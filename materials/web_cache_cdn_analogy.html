@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Web cache CDN — Convenience store analogy</title>
+<style>
+:root{color-scheme:light;
+  --color-background-primary:#ffffff;--color-background-secondary:#f4f3ee;
+  --color-text-primary:#1d1d1c;--color-text-secondary:#5f5e5a;--color-text-tertiary:#888780;
+  --color-border-secondary:rgba(0,0,0,0.18);--color-border-tertiary:rgba(0,0,0,0.13);
+  --border-radius-lg:8px;--border-radius-md:6px;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:transparent;font-family:var(--font)}
+.analogy-anim{max-width:720px;margin:0 auto;padding:.75rem 0}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.stage{background:#EAF3DE;border-radius:var(--border-radius-lg);overflow:hidden}
+.caption-box{background:var(--color-background-primary);padding:10px 16px 0;border-top:.5px solid var(--color-border-tertiary)}
+.caption{font-size:13px;color:var(--color-text-secondary);line-height:1.6;min-height:48px}
+.caption strong{color:var(--color-text-primary);font-weight:500}
+.step-track{display:flex;margin:10px 16px 0;border-radius:var(--border-radius-md);overflow:hidden;border:.5px solid var(--color-border-tertiary)}
+.step-pill{flex:1;padding:5px 3px;font-size:9px;font-weight:500;text-align:center;color:var(--color-text-secondary);background:var(--color-background-secondary);cursor:pointer;border:none;border-right:.5px solid var(--color-border-tertiary);line-height:1.3}
+.step-pill:last-child{border-right:none}
+.step-pill.active{background:#EEEDFE;color:#3C3489}
+.step-pill.done{background:#E1F5EE;color:#085041}
+.ctrl{display:flex;gap:6px;padding:10px 16px 14px;align-items:center;flex-wrap:wrap;background:var(--color-background-primary)}
+.btn{font-size:11px;padding:5px 12px;border-radius:var(--border-radius-md);border:.5px solid var(--color-border-secondary);background:transparent;cursor:pointer;color:var(--color-text-primary)}
+.btn:disabled{opacity:.35;cursor:default}
+.btn.accent{border-color:#534AB7;color:#3C3489}
+.btn.go{border-color:#0F6E56;color:#0F6E56}
+.spd{display:flex;align-items:center;gap:5px;margin-left:auto;font-size:11px;color:var(--color-text-secondary)}
+.http-label{margin:0 16px 8px;font-size:10px;font-family:ui-monospace,monospace;color:#27500A;background:#EAF3DE;padding:4px 8px;border-radius:4px;opacity:0}
+</style>
+</head>
+<body>
+<div class="analogy-anim">
+<h2 class="sr-only">CDN web cache convenience store analogy</h2>
+<div class="stage">
+<svg width="100%" viewBox="0 0 680 340" role="img">
+<rect width="680" height="340" fill="#E8F4DC"/>
+<rect x="0" y="260" width="680" height="80" fill="#C8D8B0"/>
+<text x="60" y="300" font-size="11" fill="#27500A">Customer</text>
+<text x="340" y="300" font-size="11" fill="#27500A">CDN edge (corner shop)</text>
+<text x="580" y="300" font-size="11" fill="#27500A">Origin (factory)</text>
+<rect x="40" y="80" width="120" height="100" rx="6" fill="#97C459" stroke="#639922"/>
+<text x="100" y="118" text-anchor="middle" font-size="11" font-weight="500" fill="#fff">STORE</text>
+<text x="100" y="136" text-anchor="middle" font-size="9" fill="#EAF3DE">CDN edge</text>
+<g id="shelf" opacity="1"><rect x="55" y="148" width="28" height="22" rx="3" fill="#fff" stroke="#639922"/><text x="69" y="162" text-anchor="middle" font-size="8" fill="#27500A">milk</text></g>
+<rect x="500" y="60" width="140" height="120" rx="6" fill="#B4B2A9" stroke="#888780"/>
+<text x="570" y="100" text-anchor="middle" font-size="11" font-weight="500" fill="#444">FACTORY</text>
+<text x="570" y="118" text-anchor="middle" font-size="9" fill="#5F5E5A">origin server</text>
+<text x="570" y="150" text-anchor="middle" font-size="10" fill="#5F5E5A">200 km away</text>
+<circle cx="60" cy="220" r="18" fill="#F5D5A8"/>
+<rect x="44" y="240" width="32" height="18" rx="3" fill="#4A7A9B"/>
+<g id="truck" opacity="0"><rect x="280" y="175" width="50" height="28" rx="4" fill="#378ADD"/><text x="305" y="192" text-anchor="middle" font-size="9" fill="#fff">restock</text></g>
+<g id="ttl" opacity="0"><rect x="48" y="175" width="104" height="22" rx="4" fill="#FAEEDA" stroke="#EF9F27"/><text x="100" y="190" text-anchor="middle" font-size="9" fill="#633806">max-age: 7 days</text></g>
+<g id="recall" opacity="0"><rect x="48" y="148" width="104" height="22" rx="4" fill="#FBEAF0" stroke="#E85D9C"/><text x="100" y="163" text-anchor="middle" font-size="9" fill="#72243E">RECALL — purge CDN</text></g>
+<g id="hit" opacity="0"><rect x="170" y="175" width="120" height="30" rx="6" fill="#EAF3DE" stroke="#97C459"/><text x="230" y="194" text-anchor="middle" font-size="10" fill="#27500A">Cache HIT — fast!</text></g>
+<g id="miss" opacity="0"><rect x="170" y="130" width="150" height="30" rx="6" fill="#E6F1FB" stroke="#85B7EB"/><text x="245" y="149" text-anchor="middle" font-size="10" fill="#0C447C">Cache MISS → fetch origin</text></g>
+</svg>
+<div class="http-label" id="http">GET /assets/milk.jpg</div>
+<div class="caption-box"><div class="caption" id="cap">Click <strong>Play</strong> or step through the analogy.</div></div>
+<div class="step-track">
+<button class="step-pill active" onclick="goStep(0)">1. Cache hit</button>
+<button class="step-pill" onclick="goStep(1)">2. TTL label</button>
+<button class="step-pill" onclick="goStep(2)">3. Cache miss</button>
+<button class="step-pill" onclick="goStep(3)">4. Restock</button>
+<button class="step-pill" onclick="goStep(4)">5. Recall</button>
+</div>
+<div class="ctrl">
+<button class="btn accent" id="bPlay" onclick="playAll()">▶ Play</button>
+<button class="btn go" id="bStep" onclick="stepFwd()">Step →</button>
+<button class="btn" id="bReset" onclick="doReset()" disabled>↺ Reset</button>
+<div class="spd"><span>Speed</span><input type="range" min="0.5" max="2" step="0.5" value="1" id="spd" style="width:60px" oninput="el('spdv').textContent=this.value+'×'"><span id="spdv">1×</span></div>
+</div>
+</div>
+<script>
+function el(id){return document.getElementById(id)}
+function show(id){el(id).style.opacity='1'}
+function hide(id){el(id).style.opacity='0'}
+function wait(ms,sp){return new Promise(r=>setTimeout(r,ms/(sp||1)))}
+function sp(){return parseFloat(el('spd').value)||1}
+function setHttp(t){el('http').textContent=t;show('http')}
+const caps=[
+  '<strong>Cache hit at the edge</strong> — the CDN has a fresh copy on the shelf. Response served locally without hitting the origin.',
+  '<strong>TTL on the label</strong> — Cache-Control: max-age tells the edge how long stock is valid before restocking.',
+  '<strong>Cache miss</strong> — shelf empty or expired. Edge must fetch from the origin server (factory).',
+  '<strong>Restock from origin</strong> — CDN pulls the latest response and stores it for the next visitor.',
+  '<strong>Cache invalidation</strong> — origin recalls content; CDN purges stale copies off the shelf.'
+];
+const steps=[
+  async s=>{show('hit');setHttp('200 OK (from CDN edge — 12ms)');await wait(600,s)},
+  async s=>{hide('hit');show('ttl');setHttp('Cache-Control: max-age=604800');await wait(600,s)},
+  async s=>{hide('ttl');hide('shelf');show('miss');setHttp('CDN: cache miss → origin fetch');await wait(600,s)},
+  async s=>{hide('miss');show('truck');show('shelf');setHttp('200 OK (stored at edge for next user)');await wait(700,s)},
+  async s=>{hide('truck');show('recall');hide('shelf');setHttp('PURGE /assets/milk.jpg — stale removed');await wait(600,s)}
+];
+let cur=-1,playing=false;
+function setCap(i){el('cap').innerHTML=caps[i]}
+function pills(i){document.querySelectorAll('.step-pill').forEach((p,j)=>{p.classList.remove('active','done');if(j===i)p.classList.add('active');else if(j<i)p.classList.add('done')})}
+async function runStep(i){playing=true;el('bPlay').disabled=true;el('bStep').disabled=true;el('bReset').disabled=false;pills(i);setCap(i);await steps[i](sp());cur=i;playing=false;el('bPlay').disabled=false;el('bStep').disabled=cur>=steps.length-1}
+async function stepFwd(){if(!playing&&cur<steps.length-1)await runStep(cur+1)}
+async function goStep(i){if(playing||i<=cur)return;for(let j=cur+1;j<=i;j++){await runStep(j);if(j<i)await wait(200,sp())}}
+async function playAll(){if(playing)return;doReset();await wait(80,1);for(let i=0;i<steps.length;i++){await runStep(i);if(i<steps.length-1)await wait(500,sp())}}
+function doReset(){
+  if(playing)return;cur=-1;
+  ['hit','ttl','miss','truck','recall','http'].forEach(hide);
+  show('shelf');
+  el('cap').innerHTML='Click <strong>Play</strong> or step through the analogy.';
+  document.querySelectorAll('.step-pill').forEach((p,i)=>{p.classList.remove('active','done');if(!i)p.classList.add('active')});
+  el('bPlay').disabled=false;el('bStep').disabled=false;el('bReset').disabled=true;
+}
+</script>
+</div>
+<script>
+(function(){
+  function report(){
+    var root=document.querySelector('.analogy-anim')||document.body;
+    var h=Math.max(document.documentElement.scrollHeight,document.body.scrollHeight,root.scrollHeight);
+    if(window.parent!==window)window.parent.postMessage({type:'anim-frame-height',height:h},'*');
+  }
+  window.addEventListener('load',report);
+  if(typeof ResizeObserver!=='undefined')new ResizeObserver(report).observe(document.querySelector('.analogy-anim')||document.body);
+})();
+</script>
+</body>
+</html>

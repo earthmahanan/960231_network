@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stateless HTTP — Restaurant analogy</title>
+<style>
+:root{color-scheme:light;
+  --color-background-primary:#ffffff;--color-background-secondary:#f4f3ee;
+  --color-text-primary:#1d1d1c;--color-text-secondary:#5f5e5a;--color-text-tertiary:#888780;
+  --color-border-primary:rgba(0,0,0,0.25);--color-border-secondary:rgba(0,0,0,0.18);--color-border-tertiary:rgba(0,0,0,0.13);
+  --border-radius-lg:8px;--border-radius-md:6px;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+}
+
+body{background:transparent;font-family:var(--font)}
+.analogy-anim{max-width:720px;margin:0 auto;padding:.75rem 0}
+</style>
+</head>
+<body>
+<div class="analogy-anim">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.stage{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:0;overflow:hidden;position:relative}
+.scene{width:100%;display:block}
+.caption-box{padding:10px 16px 0}
+.caption{font-size:13px;color:var(--color-text-secondary);line-height:1.6;min-height:44px;transition:opacity .3s}
+.caption strong{color:var(--color-text-primary);font-weight:500}
+.step-track{display:flex;gap:0;margin:10px 16px 0;border-radius:var(--border-radius-md);overflow:hidden;border:0.5px solid var(--color-border-tertiary)}
+.step-pill{flex:1;padding:5px 4px;font-size:10px;font-weight:500;text-align:center;color:var(--color-text-secondary);background:var(--color-background-secondary);cursor:pointer;border:none;border-right:0.5px solid var(--color-border-tertiary);transition:all .18s;line-height:1.3}
+.step-pill:last-child{border-right:none}
+.step-pill.active{background:#EEEDFE;color:#3C3489}
+.step-pill.done{background:#E1F5EE;color:#085041}
+.ctrl{display:flex;gap:6px;padding:10px 16px 14px;align-items:center;flex-wrap:wrap}
+.btn{font-size:11px;padding:5px 12px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:transparent;cursor:pointer;color:var(--color-text-primary);transition:background .15s}
+.btn:hover{background:var(--color-background-secondary)}
+.btn:disabled{opacity:.35;cursor:default}
+.btn.accent{border-color:#534AB7;color:#3C3489}
+.btn.go{border-color:#0F6E56;color:#0F6E56}
+.spd{display:flex;align-items:center;gap:5px;margin-left:auto;font-size:11px;color:var(--color-text-secondary)}
+.tag-http{display:inline-block;font-size:10px;font-weight:500;padding:2px 8px;border-radius:99px;margin-left:8px}
+</style>
+
+<h2 class="sr-only">Animated restaurant analogy for stateless HTTP: a customer orders a burger, the waiter serves it and forgets the customer entirely, then returns to ask for ketchup only to be met with a blank stare — illustrating how HTTP has no memory between requests.</h2>
+
+<div class="stage">
+  <svg id="scene" class="scene" viewBox="0 0 680 340" role="img">
+    <title>Stateless HTTP restaurant analogy — the goldfish waiter</title>
+    <desc>A customer sits at a restaurant table. A waiter with a speech bubble responds to each request independently, forgetting the previous interaction each time.</desc>
+
+    <rect x="0" y="0" width="680" height="340" fill="#F7F5EF"/>
+
+    <rect x="0" y="260" width="680" height="80" fill="#E8E4D8"/>
+    <rect x="0" y="256" width="680" height="6" rx="0" fill="#D3CFC4"/>
+
+    <rect x="40" y="200" width="200" height="70" rx="6" fill="#C8BFA8" stroke="#B4A98E" stroke-width="0.5"/>
+    <rect x="40" y="196" width="200" height="10" rx="3" fill="#B4A98E"/>
+    <rect x="55" y="270" width="20" height="30" rx="2" fill="#A89878"/>
+    <rect x="205" y="270" width="20" height="30" rx="2" fill="#A89878"/>
+
+    <circle cx="130" cy="180" r="22" fill="#F5D5A8" stroke="#D4A870" stroke-width="0.5"/>
+    <ellipse cx="130" cy="240" rx="26" ry="30" fill="#4A7A9B" stroke="#3A6A8B" stroke-width="0.5"/>
+    <rect x="104" y="210" width="52" height="35" rx="4" fill="#4A7A9B"/>
+    <circle cx="122" cy="178" r="3" fill="#5C3A1E"/>
+    <circle cx="138" cy="178" r="3" fill="#5C3A1E"/>
+    <path d="M123 188 Q130 193 137 188" stroke="#5C3A1E" stroke-width="1.5" fill="none" stroke-linecap="round" id="customer-mouth"/>
+    <text x="130" y="316" text-anchor="middle" font-size="11" font-weight="500" fill="#5F5E5A">Customer</text>
+
+    <circle cx="520" cy="170" r="22" fill="#F5D5A8" stroke="#D4A870" stroke-width="0.5"/>
+    <ellipse cx="520" cy="232" rx="26" ry="30" fill="#8B4A4A" stroke="#7A3A3A" stroke-width="0.5"/>
+    <rect x="494" y="200" width="52" height="35" rx="4" fill="#8B4A4A"/>
+    <circle cx="512" cy="168" r="3" fill="#5C3A1E" id="waiter-eye-l"/>
+    <circle cx="528" cy="168" r="3" fill="#5C3A1E" id="waiter-eye-r"/>
+    <path d="M513 180 Q520 185 527 180" stroke="#5C3A1E" stroke-width="1.5" fill="none" stroke-linecap="round" id="waiter-mouth"/>
+    <text x="520" y="316" text-anchor="middle" font-size="11" font-weight="500" fill="#5F5E5A">Waiter</text>
+    <text x="520" y="330" text-anchor="middle" font-size="10" fill="#888780">(no memory)</text>
+
+    <text id="fish-icon" x="544" y="156" font-size="13" fill="#888780" opacity="0">🐟</text>
+
+    <g id="req1" opacity="0">
+      <rect x="168" y="138" width="190" height="34" rx="8" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
+      <text x="263" y="158" text-anchor="middle" font-size="11" fill="#0C447C" dominant-baseline="central">Can I have a burger please?</text>
+    </g>
+    <g id="arr1" opacity="0">
+      <line x1="280" y1="174" x2="460" y2="174" stroke="#378ADD" stroke-width="1.5" stroke-dasharray="200" stroke-dashoffset="200" marker-end="url(#arR)"/>
+    </g>
+
+    <g id="req2" opacity="0">
+      <rect x="316" y="108" width="162" height="34" rx="8" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
+      <text x="397" y="128" text-anchor="middle" font-size="11" fill="#27500A" dominant-baseline="central">Here's your burger!</text>
+    </g>
+    <g id="burger" opacity="0">
+      <circle cx="200" cy="232" r="14" fill="#F5A623"/>
+      <ellipse cx="200" cy="232" rx="13" ry="5" fill="#8B6914"/>
+      <ellipse cx="200" cy="228" rx="10" ry="3" fill="#E8543A"/>
+      <ellipse cx="200" cy="225" rx="11" ry="3" fill="#7AB648"/>
+      <ellipse cx="200" cy="222" rx="12" ry="4" fill="#F5A623"/>
+    </g>
+    <g id="arr2" opacity="0">
+      <line x1="460" y1="162" x2="280" y2="162" stroke="#639922" stroke-width="1.5" stroke-dasharray="200" stroke-dashoffset="200" marker-end="url(#arL)"/>
+    </g>
+
+    <g id="divider" opacity="0">
+      <line x1="40" y1="260" x2="640" y2="260" stroke="#D4B896" stroke-width="1.5" stroke-dasharray="8 5"/>
+      <rect x="270" y="248" width="140" height="20" rx="10" fill="#FAEEDA" stroke="#FAC775" stroke-width="0.5"/>
+      <text x="340" y="262" text-anchor="middle" font-size="10" fill="#633806" dominant-baseline="central" font-weight="500">— new request —</text>
+    </g>
+
+    <g id="waiter-reset" opacity="0">
+      <circle cx="490" cy="148" r="18" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+      <text x="490" y="152" text-anchor="middle" font-size="18" dominant-baseline="central">🔄</text>
+    </g>
+
+    <g id="req3" opacity="0">
+      <rect x="168" y="80" width="164" height="34" rx="8" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
+      <text x="250" y="100" text-anchor="middle" font-size="11" fill="#0C447C" dominant-baseline="central">Can I have ketchup?</text>
+    </g>
+    <g id="arr3" opacity="0">
+      <line x1="280" y1="164" x2="460" y2="164" stroke="#378ADD" stroke-width="1.5" stroke-dasharray="200" stroke-dashoffset="200" marker-end="url(#arR)"/>
+    </g>
+
+    <g id="res3" opacity="0">
+      <rect x="330" y="50" width="268" height="56" rx="10" fill="#FCEBEB" stroke="#F09595" stroke-width="0.5"/>
+      <text x="464" y="72" text-anchor="middle" font-size="12" font-weight="500" fill="#791F1F" dominant-baseline="central">I'm sorry — have we met?</text>
+      <text x="464" y="92" text-anchor="middle" font-size="10" fill="#A32D2D" dominant-baseline="central">I have no record of you ordering anything.</text>
+    </g>
+    <g id="arr4" opacity="0">
+      <line x1="460" y1="152" x2="280" y2="152" stroke="#E24B4A" stroke-width="1.5" stroke-dasharray="200" stroke-dashoffset="200" marker-end="url(#arL)"/>
+    </g>
+
+    <g id="label1" opacity="0">
+      <rect x="40" y="18" width="130" height="22" rx="11" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
+      <text x="105" y="29" text-anchor="middle" font-size="10" fill="#0C447C" dominant-baseline="central">Request 1: POST /order</text>
+    </g>
+    <g id="label2" opacity="0">
+      <rect x="40" y="18" width="130" height="22" rx="11" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
+      <text x="105" y="29" text-anchor="middle" font-size="10" fill="#27500A" dominant-baseline="central">Response 1: 200 OK</text>
+    </g>
+    <g id="label3" opacity="0">
+      <rect x="40" y="18" width="148" height="22" rx="11" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
+      <text x="114" y="29" text-anchor="middle" font-size="10" fill="#0C447C" dominant-baseline="central">Request 2: GET /ketchup</text>
+    </g>
+    <g id="label4" opacity="0">
+      <rect x="40" y="18" width="148" height="22" rx="11" fill="#FCEBEB" stroke="#F09595" stroke-width="0.5"/>
+      <text x="114" y="29" text-anchor="middle" font-size="10" fill="#791F1F" dominant-baseline="central">Response 2: 401 — who?</text>
+    </g>
+
+    <defs>
+      <marker id="arR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+      <marker id="arL" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+    </defs>
+  </svg>
+
+  <div class="caption-box">
+    <div class="caption" id="cap">Click <strong>Play</strong> or step through the scene.</div>
+  </div>
+
+  <div class="step-track" id="pills">
+    <button class="step-pill active" onclick="goStep(0)">1. Order burger</button>
+    <button class="step-pill" onclick="goStep(1)">2. Burger arrives</button>
+    <button class="step-pill" onclick="goStep(2)">3. Memory wiped</button>
+    <button class="step-pill" onclick="goStep(3)">4. Ask for ketchup</button>
+    <button class="step-pill" onclick="goStep(4)">5. "Have we met?"</button>
+  </div>
+
+  <div class="ctrl">
+    <button class="btn accent" id="bPlay" onclick="playAll()">Play</button>
+    <button class="btn go" id="bStep" onclick="stepFwd()">Next step →</button>
+    <button class="btn" id="bReset" onclick="doReset()" disabled>Reset</button>
+    <div class="spd">
+      <span>Speed</span>
+      <input type="range" min="0.5" max="2" step="0.5" value="1" id="spd" style="width:60px" oninput="el('spdv').textContent=this.value+'×'">
+      <span id="spdv">1×</span>
+    </div>
+  </div>
+</div>
+
+<script>
+function el(id){return document.getElementById(id)}
+function attr(id,a,v){const e=el(id);if(e)e.setAttribute(a,v)}
+function show(id){attr(id,'opacity','1')}
+function hide(id){attr(id,'opacity','0')}
+function wait(ms,sp){return new Promise(r=>setTimeout(r,ms/(sp||1)))}
+function dashAnim(id,sp,len=200){
+  return new Promise(r=>{
+    const e=el(id);if(!e){r();return}
+    const line=e.querySelector('line');if(!line){r();return}
+    const d=0.5/(sp||1);
+    line.style.transition=`stroke-dashoffset ${d}s ease`;
+    line.setAttribute('stroke-dashoffset','0');
+    setTimeout(r,d*1000+60);
+  })
+}
+function resetDashEl(id,len=200){
+  const e=el(id);if(!e)return;
+  const line=e.querySelector('line');if(!line)return;
+  line.style.transition='none';
+  line.setAttribute('stroke-dashoffset',String(len));
+}
+
+const captions = [
+  `<strong>Request 1:</strong> "Can I have a burger please?" — The customer speaks to the waiter. This is one complete HTTP request. The waiter springs into action.`,
+  `<strong>Response 1:</strong> Burger delivered! The waiter served the request perfectly. But the moment the plate lands — the interaction is <strong>complete and forgotten</strong>.`,
+  `<strong>Memory wiped.</strong> The connection closes. The waiter's mind is a blank slate. Like HTTP — <strong>no memory between requests</strong>. Stateless by design.`,
+  `<strong>Request 2:</strong> "Can I have some ketchup?" — A perfectly reasonable follow-up. But to the server, this is a <strong>completely new request from a stranger</strong>.`,
+  `<strong>401 — "Have we met?"</strong> The server has no memory of the burger order. No context, no history. You could be a first-timer or a regular of 10 years. It has <strong>no idea</strong>.`,
+];
+
+const steps = [
+  async (sp) => {
+    show('label1');
+    show('req1');
+    await dashAnim('arr1',sp);
+    await wait(200,sp);
+  },
+  async (sp) => {
+    hide('label1');show('label2');
+    show('req2');
+    await dashAnim('arr2',sp);
+    await wait(150,sp);
+    show('burger');
+    await wait(200,sp);
+  },
+  async (sp) => {
+    hide('label2');
+    hide('req1');hide('req2');
+    resetDashEl('arr1');resetDashEl('arr2');
+    hide('arr1');hide('arr2');
+    show('divider');
+    show('waiter-reset');
+    show('fish-icon');
+    attr('waiter-mouth','d','M513 184 Q520 180 527 184');
+    await wait(600,sp);
+    hide('waiter-reset');
+    attr('waiter-mouth','d','M513 180 Q520 185 527 180');
+  },
+  async (sp) => {
+    hide('label2');show('label3');
+    show('req3');
+    await dashAnim('arr3',sp);
+    await wait(200,sp);
+  },
+  async (sp) => {
+    hide('label3');show('label4');
+    show('res3');
+    await dashAnim('arr4',sp);
+    await wait(100,sp);
+    attr('waiter-mouth','d','M513 184 Q520 180 527 184');
+    attr('waiter-eye-l','cy','166');
+    attr('waiter-eye-r','cy','166');
+    await wait(200,sp);
+    attr('waiter-eye-l','cy','168');
+    attr('waiter-eye-r','cy','168');
+    await wait(100,sp);
+    attr('waiter-eye-l','cy','166');
+    attr('waiter-eye-r','cy','166');
+  },
+];
+
+let curStep = -1;
+let playing = false;
+
+function sp(){return parseFloat(el('spd').value)||1;}
+
+function updatePills(active){
+  const pills=document.querySelectorAll('.step-pill');
+  pills.forEach((p,i)=>{
+    p.classList.remove('active','done');
+    if(i===active)p.classList.add('active');
+    else if(i<active)p.classList.add('done');
+  });
+}
+
+function setCaption(idx){
+  const c=el('cap');
+  c.style.opacity='0';
+  setTimeout(()=>{c.innerHTML=captions[idx];c.style.opacity='1';},200);
+}
+
+async function runStep(idx){
+  playing=true;
+  el('bPlay').disabled=true;
+  el('bStep').disabled=true;
+  el('bReset').disabled=false;
+  updatePills(idx);
+  setCaption(idx);
+  await steps[idx](sp());
+  curStep=idx;
+  playing=false;
+  el('bPlay').disabled=false;
+  const done=curStep>=steps.length-1;
+  el('bStep').disabled=done;
+  el('bStep').textContent=done?'Done!':`Next step → (${curStep+2}/${steps.length})`;
+}
+
+async function stepFwd(){
+  if(playing)return;
+  const next=curStep+1;
+  if(next>=steps.length)return;
+  await runStep(next);
+}
+
+async function goStep(idx){
+  if(playing)return;
+  if(idx<=curStep)return;
+  for(let i=curStep+1;i<=idx;i++){
+    await runStep(i);
+    if(i<idx)await wait(200,sp());
+  }
+}
+
+async function playAll(){
+  if(playing)return;
+  doReset();
+  await wait(100,1);
+  for(let i=0;i<steps.length;i++){
+    await runStep(i);
+    if(i<steps.length-1)await wait(500,sp());
+  }
+}
+
+function doReset(){
+  if(playing)return;
+  curStep=-1;
+  playing=false;
+  const toHide=['req1','arr1','req2','arr2','burger','label1','label2','label3','label4','divider','waiter-reset','fish-icon','req3','arr3','res3','arr4'];
+  toHide.forEach(id=>hide(id));
+  resetDashEl('arr1');resetDashEl('arr2');resetDashEl('arr3');resetDashEl('arr4');
+  attr('waiter-mouth','d','M513 180 Q520 185 527 180');
+  attr('waiter-eye-l','cy','168');
+  attr('waiter-eye-r','cy','168');
+  updatePills(-1);
+  document.querySelectorAll('.step-pill').forEach((p,i)=>{p.classList.remove('active','done');if(i===0)p.classList.add('active');});
+  el('cap').innerHTML='Click <strong>Play</strong> or step through the scene.';
+  el('bPlay').disabled=false;
+  el('bStep').disabled=false;
+  el('bStep').textContent='Next step →';
+  el('bReset').disabled=true;
+}
+</script>
+</div>
+<script>
+(function(){
+  function report(){
+    var root=document.querySelector('.analogy-anim')||document.body;
+    var h=Math.max(document.documentElement.scrollHeight,document.body.scrollHeight,root.scrollHeight);
+    if(window.parent!==window)window.parent.postMessage({type:'anim-frame-height',height:h},'*');
+  }
+  window.addEventListener('load',report);
+  if(typeof ResizeObserver!=='undefined')new ResizeObserver(report).observe(document.querySelector('.analogy-anim')||document.body);
+})();
+</script>
+</body>
+</html>

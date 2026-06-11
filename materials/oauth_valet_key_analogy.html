@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OAuth 2.0 — Valet key analogy</title>
+<style>
+:root{color-scheme:light;
+  --color-background-primary:#ffffff;--color-background-secondary:#f4f3ee;
+  --color-text-primary:#1d1d1c;--color-text-secondary:#5f5e5a;--color-text-tertiary:#888780;
+  --color-border-secondary:rgba(0,0,0,0.18);--color-border-tertiary:rgba(0,0,0,0.13);
+  --border-radius-lg:8px;--border-radius-md:6px;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:transparent;font-family:var(--font)}
+.analogy-anim{max-width:720px;margin:0 auto;padding:.75rem 0}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.stage{background:#F5EDE8;border-radius:var(--border-radius-lg);overflow:hidden}
+.caption-box{background:var(--color-background-primary);padding:10px 16px 0;border-top:.5px solid var(--color-border-tertiary)}
+.caption{font-size:13px;color:var(--color-text-secondary);line-height:1.6;min-height:48px;transition:opacity .25s}
+.caption strong{color:var(--color-text-primary);font-weight:500}
+.step-track{display:flex;margin:10px 16px 0;border-radius:var(--border-radius-md);overflow:hidden;border:.5px solid var(--color-border-tertiary)}
+.step-pill{flex:1;padding:5px 3px;font-size:9.5px;font-weight:500;text-align:center;color:var(--color-text-secondary);background:var(--color-background-secondary);cursor:pointer;border:none;border-right:.5px solid var(--color-border-tertiary);line-height:1.3}
+.step-pill:last-child{border-right:none}
+.step-pill.active{background:#EEEDFE;color:#3C3489}
+.step-pill.done{background:#E1F5EE;color:#085041}
+.ctrl{display:flex;gap:6px;padding:10px 16px 14px;align-items:center;flex-wrap:wrap;background:var(--color-background-primary)}
+.btn{font-size:11px;padding:5px 12px;border-radius:var(--border-radius-md);border:.5px solid var(--color-border-secondary);background:transparent;cursor:pointer;color:var(--color-text-primary)}
+.btn:disabled{opacity:.35;cursor:default}
+.btn.accent{border-color:#534AB7;color:#3C3489}
+.btn.go{border-color:#0F6E56;color:#0F6E56}
+.spd{display:flex;align-items:center;gap:5px;margin-left:auto;font-size:11px;color:var(--color-text-secondary)}
+.http-label{margin:0 16px 8px;font-size:10px;font-family:ui-monospace,monospace;color:#712B13;background:#FAECE7;padding:4px 8px;border-radius:4px;opacity:0;transition:opacity .2s}
+</style>
+</head>
+<body>
+<div class="analogy-anim">
+<h2 class="sr-only">OAuth 2.0 valet key analogy animation</h2>
+<div class="stage">
+<svg id="scene" width="100%" viewBox="0 0 680 340" role="img">
+<rect width="680" height="340" fill="#E8DDD4"/>
+<rect x="0" y="250" width="680" height="90" fill="#C8B8A8"/>
+<text x="80" y="310" font-size="11" fill="#5F5E5A">Owner</text>
+<text x="340" y="310" font-size="11" fill="#5F5E5A">Building manager (OAuth server)</text>
+<text x="580" y="310" font-size="11" fill="#5F5E5A">Removalist (app)</text>
+<rect x="220" y="40" width="240" height="180" rx="6" fill="#D4C4B0" stroke="#A89888"/>
+<rect x="300" y="170" width="80" height="50" fill="#8B7058"/>
+<text x="340" y="128" text-anchor="middle" font-size="12" font-weight="500" fill="#444">Apartment</text>
+<circle cx="80" cy="200" r="20" fill="#F5D5A8" stroke="#D4A870"/>
+<rect x="60" y="222" width="40" height="28" rx="4" fill="#4A7A9B"/>
+<text x="80" y="268" text-anchor="middle" font-size="10" fill="#712B13" id="master-key" opacity="0">🔑 master</text>
+<circle cx="340" cy="200" r="20" fill="#F5D5A8" stroke="#D4A870"/>
+<rect x="320" y="222" width="40" height="28" rx="4" fill="#8B4A4A"/>
+<text x="340" y="268" text-anchor="middle" font-size="10" fill="#712B13" id="valet-key" opacity="0">🗝️ valet</text>
+<circle cx="580" cy="200" r="20" fill="#F5D5A8" stroke="#D4A870"/>
+<rect x="560" y="222" width="40" height="28" rx="4" fill="#6B8B4A"/>
+<g id="bub-need" opacity="0"><rect x="430" y="130" width="150" height="36" rx="8" fill="#FAECE7" stroke="#F0997B"/><text x="505" y="152" text-anchor="middle" font-size="10" fill="#712B13">Need apartment access</text></g>
+<g id="bub-no" opacity="0"><rect x="130" y="130" width="170" height="36" rx="8" fill="#FAECE7" stroke="#F0997B"/><text x="215" y="152" text-anchor="middle" font-size="10" fill="#712B13">Not giving master key!</text></g>
+<g id="bub-issue" opacity="0"><rect x="250" y="90" width="180" height="40" rx="8" fill="#EAF3DE" stroke="#97C459"/><text x="340" y="108" text-anchor="middle" font-size="10" fill="#27500A">Valet key: front door only</text><text x="340" y="122" text-anchor="middle" font-size="9" fill="#27500A">expires 5pm · scope: move-in</text></g>
+<g id="door-open" opacity="0"><rect x="318" y="172" width="44" height="46" fill="#EAF3DE" stroke="#97C459"/><text x="340" y="198" text-anchor="middle" font-size="10" fill="#27500A">✓</text></g>
+<g id="bub-revoke" opacity="0"><rect x="250" y="90" width="180" height="36" rx="8" fill="#FBEAF0" stroke="#E85D9C"/><text x="340" y="112" text-anchor="middle" font-size="10" fill="#72243E">Valet key revoked</text></g>
+<g id="door-denied" opacity="0"><text x="340" y="198" text-anchor="middle" font-size="18" fill="#A32D2D">✕</text></g>
+</svg>
+<div class="http-label" id="http">GET /authorize?scope=move-in</div>
+<div class="caption-box"><div class="caption" id="cap">Click <strong>Play</strong> or step through the analogy.</div></div>
+<div class="step-track">
+<button class="step-pill active" onclick="goStep(0)">1. Need access</button>
+<button class="step-pill" onclick="goStep(1)">2. No master key</button>
+<button class="step-pill" onclick="goStep(2)">3. Valet issued</button>
+<button class="step-pill" onclick="goStep(3)">4. Limited use</button>
+<button class="step-pill" onclick="goStep(4)">5. Revoked</button>
+</div>
+<div class="ctrl">
+<button class="btn accent" id="bPlay" onclick="playAll()">▶ Play</button>
+<button class="btn go" id="bStep" onclick="stepFwd()">Step →</button>
+<button class="btn" id="bReset" onclick="doReset()" disabled>↺ Reset</button>
+<div class="spd"><span>Speed</span><input type="range" min="0.5" max="2" step="0.5" value="1" id="spd" style="width:60px" oninput="el('spdv').textContent=this.value+'×'"><span id="spdv">1×</span></div>
+</div>
+</div>
+<script>
+function el(id){return document.getElementById(id)}
+function show(id){el(id).style.opacity='1'}
+function hide(id){el(id).style.opacity='0'}
+function wait(ms,sp){return new Promise(r=>setTimeout(r,ms/(sp||1)))}
+function sp(){return parseFloat(el('spd').value)||1}
+function setHttp(t){el('http').textContent=t;show('http')}
+const caps=[
+  '<strong>Removalist needs access</strong> — a third-party app wants your data. It should never receive your real password (master key).',
+  '<strong>Owner refuses the master key</strong> — you redirect to the OAuth authorization server instead of sharing credentials.',
+  '<strong>Building manager issues a valet key</strong> — limited access token with scopes and expiry. Password stays with the IdP.',
+  '<strong>Valet key opens front door only</strong> — the app can only do what you consented to (scope). Not garage, not letterbox.',
+  '<strong>Owner revokes the valet key</strong> — cancel app access in account settings without changing your password.'
+];
+const steps=[
+  async s=>{show('bub-need');setHttp('User clicks "Login with IdP"');await wait(600,s)},
+  async s=>{hide('bub-need');show('bub-no');show('master-key');setHttp('Redirect → /authorize (no password sent)');await wait(600,s)},
+  async s=>{hide('bub-no');show('bub-issue');hide('master-key');show('valet-key');setHttp('POST /token → access_token (scoped)');await wait(700,s)},
+  async s=>{hide('bub-issue');show('door-open');setHttp('API call with Bearer token — scope: move-in');await wait(600,s)},
+  async s=>{hide('door-open');show('bub-revoke');show('door-denied');hide('valet-key');setHttp('Token revoked — 401 Unauthorized');await wait(600,s)}
+];
+let cur=-1,playing=false;
+function setCap(i){const c=el('cap');c.style.opacity='0';setTimeout(()=>{c.innerHTML=caps[i];c.style.opacity='1'},150)}
+function pills(i){document.querySelectorAll('.step-pill').forEach((p,j)=>{p.classList.remove('active','done');if(j===i)p.classList.add('active');else if(j<i)p.classList.add('done')})}
+async function runStep(i){
+  playing=true;el('bPlay').disabled=true;el('bStep').disabled=true;el('bReset').disabled=false;
+  pills(i);setCap(i);await steps[i](sp());cur=i;playing=false;el('bPlay').disabled=false;
+  el('bStep').disabled=cur>=steps.length-1;
+}
+async function stepFwd(){if(!playing&&cur<steps.length-1)await runStep(cur+1)}
+async function goStep(i){if(playing||i<=cur)return;for(let j=cur+1;j<=i;j++){await runStep(j);if(j<i)await wait(200,sp())}}
+async function playAll(){if(playing)return;doReset();await wait(80,1);for(let i=0;i<steps.length;i++){await runStep(i);if(i<steps.length-1)await wait(500,sp())}}
+function doReset(){
+  if(playing)return;cur=-1;
+  ['bub-need','bub-no','bub-issue','bub-revoke','master-key','valet-key','door-open','door-denied','http'].forEach(hide);
+  el('cap').innerHTML='Click <strong>Play</strong> or step through the analogy.';
+  document.querySelectorAll('.step-pill').forEach((p,i)=>{p.classList.remove('active','done');if(!i)p.classList.add('active')});
+  el('bPlay').disabled=false;el('bStep').disabled=false;el('bReset').disabled=true;
+}
+</script>
+</div>
+<script>
+(function(){
+  function report(){
+    var root=document.querySelector('.analogy-anim')||document.body;
+    var h=Math.max(document.documentElement.scrollHeight,document.body.scrollHeight,root.scrollHeight);
+    if(window.parent!==window)window.parent.postMessage({type:'anim-frame-height',height:h},'*');
+  }
+  window.addEventListener('load',report);
+  if(typeof ResizeObserver!=='undefined')new ResizeObserver(report).observe(document.querySelector('.analogy-anim')||document.body);
+})();
+</script>
+</body>
+</html>

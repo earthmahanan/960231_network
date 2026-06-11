@@ -1,0 +1,615 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{color-scheme:light;
+  --bg:#ffffff;--bg2:#f4f3ee;--bg3:#ecebe4;
+  --txt:#1d1d1c;--txt2:#5f5e5a;--txt3:#888780;
+  --bdr:rgba(0,0,0,0.13);--bdr2:rgba(0,0,0,0.25);
+  --ep:#f4f3ee;--eps:#d3d1c7;
+  --radius:8px;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+
+body{background:transparent;font-family:var(--font);color:var(--txt);font-size:14px}
+button{font-family:var(--font);font-size:13px;padding:5px 12px;background:transparent;color:var(--txt);border:.5px solid var(--bdr2);border-radius:var(--radius);cursor:pointer;transition:background .15s,transform .1s}
+button:hover{background:var(--bg2)}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.38;cursor:not-allowed}
+.surface{background:var(--bg2);border-radius:var(--radius);border:.5px solid var(--bdr);padding:10px 12px}
+.mono{font-family:var(--mono);font-size:11px;color:var(--txt2);line-height:1.65}
+.mute{color:var(--txt3)}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 9px;border-radius:20px;border:.5px solid}
+.pill-teal{background:#E1F5EE;color:#085041;border-color:#5DCAA5}
+.pill-red{background:#FCEBEB;color:#791F1F;border-color:#F09595}
+.pill-amber{background:#FAEEDA;color:#633806;border-color:#EF9F27}
+.pill-blue{background:#E6F1FB;color:#185FA5;border-color:#85B7EB}
+.pill-gray{background:var(--bg2);color:var(--txt2);border-color:var(--bdr2)}
+
+.log-e{font-family:var(--mono);font-size:11px;padding:2px 0;border-bottom:.5px solid var(--bdr);color:var(--txt2);animation:fi .2s ease forwards}
+.log-e:last-child{border-bottom:none}
+@keyframes fi{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:translateY(0)}}
+.lr{color:#185FA5}.lg{color:#0F6E56}.le{color:#A32D2D}.lw{color:#854F0B}
+
+.scen-btn{font-size:11px;padding:4px 10px;border-radius:6px;border:.5px solid var(--bdr2);cursor:pointer;background:transparent;color:var(--txt2);font-family:var(--font)}
+.scen-btn:hover{background:var(--bg2)}
+.scen-btn.active{font-weight:500;border-color:#D85A30;background:#FAECE7;color:#712B13}
+
+#stage{position:relative;width:100%;height:260px;border-radius:var(--radius);border:.5px solid var(--bdr);overflow:hidden;background:var(--bg2)}
+.ep{position:absolute;width:90px;text-align:center;font-size:12px}
+.ep-icon{font-size:28px;line-height:1}
+.ep-label{font-size:11px;font-weight:500;color:var(--txt);margin-top:2px}
+.ep-sub{font-size:10px;color:var(--txt3)}
+.router-box{position:absolute;width:64px;text-align:center}
+.router-icon{font-size:24px;line-height:1}
+.router-label{font-size:10px;color:var(--txt3);margin-top:2px}
+.pkt{position:absolute;font-family:var(--mono);font-size:10px;font-weight:500;padding:3px 8px;border-radius:14px;white-space:nowrap;pointer-events:none;transition:left .05s,top .05s;z-index:10}
+.pkt-udp{background:#FAECE7;color:#712B13;border:.5px solid #F0997B}
+.pkt-ack{background:#E1F5EE;color:#085041;border:.5px solid #5DCAA5}
+.pkt-lost{background:#FCEBEB;color:#791F1F;border:.5px solid #F09595;text-decoration:line-through}
+
+.wire{position:absolute;height:.5px;background:var(--bdr2)}
+.router-glow-red{box-shadow:0 0 8px 2px rgba(226,75,74,.5);border-radius:50%}
+.router-glow-green{box-shadow:0 0 8px 2px rgba(29,158,117,.5);border-radius:50%}
+</style>
+
+<div style="padding:.75rem 0">
+
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:.75rem;flex-wrap:wrap">
+  <div>
+    <div style="font-size:16px;font-weight:500" id="ttl">UDP — User Datagram Protocol</div>
+    <div style="font-size:12px;color:var(--txt2);margin-top:2px" id="dsc">Connectionless · fire-and-forget · no guarantees</div>
+  </div>
+  <div style="display:flex;gap:5px">
+    <button id="btnStep">Step →</button>
+    <button id="btnPlay">▶ Play</button>
+    <button id="btnReset">↺ Reset</button>
+  </div>
+</div>
+
+<!-- Scenario selector -->
+<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:.75rem">
+  <button class="scen-btn active" id="s-dns">DNS query</button>
+  <button class="scen-btn" id="s-stream">Video stream</button>
+  <button class="scen-btn" id="s-game">Game state</button>
+  <button class="scen-btn" id="s-loss">Packet loss</button>
+  <button class="scen-btn" id="s-ooo">Out of order</button>
+  <button class="scen-btn" id="s-flood">Burst flood</button>
+</div>
+
+<!-- Step dots -->
+<div style="display:flex;align-items:center;gap:0;margin-bottom:.6rem" id="dotrow"></div>
+
+<!-- Main stage -->
+<div id="stage">
+  <!-- wires drawn by JS -->
+  <!-- endpoints drawn by JS -->
+  <!-- packets injected by JS -->
+</div>
+
+<!-- Info panels -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:.6rem">
+  <div class="surface"><div style="font-size:10px;color:var(--txt3);margin-bottom:3px;letter-spacing:.04em">DATAGRAM OUT</div><div id="pktOut" class="mono"><span class="mute">waiting…</span></div></div>
+  <div class="surface"><div style="font-size:10px;color:var(--txt3);margin-bottom:3px;letter-spacing:.04em">DATAGRAM IN</div><div id="pktIn" class="mono"><span class="mute">waiting…</span></div></div>
+</div>
+
+<div class="surface" style="margin-top:8px">
+  <div style="font-size:10px;color:var(--txt3);margin-bottom:4px;letter-spacing:.04em">EVENT LOG</div>
+  <div id="log" style="min-height:44px;max-height:80px;overflow-y:auto"><div class="log-e">Select a scenario and press Play.</div></div>
+</div>
+
+<!-- Key facts -->
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:.75rem" id="facts"></div>
+
+</div>
+
+<script>
+var stage = document.getElementById('stage');
+var W = 660, H = 260;
+
+// ── layout constants (% of stage width) ──────────────────────
+var CLIENT_X = 30, CLIENT_Y = 95;   // centre of client icon
+var R1_X = 210, R1_Y = 95;          // router 1
+var R2_X = 370, R2_Y = 95;          // router 2 (some scenarios)
+var SERVER_X = 590, SERVER_Y = 95;  // server
+var EP_W = 90, ICON_Y = 10;
+
+// ── state ─────────────────────────────────────────────────────
+var scenario = 'dns', cur = -1, playing = false, pt = null, steps = [];
+var pkts = {};  // id → DOM element
+
+// ── helpers ──────────────────────────────────────────────────
+function clearStage(){
+  stage.innerHTML = '';
+  pkts = {};
+  drawWires();
+  drawEndpoints();
+}
+
+function pct(x){ return (x / W * 100).toFixed(2) + '%'; }
+
+function drawWires(){
+  // client → R1
+  makeWire(CLIENT_X+28, CLIENT_Y+4, R1_X-18, R1_Y+4);
+  // R1 → R2 (always present; R2 hidden when unused)
+  makeWire(R1_X+18, R1_Y+4, R2_X-18, R2_Y+4);
+  // R2 → server
+  makeWire(R2_X+18, R2_Y+4, SERVER_X-28, SERVER_Y+4);
+}
+
+function makeWire(x1,y1,x2,y2){
+  var d=document.createElement('div');
+  d.className='wire';
+  var len=Math.hypot(x2-x1,y2-y1);
+  var ang=Math.atan2(y2-y1,x2-x1)*180/Math.PI;
+  d.style.cssText='position:absolute;width:'+len+'px;left:'+pct(x1)+';top:'+y1+'px;transform-origin:0 0;transform:rotate('+ang+'deg)';
+  stage.appendChild(d);
+}
+
+function drawEndpoints(){
+  addEP(CLIENT_X-45, CLIENT_Y-18, '🖥️', 'Client', 'port 54321');
+  addEP(SERVER_X-45, SERVER_Y-18, '🗄️', 'Server', 'port 53 / 1935');
+  addRouter(R1_X-32, R1_Y-18, 'R1', true);
+  addRouter(R2_X-32, R2_Y-18, 'R2', true);
+}
+
+function addEP(x,y,icon,label,sub){
+  var d=document.createElement('div');
+  d.className='ep';
+  d.style.cssText='left:'+pct(x)+';top:'+y+'px';
+  d.innerHTML='<div class="ep-icon">'+icon+'</div><div class="ep-label">'+label+'</div><div class="ep-sub">'+sub+'</div>';
+  stage.appendChild(d);
+}
+
+function addRouter(x,y,id,visible){
+  var d=document.createElement('div');
+  d.className='router-box';
+  d.id='router-'+id;
+  d.style.cssText='left:'+pct(x)+';top:'+y+'px;opacity:'+(visible?1:0)+';transition:opacity .3s';
+  d.innerHTML='<div class="router-icon" id="ri-'+id+'">🌐</div><div class="router-label">'+id+'</div>';
+  stage.appendChild(d);
+}
+
+function spawnPkt(id,label,cls,x,y){
+  var d=document.createElement('div');
+  d.className='pkt '+cls;
+  d.id='pkt-'+id;
+  d.textContent=label;
+  d.style.cssText='left:'+pct(x)+';top:'+y+'px;opacity:0;transition:left .6s ease-in-out,top .6s ease-in-out,opacity .2s';
+  stage.appendChild(d);
+  pkts[id]=d;
+  requestAnimationFrame(function(){d.style.opacity='1';});
+  return d;
+}
+
+function movePkt(id,x,y,dur){
+  var d=pkts[id];if(!d)return;
+  d.style.transitionDuration=(dur||0.6)+'s,'+(dur||0.6)+'s,.2s';
+  d.style.left=pct(x);
+  d.style.top=y+'px';
+}
+
+function fadePkt(id,delay){
+  var d=pkts[id];if(!d)return;
+  setTimeout(function(){if(d)d.style.opacity='0';},delay||0);
+  setTimeout(function(){if(d&&d.parentNode)d.parentNode.removeChild(d);delete pkts[id];},(delay||0)+400);
+}
+
+function dropPkt(id){
+  var d=pkts[id];if(!d)return;
+  d.classList.add('pkt-lost');
+  d.style.transition='top 1s ease-in,opacity 1s ease-in,transform 1s ease-in';
+  d.style.top=(parseInt(d.style.top||0)+80)+'px';
+  d.style.transform='rotate(25deg)';
+  d.style.opacity='0';
+  setTimeout(function(){if(d&&d.parentNode)d.parentNode.removeChild(d);delete pkts[id];},1200);
+}
+
+function routerGlow(id,color){
+  var ri=document.getElementById('ri-'+id);if(!ri)return;
+  ri.className='router-icon '+(color==='red'?'router-glow-red':'router-glow-green');
+  setTimeout(function(){if(ri)ri.className='router-icon';},900);
+}
+
+function addLog(msg,cls){
+  var d=document.getElementById('log'),e=document.createElement('div');
+  e.className='log-e '+(cls||'');e.textContent=msg;
+  d.appendChild(e);d.scrollTop=d.scrollHeight;
+}
+
+function setTD(t,d){document.getElementById('ttl').textContent=t;document.getElementById('dsc').textContent=d;}
+function setOut(html){document.getElementById('pktOut').innerHTML=html;}
+function setIn(html){document.getElementById('pktIn').innerHTML=html;}
+
+// ── dot row ───────────────────────────────────────────────────
+function buildDots(labels){
+  var row=document.getElementById('dotrow');row.innerHTML='';
+  labels.forEach(function(lbl,i){
+    var wrap=document.createElement('div');
+    wrap.style.cssText='display:flex;flex-direction:column;align-items:center;gap:2px';
+    var dot=document.createElement('div');
+    dot.id='dot'+i;
+    dot.style.cssText='width:9px;height:9px;border-radius:50%;background:var(--bdr2);flex-shrink:0;transition:background .25s';
+    var t=document.createElement('div');
+    t.style.cssText='font-size:9px;color:var(--txt3)';t.textContent=lbl;
+    wrap.appendChild(dot);wrap.appendChild(t);row.appendChild(wrap);
+    if(i<labels.length-1){
+      var seg=document.createElement('div');
+      seg.style.cssText='flex:1;height:.5px;background:var(--bdr);margin:0 3px;margin-bottom:12px';
+      row.appendChild(seg);
+    }
+  });
+}
+
+function setDot(i,state){
+  var d=document.getElementById('dot'+i);if(!d)return;
+  var colors={act:'#378ADD',done:'#1D9E75',err:'#E24B4A',warn:'#BA7517'};
+  d.style.background=colors[state]||'var(--bdr2)';
+  if(state==='act') d.style.animation='none'; else d.style.animation='';
+}
+
+// ── facts bar ─────────────────────────────────────────────────
+var SCENARIO_FACTS={
+  dns:[
+    {t:'No handshake',c:'pill-amber'},
+    {t:'28-byte query',c:'pill-gray'},
+    {t:'~1ms round-trip',c:'pill-teal'},
+    {t:'Uses port 53',c:'pill-blue'}
+  ],
+  stream:[
+    {t:'Fire-and-forget',c:'pill-amber'},
+    {t:'RTP over UDP',c:'pill-blue'},
+    {t:'Dropped frame? skip it',c:'pill-amber'},
+    {t:'~1432 bytes/frame',c:'pill-gray'}
+  ],
+  game:[
+    {t:'~10ms latency',c:'pill-teal'},
+    {t:'Late = useless',c:'pill-amber'},
+    {t:'App handles ordering',c:'pill-gray'},
+    {t:'UDP port 27015',c:'pill-blue'}
+  ],
+  loss:[
+    {t:'No retransmit',c:'pill-red'},
+    {t:'Sender never knows',c:'pill-red'},
+    {t:'App must decide',c:'pill-amber'},
+    {t:'Router drops silently',c:'pill-gray'}
+  ],
+  ooo:[
+    {t:'No ordering',c:'pill-amber'},
+    {t:'App uses seq numbers',c:'pill-gray'},
+    {t:'Arrive 3-1-2',c:'pill-amber'},
+    {t:'UDP doesn\'t care',c:'pill-red'}
+  ],
+  flood:[
+    {t:'No flow control',c:'pill-red'},
+    {t:'Saturates buffer',c:'pill-red'},
+    {t:'App-level throttle',c:'pill-amber'},
+    {t:'Router queue drops',c:'pill-amber'}
+  ]
+};
+
+function renderFacts(){
+  var bar=document.getElementById('facts');bar.innerHTML='';
+  (SCENARIO_FACTS[scenario]||[]).forEach(function(f){
+    var s=document.createElement('span');s.className='pill '+f.c;s.textContent=f.t;
+    bar.appendChild(s);
+  });
+}
+
+// ── SCENARIO DEFINITIONS ──────────────────────────────────────
+// Each step: { label (dot), title, desc, fn }
+function buildSteps(){
+  if(scenario==='dns') return [
+    {l:'Resolve',t:'DNS query fired',d:'Client sends 28-byte UDP datagram to port 53 — no handshake needed',
+     fn:function(){
+       setOut('<span style="color:#185FA5">UDP → port 53</span><br>QUERY: example.com (A record)<br>length: 28 bytes  checksum: 0x4a2f');
+       addLog('[Client] Resolving example.com…','lr');
+       var p=spawnPkt('q1','DNS query','pkt-udp',CLIENT_X+30,CLIENT_Y-14);
+       setTimeout(function(){movePkt('q1',R1_X-10,R1_Y-14,.55);},50);
+     }},
+    {l:'Router',t:'Packet at R1',d:'Router R1 forwards immediately — no connection state to check',
+     fn:function(){
+       addLog('[R1] Forwarding datagram','lw');
+       routerGlow('R1','green');
+       movePkt('q1',R2_X-10,R1_Y-14,.55);
+     }},
+    {l:'Server',t:'Packet at R2 → server',d:'R2 forwards. Server receives and looks up the A record',
+     fn:function(){
+       addLog('[R2] Forwarding datagram','lw');
+       routerGlow('R2','green');
+       setTimeout(function(){movePkt('q1',SERVER_X-30,SERVER_Y-14,.45);},50);
+       setTimeout(function(){fadePkt('q1');},700);
+       setTimeout(function(){addLog('[Server] Lookup: example.com → 93.184.216.34','lg');},800);
+     }},
+    {l:'Response',t:'Answer fires back',d:'Server sends UDP reply — still no ACK, still no connection',
+     fn:function(){
+       setIn('<span style="color:#0F6E56">UDP ← port 53</span><br>ANSWER: example.com A 93.184.216.34<br>TTL: 3600  length: 44 bytes');
+       addLog('[Server] Sending answer','lg');
+       var r=spawnPkt('r1','93.184.216.34','pkt-ack',SERVER_X-95,SERVER_Y+14);
+       setTimeout(function(){movePkt('r1',R2_X+10,R2_Y+14,.55);},50);
+       setTimeout(function(){routerGlow('R2','green');movePkt('r1',R1_X+10,R1_Y+14,.55);},700);
+       setTimeout(function(){routerGlow('R1','green');movePkt('r1',CLIENT_X+55,CLIENT_Y+14,.5);},1350);
+       setTimeout(function(){fadePkt('r1');addLog('[Client] Resolved! 93.184.216.34','lg');},1900);
+     }},
+    {l:'Done',t:'Complete — 0 round-trips for setup',d:'Total: 2 datagrams, no handshake, ~1ms. TCP DNS would cost 3 round-trips first.',
+     fn:function(){addLog('[Done] DNS resolved in ~1ms with 2 UDP datagrams ✓','lg');}}
+  ];
+
+  if(scenario==='stream') return [
+    {l:'Join',t:'Client joins stream',d:'Client sends a lightweight RTP join request over UDP',
+     fn:function(){
+       setOut('<span style="color:#185FA5">UDP → port 1935</span><br>RTP join request<br>src port: 49152  length: 16 bytes');
+       addLog('[Client] Sending RTP join → server','lr');
+       var p=spawnPkt('j1','join','pkt-udp',CLIENT_X+30,CLIENT_Y-14);
+       setTimeout(function(){movePkt('j1',SERVER_X-30,SERVER_Y-14,1.0);},50);
+       setTimeout(function(){fadePkt('j1');},1200);
+     }},
+    {l:'Frame',t:'Video frames flow',d:'Server streams H.264 frames as 1432-byte UDP datagrams — one per keyframe',
+     fn:function(){
+       addLog('[Server] Streaming video frames','lg');
+       setIn('<span style="color:#0F6E56">UDP ← port 1935</span><br>RTP frame · seq=1247<br>timestamp: 90000  payload: H.264<br>length: 1432 bytes');
+       function sendFrame(seq,delay,yOff){
+         setTimeout(function(){
+           var p=spawnPkt('f'+seq,'frame #'+seq,'pkt-udp',SERVER_X-95,SERVER_Y-14+yOff);
+           setTimeout(function(){movePkt('f'+seq,R2_X+10,R2_Y-14+yOff,.55);},50);
+           setTimeout(function(){routerGlow('R2','green');movePkt('f'+seq,R1_X+10,R1_Y-14+yOff,.55);},700);
+           setTimeout(function(){routerGlow('R1','green');movePkt('f'+seq,CLIENT_X+55,CLIENT_Y-14+yOff,.5);},1350);
+           setTimeout(function(){fadePkt('f'+seq);},1900);
+         },delay);
+       }
+       sendFrame(1247,0,0);sendFrame(1248,400,-8);sendFrame(1249,800,8);
+     }},
+    {l:'Drop',t:'Frame #1250 lost',d:'A congested router drops one frame — UDP says nothing. Player skips the frame and moves on.',
+     fn:function(){
+       addLog('[Router R2] Queue full — dropping frame #1250','le');
+       var p=spawnPkt('fd','frame #1250 ✗','pkt-udp',SERVER_X-95,SERVER_Y-14);
+       setTimeout(function(){movePkt('fd',R2_X+10,R2_Y-14,.55);},50);
+       setTimeout(function(){routerGlow('R2','red');dropPkt('fd');addLog('[Client] Frame gap — decoder skips to #1251','lw');},750);
+     }},
+    {l:'Continue',t:'Stream continues uninterrupted',d:'Player never paused. One missing frame causes a tiny visual glitch — far better than a buffering spinner.',
+     fn:function(){
+       addLog('[Server] Continuing stream — no retransmit','lg');
+       var p=spawnPkt('f1251','frame #1251','pkt-udp',SERVER_X-95,SERVER_Y-14);
+       setTimeout(function(){movePkt('f1251',CLIENT_X+55,CLIENT_Y-14,1.4);},100);
+       setTimeout(function(){fadePkt('f1251');},1600);
+     }},
+    {l:'Done',t:'Why UDP beats TCP here',d:'TCP retransmit would freeze the stream for 50-200ms. UDP drops and moves on — the right trade-off for live video.',
+     fn:function(){addLog('[Done] Video streaming — UDP wins on latency over reliability ✓','lg');}}
+  ];
+
+  if(scenario==='game') return [
+    {l:'Tick',t:'Game tick — client sends position',d:'Every 16ms the client fires a UDP datagram with current player state',
+     fn:function(){
+       setOut('<span style="color:#185FA5">UDP → port 27015</span><br>player_x: 142.5  player_y: 88.0<br>action: jump  tick: 4821<br>length: 24 bytes');
+       addLog('[Client] Sending tick #4821','lr');
+       var p=spawnPkt('g1','pos #4821','pkt-udp',CLIENT_X+30,CLIENT_Y-14);
+       setTimeout(function(){movePkt('g1',R1_X-10,R1_Y-14,.4);},50);
+       setTimeout(function(){routerGlow('R1','green');movePkt('g1',R2_X-10,R2_Y-14,.35);},500);
+       setTimeout(function(){routerGlow('R2','green');movePkt('g1',SERVER_X-30,SERVER_Y-14,.35);},900);
+       setTimeout(function(){fadePkt('g1');addLog('[Server] Tick #4821 received','lg');},1200);
+     }},
+    {l:'World',t:'Server sends world state back',d:'Server broadcasts the world state to all clients — 14 entities, your health, enemy positions',
+     fn:function(){
+       setIn('<span style="color:#0F6E56">UDP ← port 27015</span><br>tick: 4821  entities: 14<br>your_health: 87  enemy_near: true<br>length: 312 bytes');
+       addLog('[Server] Broadcasting world state','lg');
+       var r=spawnPkt('gs','world #4821','pkt-ack',SERVER_X-95,SERVER_Y+14);
+       setTimeout(function(){movePkt('gs',CLIENT_X+55,CLIENT_Y+14,1.0);},50);
+       setTimeout(function(){fadePkt('gs');},1200);
+     }},
+    {l:'Stale',t:'Tick #4822 arrives out of order',d:'Network jitter delayed it. A late position update is worthless — the game engine discards it.',
+     fn:function(){
+       addLog('[Network] Tick #4822 delayed by 30ms','lw');
+       var p=spawnPkt('g3','pos #4822','pkt-udp',CLIENT_X+30,CLIENT_Y+20);
+       setTimeout(function(){movePkt('g3',R1_X-10,R1_Y+20,.7);},50);
+       setTimeout(function(){movePkt('g3',SERVER_X-30,SERVER_Y+20,.8);},850);
+       setTimeout(function(){fadePkt('g3');addLog('[Server] Tick #4822 is stale — discarded (seq < latest)','lw');},1700);
+     }},
+    {l:'Next',t:'Next tick proceeds normally',d:'The game just uses the most recent valid state. No waiting, no resending.',
+     fn:function(){
+       addLog('[Client] Sending tick #4823 (game continues)','lr');
+       var p=spawnPkt('g4','pos #4823','pkt-udp',CLIENT_X+30,CLIENT_Y-14);
+       setTimeout(function(){movePkt('g4',SERVER_X-30,SERVER_Y-14,1.0);},50);
+       setTimeout(function(){fadePkt('g4');},1200);
+     }},
+    {l:'Done',t:'Why UDP wins for games',d:'50ms of TCP retransmit latency kills a game. UDP lets stale packets disappear and keeps the loop running at 60fps.',
+     fn:function(){addLog('[Done] Game networking — latency always wins over reliability ✓','lg');}}
+  ];
+
+  if(scenario==='loss') return [
+    {l:'Send',t:'Client fires datagram',d:'UDP sends one datagram toward the server with no expectation of acknowledgment',
+     fn:function(){
+       setOut('<span style="color:#185FA5">UDP → port 53</span><br>QUERY: example.com<br>length: 28 bytes');
+       addLog('[Client] Sending datagram → server','lr');
+       var p=spawnPkt('l1','DNS query','pkt-udp',CLIENT_X+30,CLIENT_Y-14);
+       setTimeout(function(){movePkt('l1',R1_X-10,R1_Y-14,.55);},50);
+       setTimeout(function(){addLog('[R1] Forwarding…','lw');routerGlow('R1','green');movePkt('l1',R2_X-10,R2_Y-14,.5);},700);
+     }},
+    {l:'Drop',t:'R2 drops the packet',d:'R2\'s queue is full. The datagram is silently discarded — no error is sent back.',
+     fn:function(){
+       setTimeout(function(){
+         routerGlow('R2','red');
+         addLog('[R2] Buffer overflow — datagram DROPPED','le');
+         dropPkt('l1');
+       },300);
+     }},
+    {l:'Silence',t:'Client hears nothing',d:'No RST, no ICMP error, no timeout message from the network. The client simply waits.',
+     fn:function(){
+       setIn('<span style="color:#A32D2D">no response</span><br>no ACK · no error · no retransmit<br>client waits for application timeout');
+       addLog('[Client] …waiting… no response','lw');
+       setTimeout(function(){addLog('[Client] …still waiting…','lw');},600);
+     }},
+    {l:'Timeout',t:'Application decides what to do',d:'After its own timer fires, the app can retry, give up, or try a different server — UDP itself does nothing.',
+     fn:function(){
+       setTimeout(function(){addLog('[App] Timeout! Retrying query (app-level logic)','lw');},300);
+       setTimeout(function(){
+         var p=spawnPkt('l2','DNS retry','pkt-udp',CLIENT_X+30,CLIENT_Y-14);
+         setTimeout(function(){movePkt('l2',R1_X-10,R1_Y-14,.55);},50);
+         setTimeout(function(){routerGlow('R1','green');movePkt('l2',R2_X-10,R2_Y-14,.5);},700);
+         setTimeout(function(){routerGlow('R2','green');movePkt('l2',SERVER_X-30,SERVER_Y-14,.45);},1250);
+         setTimeout(function(){fadePkt('l2');addLog('[Server] Retry received — sending answer','lg');},1700);
+       },800);
+     }},
+    {l:'Done',t:'The key lesson',d:'UDP is not broken — it is intentionally minimal. Reliability is the application\'s job, not the protocol\'s.',
+     fn:function(){addLog('[Done] Loss is silent. Applications must handle their own reliability. ✓','lg');}}
+  ];
+
+  if(scenario==='ooo') return [
+    {l:'Send 3',t:'Three datagrams sent in order',d:'Application sends #1, #2, #3 back-to-back — each takes its own independent path through the internet',
+     fn:function(){
+       setOut('<span style="color:#185FA5">UDP burst → server</span><br>chunk #1 (t=0ms)<br>chunk #2 (t=10ms)<br>chunk #3 (t=20ms)');
+       addLog('[Client] Sending chunks #1, #2, #3','lr');
+       // spawn 3 packets on slightly different y tracks
+       spawnPkt('o1','#1','pkt-udp',CLIENT_X+30,CLIENT_Y-22);
+       spawnPkt('o2','#2','pkt-udp',CLIENT_X+30,CLIENT_Y-8);
+       spawnPkt('o3','#3','pkt-udp',CLIENT_X+30,CLIENT_Y+6);
+       setTimeout(function(){movePkt('o1',R1_X-10,R1_Y-22,.5);},50);
+       setTimeout(function(){movePkt('o2',R1_X-10,R1_Y-8,.5);},200);
+       setTimeout(function(){movePkt('o3',R1_X-10,R1_Y+6,.5);},400);
+     }},
+    {l:'Routes',t:'Each packet takes a different path',d:'R1 routes them differently — #3 gets a faster path, #2 hits congestion',
+     fn:function(){
+       addLog('[Network] Different paths: #3 fast, #1 medium, #2 slow','lw');
+       // #3 races ahead
+       movePkt('o3',R2_X-10,R2_Y-4,.4);
+       setTimeout(function(){movePkt('o1',R2_X-10,R2_Y-22,.55);},150);
+       setTimeout(function(){movePkt('o2',R2_X-10,R2_Y+12,.9);},400);
+     }},
+    {l:'Arrive',t:'Arrive out of order: 3 → 1 → 2',d:'Server receives them as #3, then #1, then #2 — UDP does not reorder',
+     fn:function(){
+       setIn('<span style="color:#854F0B">arrived out of order</span><br>recv #3 (t=45ms)<br>recv #1 (t=52ms)<br>recv #2 (t=68ms)');
+       movePkt('o3',SERVER_X-30,SERVER_Y-4,.4);
+       setTimeout(function(){addLog('[Server] recv #3 first','lw');fadePkt('o3',300);},500);
+       setTimeout(function(){movePkt('o1',SERVER_X-30,SERVER_Y-22,.4);},700);
+       setTimeout(function(){addLog('[Server] recv #1','lw');fadePkt('o1',300);},1200);
+       setTimeout(function(){movePkt('o2',SERVER_X-30,SERVER_Y+12,.5);},1300);
+       setTimeout(function(){addLog('[Server] recv #2 last','lw');fadePkt('o2',300);},1900);
+     }},
+    {l:'Reorder',t:'Application reorders by sequence number',d:'The server\'s app layer has its own seq numbers and buffers. It reassembles #1-#2-#3 in order.',
+     fn:function(){
+       addLog('[App] Reordering: 3,1,2 → 1,2,3 ✓','lg');
+       addLog('[App] Chunks reassembled correctly','lg');
+     }},
+    {l:'Done',t:'The key lesson',d:'UDP delivers in network order, not send order. Any ordering guarantee must be built by the application.',
+     fn:function(){addLog('[Done] Out-of-order delivery — app must sort by sequence number. ✓','lg');}}
+  ];
+
+  if(scenario==='flood') return [
+    {l:'Burst',t:'Burst of 6 datagrams in 10ms',d:'UDP has no congestion control — the application can send as fast as it likes',
+     fn:function(){
+       setOut('<span style="color:#185FA5">UDP burst</span><br>6 datagrams × 1400 bytes<br>sent in 10ms · no flow control');
+       addLog('[Client] Flooding 6 datagrams at full rate','lr');
+       for(var i=0;i<6;i++){
+         (function(idx){
+           setTimeout(function(){
+             var y=CLIENT_Y-28+(idx*12);
+             spawnPkt('b'+idx,'pkt '+(idx+1),'pkt-udp',CLIENT_X+30,y);
+             setTimeout(function(){movePkt('b'+idx,R1_X-10,y,.45);},50);
+           },idx*80);
+         })(i);
+       }
+     }},
+    {l:'Queue',t:'R1 queue starts filling',d:'Router R1 forwards rapidly — its buffer has room for 4 packets maximum',
+     fn:function(){
+       addLog('[R1] Buffer: 1/4… 2/4… 3/4… 4/4 full','lw');
+       for(var i=0;i<4;i++){
+         (function(idx){
+           setTimeout(function(){
+             routerGlow('R1','green');
+             movePkt('b'+idx,R2_X-10,R1_Y-28+(idx*12),.45);
+           },idx*200);
+         })(i);
+       }
+     }},
+    {l:'Drop',t:'Buffer overflow — 2 packets dropped',d:'R1 cannot queue packets 5 and 6. They are silently discarded. UDP sends no notification.',
+     fn:function(){
+       addLog('[R1] Buffer overflow! Dropping pkt 5 and pkt 6','le');
+       routerGlow('R1','red');
+       setTimeout(function(){dropPkt('b4');},200);
+       setTimeout(function(){dropPkt('b5');},500);
+     }},
+    {l:'Arrive',t:'Only 4 of 6 arrive at server',d:'Server receives packets 1-4. Packets 5-6 are gone with no trace.',
+     fn:function(){
+       addLog('[Server] Received: pkt 1, 2, 3, 4 only','lw');
+       for(var i=0;i<4;i++){
+         (function(idx){
+           setTimeout(function(){
+             routerGlow('R2','green');
+             movePkt('b'+idx,SERVER_X-30,SERVER_Y-28+(idx*12),.45);
+             setTimeout(function(){fadePkt('b'+idx);},600);
+           },idx*200);
+         })(i);
+       }
+       setTimeout(function(){
+         setIn('<span style="color:#854F0B">4 of 6 received</span><br>pkt 1 ✓  pkt 2 ✓<br>pkt 3 ✓  pkt 4 ✓<br>pkt 5 ✗  pkt 6 ✗ (dropped)');
+       },1000);
+     }},
+    {l:'Done',t:'The key lesson',d:'No flow control means routers drop whatever they cannot queue. Applications need their own rate-limiting when using UDP at high throughput.',
+     fn:function(){addLog('[Done] Flood without flow control = silent packet loss at the bottleneck. ✓','lg');}}
+  ];
+
+  return [];
+}
+
+// ── step engine ───────────────────────────────────────────────
+function applyStep(i){
+  var s=steps[i];
+  if(i>0) setDot(i-1,'done');
+  setDot(i,'act');
+  setTD(s.t, s.d);
+  s.fn();
+  if(i===steps.length-1){
+    document.getElementById('btnStep').disabled=true;
+    if(!playing) document.getElementById('btnPlay').disabled=true;
+  }
+}
+
+function doStep(){if(cur>=steps.length-1)return;cur++;applyStep(cur);}
+
+function doPlay(){
+  if(playing)return;
+  playing=true;
+  document.getElementById('btnPlay').disabled=true;
+  document.getElementById('btnStep').disabled=true;
+  (function loop(){
+    if(!playing||cur>=steps.length-1){
+      playing=false;
+      document.getElementById('btnPlay').disabled=(cur>=steps.length-1);
+      document.getElementById('btnStep').disabled=(cur>=steps.length-1);
+      return;
+    }
+    cur++;applyStep(cur);
+    pt=setTimeout(loop,2400);
+  })();
+}
+
+function doReset(){
+  playing=false;clearTimeout(pt);cur=-1;
+  clearStage();
+  document.getElementById('btnStep').disabled=false;
+  document.getElementById('btnPlay').disabled=false;
+  document.getElementById('log').innerHTML='<div class="log-e">Select a scenario and press Play.</div>';
+  setOut('<span class="mute">waiting…</span>');
+  setIn('<span class="mute">waiting…</span>');
+  var labels={'dns':['Resolve','Router','Server','Response','Done'],'stream':['Join','Frames','Drop','Resume','Done'],'game':['Tick','World','Stale','Next','Done'],'loss':['Send','Drop','Silence','Timeout','Done'],'ooo':['Send 3','Routes','Arrive','Reorder','Done'],'flood':['Burst','Queue','Drop','Arrive','Done']};
+  buildDots(labels[scenario]||['A','B','C','D','E']);
+  steps=buildSteps();
+  setTD('UDP — User Datagram Protocol','Connectionless · fire-and-forget · no guarantees');
+  renderFacts();
+}
+
+function setScenario(s){
+  scenario=s;
+  document.querySelectorAll('.scen-btn').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('s-'+s).classList.add('active');
+  doReset();
+}
+
+document.getElementById('btnStep').addEventListener('click',doStep);
+document.getElementById('btnPlay').addEventListener('click',doPlay);
+document.getElementById('btnReset').addEventListener('click',doReset);
+['dns','stream','game','loss','ooo','flood'].forEach(function(s){
+  document.getElementById('s-'+s).addEventListener('click',function(){setScenario(s);});
+});
+
+doReset();
+</script>

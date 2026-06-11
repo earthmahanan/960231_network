@@ -1,0 +1,569 @@
+<html>
+<style>
+:root{color-scheme:light;
+  --bg:#ffffff;--bg2:#f4f3ee;--bg3:#ecebe4;
+  --txt:#1d1d1c;--txt2:#5f5e5a;--txt3:#888780;
+  --bdr:rgba(0,0,0,0.13);--bdr2:rgba(0,0,0,0.25);
+  --radius:8px;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:transparent;font-family:var(--font);color:var(--txt);font-size:14px;line-height:1.5}
+.login-stepped{max-width:720px;margin:0 auto;padding:.75rem 0}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.tab-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:.6rem}
+.tab{font-size:11px;padding:4px 10px;border-radius:6px;border:.5px solid var(--bdr2);cursor:pointer;background:transparent;color:var(--txt2);font-family:var(--font);white-space:nowrap;transition:background .15s}
+.tab:hover{background:var(--bg2)}
+.tab.active{font-weight:500;border-color:#534AB7;background:#EEEDFE;color:#3C3489}
+
+.panel{display:none}
+.panel.active{display:block}
+.step-track{display:flex;gap:0;margin-bottom:.6rem;border-radius:var(--radius);overflow:hidden;border:.5px solid var(--bdr)}
+.step-pill{flex:1;padding:6px 8px;font-size:10px;font-weight:500;text-align:center;color:var(--txt2);background:var(--bg2);cursor:pointer;border:none;border-right:.5px solid var(--bdr);transition:all .18s;line-height:1.3;font-family:var(--font)}
+.step-pill:last-child{border-right:none}
+.step-pill.active{background:#EEEDFE;color:#3C3489}
+.step-pill.done{background:#E1F5EE;color:#085041}
+
+.desc-box{background:var(--bg2);border:.5px solid var(--bdr);border-radius:var(--radius);padding:8px 12px;font-size:12px;color:var(--txt2);line-height:1.55;margin-bottom:.6rem;min-height:36px;transition:all .2s}
+.desc-box strong{color:var(--txt);font-weight:500}
+.diagram-wrap{background:var(--bg2);border:.5px solid var(--bdr);border-radius:var(--radius);overflow:hidden;margin-bottom:6px}
+.log-box{background:var(--bg2);border:.5px solid var(--bdr);border-radius:var(--radius);padding:8px 10px;min-height:44px;font-size:11px;font-family:var(--mono);line-height:1.85}
+.ll{opacity:0;transform:translateY(3px);transition:opacity .22s,transform .22s}
+.ll.show{opacity:1;transform:none}
+.lr{color:#185FA5}.lg{color:#0F6E56}.lw{color:#A32D2D}.lc{color:#633806}.lp{color:#534AB7}.ln{color:var(--txt2)}
+
+.ctrl{display:flex;gap:5px;margin-top:.6rem;align-items:center;flex-wrap:wrap}
+.btn{font-family:var(--font);font-size:13px;padding:5px 12px;border-radius:var(--radius);border:.5px solid var(--bdr2);background:transparent;cursor:pointer;color:var(--txt);transition:background .15s}
+.btn:hover{background:var(--bg2)}.btn:active{transform:scale(.97)}.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.accent{border-color:#534AB7;color:#3C3489;background:#EEEDFE}
+.btn.go{border-color:#0F6E56;color:#0F6E56}
+
+.spd{display:flex;align-items:center;gap:5px;margin-left:auto;font-size:11px;color:var(--txt2)}
+.verdict{display:flex;gap:7px;align-items:flex-start;padding:8px 10px;border-radius:var(--radius);border:.5px solid var(--bdr);font-size:11px;line-height:1.55;margin-top:.6rem;opacity:0;transition:opacity .35s}
+.verdict.show{opacity:1}
+.verdict .ico{font-size:14px;flex-shrink:0;margin-top:1px}
+.vbad{background:#FCEBEB;color:#791F1F;border-color:#F09595}
+.vgood{background:#E1F5EE;color:#085041;border-color:#5DCAA5}
+.vinfo{background:#EEEDFE;color:#3C3489;border-color:#AFA9EC}
+
+</style>
+
+<div class="login-stepped">
+<h2 class="sr-only">Three login scenario animations with step-by-step controls and Play button: Stateless HTTP, Cookie without session, and Session plus cookie.</h2>
+<div style="font-size:16px;font-weight:500;margin-bottom:.25rem">Login — stepped walkthrough</div>
+<div style="font-size:12px;color:var(--txt2);margin-bottom:.6rem">Click any step pill or use Step → / ▶ Play to advance through each login approach</div>
+
+<div class="tab-row">
+  <button class="tab active" onclick="sw(0)">Stateless HTTP</button>
+  <button class="tab" onclick="sw(1)">Cookie (no session)</button>
+  <button class="tab" onclick="sw(2)">Session + cookie</button>
+</div>
+
+<div id="p0" class="panel active">
+  <div class="step-track" id="st0">
+    <button class="step-pill active" onclick="goStep(0,0)">1. Login request</button>
+    <button class="step-pill" onclick="goStep(0,1)">2. Server responds</button>
+    <button class="step-pill" onclick="goStep(0,2)">3. Visit dashboard</button>
+    <button class="step-pill" onclick="goStep(0,3)">4. Server forgets</button>
+  </div>
+  <div class="desc-box" id="db0">Browser sends login credentials to the server.</div>
+  <div class="diagram-wrap"><svg id="svg0" width="100%" viewBox="0 0 680 200" style="display:block">
+    <defs><marker id="ar0" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+    <rect x="20" y="76" width="116" height="48" rx="8" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+    <text x="78" y="96" text-anchor="middle" font-size="12" font-weight="500" fill="#3C3489" dominant-baseline="central">Browser</text>
+    <text id="s0brm" x="78" y="113" text-anchor="middle" font-size="10" fill="#534AB7" dominant-baseline="central">no memory</text>
+    <rect x="524" y="76" width="136" height="48" rx="8" fill="#F1EFE8" stroke="#B4B2A9" stroke-width="0.5"/>
+    <text x="592" y="96" text-anchor="middle" font-size="12" font-weight="500" fill="#444441" dominant-baseline="central">Server</text>
+    <text x="592" y="113" text-anchor="middle" font-size="10" fill="#5F5E5A" dominant-baseline="central">stateless</text>
+    <rect id="0p1" x="200" y="81" width="178" height="26" rx="5" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5" opacity="0"/>
+    <text id="0p1t" x="289" y="94" text-anchor="middle" font-size="10" fill="#0C447C" dominant-baseline="central" opacity="0">POST /login  {user, pass}</text>
+    <rect id="0p2" x="210" y="93" width="200" height="26" rx="5" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5" opacity="0"/>
+    <text id="0p2t" x="310" y="106" text-anchor="middle" font-size="10" fill="#27500A" dominant-baseline="central" opacity="0">200 OK — credentials valid</text>
+    <rect id="0p3" x="200" y="81" width="178" height="26" rx="5" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5" opacity="0"/>
+    <text id="0p3t" x="289" y="94" text-anchor="middle" font-size="10" fill="#0C447C" dominant-baseline="central" opacity="0">GET /dashboard</text>
+    <rect id="0p4" x="186" y="93" width="230" height="26" rx="5" fill="#FCEBEB" stroke="#F09595" stroke-width="0.5" opacity="0"/>
+    <text id="0p4t" x="301" y="106" text-anchor="middle" font-size="10" fill="#791F1F" dominant-baseline="central" opacity="0">401 Unauthorized — Who are you?!</text>
+    <rect id="0note" x="136" y="148" width="408" height="24" rx="5" fill="#FCEBEB" stroke="#F09595" stroke-width="0.5" opacity="0"/>
+    <text id="0noteT" x="340" y="160" text-anchor="middle" font-size="10" fill="#791F1F" dominant-baseline="central" opacity="0">No cookie set → server forgot the login immediately</text>
+    <line id="0l1" x1="136" y1="94" x2="522" y2="94" stroke="#378ADD" stroke-width="1.5" marker-end="url(#ar0)" stroke-dasharray="400" stroke-dashoffset="400" fill="none"/>
+    <line id="0l2" x1="522" y1="106" x2="136" y2="106" stroke="#639922" stroke-width="1.5" marker-end="url(#ar0)" stroke-dasharray="400" stroke-dashoffset="400" fill="none"/>
+    <line id="0l3" x1="136" y1="94" x2="522" y2="94" stroke="#378ADD" stroke-width="1.5" marker-end="url(#ar0)" stroke-dasharray="400" stroke-dashoffset="400" fill="none"/>
+    <line id="0l4" x1="522" y1="106" x2="136" y2="106" stroke="#E24B4A" stroke-width="1.5" marker-end="url(#ar0)" stroke-dasharray="400" stroke-dashoffset="400" fill="none"/>
+  </svg></div>
+  <div class="log-box" id="log0"><div class="ll ln show">Press Step → or ▶ Play to start…</div></div>
+  <div id="v0" class="verdict vbad"><span class="ico" aria-hidden="true">⚠</span><div>Server forgot the login instantly. No Set-Cookie header was sent. Every protected request returns 401 — the user must re-authenticate every time.</div></div>
+  <div class="ctrl">
+    <button class="btn go" id="bstep0" onclick="stepFwd(0)">Step →</button>
+    <button class="btn accent" id="bp0" onclick="playAll(0)">▶ Play</button>
+    <button class="btn" id="br0" onclick="resetScenario(0)">↺ Reset</button>
+    <div class="spd"><span>Speed</span><input type="range" min="0.5" max="2" step="0.5" value="1" id="sp0" style="width:60px" oninput="el('sp0v').textContent=this.value+'×'"><span id="sp0v">1×</span></div>
+  </div>
+</div>
+
+<div id="p1" class="panel">
+  <div class="step-track" id="st1">
+    <button class="step-pill active" onclick="goStep(1,0)">1. Login request</button>
+    <button class="step-pill" onclick="goStep(1,1)">2. Set-Cookie sent</button>
+    <button class="step-pill" onclick="goStep(1,2)">3. Cookie stored</button>
+    <button class="step-pill" onclick="goStep(1,3)">4. Auto-attached</button>
+    <button class="step-pill" onclick="goStep(1,4)">5. Access granted</button>
+  </div>
+  <div class="desc-box" id="db1">Browser sends login credentials to the server.</div>
+  <div class="diagram-wrap"><svg id="svg1" width="100%" viewBox="0 0 680 210" style="display:block">
+    <defs><marker id="ar1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+    <rect x="20" y="70" width="116" height="48" rx="8" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+    <text x="78" y="90" text-anchor="middle" font-size="12" font-weight="500" fill="#3C3489" dominant-baseline="central">Browser</text>
+    <text id="s1brm" x="78" y="107" text-anchor="middle" font-size="10" fill="#534AB7" dominant-baseline="central">no cookie</text>
+    <rect x="524" y="70" width="136" height="48" rx="8" fill="#F1EFE8" stroke="#B4B2A9" stroke-width="0.5"/>
+    <text x="592" y="90" text-anchor="middle" font-size="12" font-weight="500" fill="#444441" dominant-baseline="central">Server</text>
+    <text x="592" y="107" text-anchor="middle" font-size="10" fill="#5F5E5A" dominant-baseline="central">reads Cookie header</text>
+    <rect id="1p1" x="200" y="75" width="178" height="26" rx="5" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5" opacity="0"/>
+    <text id="1p1t" x="289" y="88" text-anchor="middle" font-size="10" fill="#0C447C" dominant-baseline="central" opacity="0">POST /login  {user, pass}</text>
+    <rect id="1p2" x="160" y="87" width="318" height="26" rx="5" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5" opacity="0"/>
+    <text id="1p2t" x="319" y="100" text-anchor="middle" font-size="10" fill="#27500A" dominant-baseline="central" opacity="0">200 OK  Set-Cookie: user=alice; HttpOnly; Secure</text>
+    <rect id="1jar" x="20" y="132" width="116" height="26" rx="6" fill="#FAEEDA" stroke="#FAC775" stroke-width="0.5" opacity="0"/>
+    <text id="1jart" x="78" y="145" text-anchor="middle" font-size="10" fill="#633806" dominant-baseline="central" opacity="0">user=alice (stored)</text>
+    <rect id="1p3" x="170" y="75" width="278" height="26" rx="5" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5" opacity="0"/>
+    <text id="1p3t" x="309" y="88" text-anchor="middle" font-size="10" fill="#0C447C" dominant-baseline="central" opacity="0">GET /dashboard   Cookie: user=alice  ← auto!</text>
+    <rect id="1p4" x="196" y="87" width="238" height="26" rx="5" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5" opacity="0"/>
+    <text id="1p4t" x="315" y="100" text-anchor="middle" font-size="10" fill="#27500A" dominant-baseline="central" opacity="0">200 OK — Welcome back, alice!</text>
+    <rect id="1note" x="136" y="168" width="408" height="24" rx="5" fill="#E1F5EE" stroke="#5DCAA5" stroke-width="0.5" opacity="0"/>
+    <text id="1noteT" x="340" y="180" text-anchor="middle" font-size="10" fill="#085041" dominant-baseline="central" opacity="0">Browser attached cookie automatically — zero JS needed</text>
+    <line id="1l1" x1="136" y1="88" x2="522" y2="88" stroke="#378ADD" stroke-width="1.5" marker-end="url(#ar1)" stroke-dasharray="400" stroke-dashoffset="400" fill="none"/>
+    <line id="1l2" x1="522" y1="100" x2="136" y2="100" stroke="#639922" stroke-width="1.5" marker-end="url(#ar1)" stroke-dasharray="400" stroke-dashoffset="400" fill="none"/>
+    <line id="1l3" x1="136" y1="88" x2="522" y2="88" stroke="#378ADD" stroke-width="1.5" marker-end="url(#ar1)" stroke-dasharray="400" stroke-dashoffset="400" fill="none"/>
+    <line id="1l4" x1="522" y1="100" x2="136" y2="100" stroke="#639922" stroke-width="1.5" marker-end="url(#ar1)" stroke-dasharray="400" stroke-dashoffset="400" fill="none"/>
+  </svg></div>
+  <div class="log-box" id="log1"><div class="ll ln show">Press Step → or ▶ Play to start…</div></div>
+  <div id="v1" class="verdict vgood"><span class="ico" aria-hidden="true">✓</span><div>Cookie travels automatically on every request. Server reads the user value directly — no database lookup needed. Simple and effective for web apps.</div></div>
+  <div class="ctrl">
+    <button class="btn go" id="bstep1" onclick="stepFwd(1)">Step →</button>
+    <button class="btn accent" id="bp1" onclick="playAll(1)">▶ Play</button>
+    <button class="btn" id="br1" onclick="resetScenario(1)">↺ Reset</button>
+    <div class="spd"><span>Speed</span><input type="range" min="0.5" max="2" step="0.5" value="1" id="sp1" style="width:60px" oninput="el('sp1v').textContent=this.value+'×'"><span id="sp1v">1×</span></div>
+  </div>
+</div>
+
+<div id="p2" class="panel">
+  <div class="step-track" id="st2">
+    <button class="step-pill active" onclick="goStep(2,0)">1. Login request</button>
+    <button class="step-pill" onclick="goStep(2,1)">2. Write session</button>
+    <button class="step-pill" onclick="goStep(2,2)">3. sid cookie sent</button>
+    <button class="step-pill" onclick="goStep(2,3)">4. sid auto-attached</button>
+    <button class="step-pill" onclick="goStep(2,4)">5. DB lookup</button>
+    <button class="step-pill" onclick="goStep(2,5)">6. Access granted</button>
+  </div>
+  <div class="desc-box" id="db2">Browser sends login credentials to the server.</div>
+  <div class="diagram-wrap"><svg id="svg2" width="100%" viewBox="0 0 680 240" style="display:block">
+    <defs><marker id="ar2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+    <rect x="20" y="70" width="108" height="48" rx="8" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+    <text x="74" y="90" text-anchor="middle" font-size="12" font-weight="500" fill="#3C3489" dominant-baseline="central">Browser</text>
+    <text id="s2brm" x="74" y="107" text-anchor="middle" font-size="10" fill="#534AB7" dominant-baseline="central">no cookie</text>
+    <rect x="370" y="70" width="118" height="48" rx="8" fill="#F1EFE8" stroke="#B4B2A9" stroke-width="0.5"/>
+    <text x="429" y="90" text-anchor="middle" font-size="12" font-weight="500" fill="#444441" dominant-baseline="central">Server</text>
+    <text x="429" y="107" text-anchor="middle" font-size="10" fill="#5F5E5A" dominant-baseline="central">validates</text>
+    <rect x="542" y="70" width="118" height="48" rx="8" fill="#E1F5EE" stroke="#5DCAA5" stroke-width="0.5"/>
+    <text x="601" y="90" text-anchor="middle" font-size="12" font-weight="500" fill="#085041" dominant-baseline="central">Session DB</text>
+    <text id="s2dbm" x="601" y="107" text-anchor="middle" font-size="10" fill="#0F6E56" dominant-baseline="central">(empty)</text>
+    <rect id="2db1" x="542" y="130" width="118" height="70" rx="8" fill="#E1F5EE" stroke="#5DCAA5" stroke-width="0.5" opacity="0"/>
+    <text id="2db1k" x="601" y="152" text-anchor="middle" font-size="10" fill="#085041" dominant-baseline="central" opacity="0" font-family="monospace">sid=x9f3</text>
+    <text id="2db1u" x="601" y="168" text-anchor="middle" font-size="10" fill="#0F6E56" dominant-baseline="central" opacity="0">user: alice</text>
+    <text id="2db1r" x="601" y="184" text-anchor="middle" font-size="10" fill="#0F6E56" dominant-baseline="central" opacity="0">role: admin</text>
+    <rect id="2p1" x="178" y="75" width="180" height="26" rx="5" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5" opacity="0"/>
+    <text id="2p1t" x="268" y="88" text-anchor="middle" font-size="10" fill="#0C447C" dominant-baseline="central" opacity="0">POST /login  {user, pass}</text>
+    <rect id="2db2" x="500" y="82" width="40" height="22" rx="4" fill="#9FE1CB" stroke="#1D9E75" stroke-width="0.5" opacity="0"/>
+    <text id="2db2t" x="520" y="93" text-anchor="middle" font-size="9" fill="#04342C" dominant-baseline="central" opacity="0">WRITE</text>
+    <line id="2ldb1" x1="488" y1="90" x2="500" y2="90" stroke="#1D9E75" stroke-width="1" stroke-dasharray="6 3" marker-end="url(#ar2)" stroke-dashoffset="12" fill="none"/>
+    <rect id="2p2" x="148" y="87" width="296" height="26" rx="5" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5" opacity="0"/>
+    <text id="2p2t" x="296" y="100" text-anchor="middle" font-size="10" fill="#27500A" dominant-baseline="central" opacity="0">200 OK  Set-Cookie: sid=x9f3; HttpOnly; Secure</text>
+    <rect id="2jar" x="20" y="132" width="108" height="26" rx="6" fill="#FAEEDA" stroke="#FAC775" stroke-width="0.5" opacity="0"/>
+    <text id="2jart" x="74" y="145" text-anchor="middle" font-size="10" fill="#633806" dominant-baseline="central" opacity="0">sid=x9f3 (opaque)</text>
+    <rect id="2p3" x="148" y="75" width="296" height="26" rx="5" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5" opacity="0"/>
+    <text id="2p3t" x="296" y="88" text-anchor="middle" font-size="10" fill="#0C447C" dominant-baseline="central" opacity="0">GET /dashboard   Cookie: sid=x9f3  ← auto!</text>
+    <rect id="2db3" x="500" y="82" width="40" height="22" rx="4" fill="#9FE1CB" stroke="#1D9E75" stroke-width="0.5" opacity="0"/>
+    <text id="2db3t" x="520" y="93" text-anchor="middle" font-size="9" fill="#04342C" dominant-baseline="central" opacity="0">READ</text>
+    <line id="2ldb2" x1="488" y1="88" x2="500" y2="88" stroke="#1D9E75" stroke-width="1" stroke-dasharray="6 3" marker-end="url(#ar2)" stroke-dashoffset="12" fill="none"/>
+    <line id="2ldb3" x1="500" y1="96" x2="488" y2="96" stroke="#1D9E75" stroke-width="1" stroke-dasharray="6 3" marker-end="url(#ar2)" stroke-dashoffset="12" fill="none"/>
+    <rect id="2p4" x="160" y="87" width="280" height="26" rx="5" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5" opacity="0"/>
+    <text id="2p4t" x="300" y="100" text-anchor="middle" font-size="10" fill="#27500A" dominant-baseline="central" opacity="0">200 OK — Welcome back, alice!</text>
+    <rect id="2note" x="80" y="200" width="520" height="24" rx="5" fill="#E1F5EE" stroke="#5DCAA5" stroke-width="0.5" opacity="0"/>
+    <text id="2noteT" x="340" y="212" text-anchor="middle" font-size="10" fill="#085041" dominant-baseline="central" opacity="0">Cookie = key only · User data lives on server · Server can revoke anytime</text>
+    <line id="2l1" x1="128" y1="88" x2="368" y2="88" stroke="#378ADD" stroke-width="1.5" marker-end="url(#ar2)" stroke-dasharray="300" stroke-dashoffset="300" fill="none"/>
+    <line id="2l2" x1="368" y1="100" x2="128" y2="100" stroke="#639922" stroke-width="1.5" marker-end="url(#ar2)" stroke-dasharray="300" stroke-dashoffset="300" fill="none"/>
+    <line id="2l3" x1="128" y1="88" x2="368" y2="88" stroke="#378ADD" stroke-width="1.5" marker-end="url(#ar2)" stroke-dasharray="300" stroke-dashoffset="300" fill="none"/>
+    <line id="2l4" x1="368" y1="100" x2="128" y2="100" stroke="#639922" stroke-width="1.5" marker-end="url(#ar2)" stroke-dasharray="300" stroke-dashoffset="300" fill="none"/>
+  </svg></div>
+  <div class="log-box" id="log2"><div class="ll ln show">Press Step → or ▶ Play to start…</div></div>
+  <div id="v2" class="verdict vinfo"><span class="ico" aria-hidden="true">📦</span><div>Cookie carries only an opaque session ID. Real user data lives in the server store. Server can revoke the session instantly — delete the record and the cookie becomes useless.</div></div>
+  <div class="ctrl">
+    <button class="btn go" id="bstep2" onclick="stepFwd(2)">Step →</button>
+    <button class="btn accent" id="bp2" onclick="playAll(2)">▶ Play</button>
+    <button class="btn" id="br2" onclick="resetScenario(2)">↺ Reset</button>
+    <div class="spd"><span>Speed</span><input type="range" min="0.5" max="2" step="0.5" value="1" id="sp2" style="width:60px" oninput="el('sp2v').textContent=this.value+'×'"><span id="sp2v">1×</span></div>
+  </div>
+</div>
+</div>
+
+<script>
+function el(id){return document.getElementById(id)}
+function attr(id,a,v){const e=el(id);if(e)e.setAttribute(a,v)}
+function show(id){attr(id,'opacity','1')}
+function hide(id){attr(id,'opacity','0')}
+function txt(id,t){const e=el(id);if(e)e.textContent=t}
+function wait(ms,sp){return new Promise(r=>setTimeout(r,ms/(sp||1)))}
+function dash(id,sp,len=400){
+  return new Promise(r=>{
+    const e=el(id);if(!e){r();return}
+    const d=0.46/(sp||1);
+    e.style.transition=`stroke-dashoffset ${d}s ease`;
+    e.setAttribute('stroke-dashoffset','0');
+    setTimeout(r,d*1000+50);
+  })
+}
+function dashShort(id,sp){return new Promise(r=>{const e=el(id);if(!e){r();return}const d=0.28/(sp||1);e.style.transition=`stroke-dashoffset ${d}s ease`;e.setAttribute('stroke-dashoffset','0');setTimeout(r,d*1000+40);})}
+function addLog(bid,t,cls){
+  const b=el(bid);if(!b._l)b._l=[];
+  b._l.push({t,cls});b.innerHTML='';
+  b._l.slice(-6).forEach(l=>{
+    const d=document.createElement('div');
+    d.className=`ll l${l.cls}`;d.textContent=l.t;
+    b.appendChild(d);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>d.classList.add('show')));
+  });
+}
+function clearLog(id){const b=el(id);b.innerHTML='';b._l=[];}
+function initLog(id){clearLog(id);const d=document.createElement('div');d.className='ll ln show';d.textContent='Press Step → or ▶ Play to start…';el(id).appendChild(d);}
+function resetDash(ids,len=400){ids.forEach(id=>{const e=el(id);if(e){e.style.transition='none';e.setAttribute('stroke-dashoffset',String(len));}})}
+
+const scenarios = [
+  {
+    curStep: -1,
+    playing: false,
+    steps: [
+      {
+        pills: [0],
+        desc: 'Browser sends login credentials to the server.',
+        run: async (sp) => {
+          addLog('log0','→ POST /login  {user:"alice", pass:"••••"}','r');
+          show('0p1');show('0p1t');
+          await dash('0l1',sp);
+        }
+      },
+      {
+        pills: [0,1],
+        desc: 'Server validates credentials and responds — but sends <strong>no cookie</strong>. No state stored anywhere.',
+        run: async (sp) => {
+          addLog('log0','← 200 OK  (no Set-Cookie header sent)','g');
+          hide('0p1');hide('0p1t');show('0p2');show('0p2t');
+          await dash('0l2',sp);
+          await wait(80,sp);
+          hide('0p2');hide('0p2t');
+          addLog('log0','   Server forgets this request ever happened.','n');
+        }
+      },
+      {
+        pills: [0,1,2],
+        desc: 'User navigates to the dashboard. Browser has <strong>nothing to send</strong> — no cookie, no memory.',
+        run: async (sp) => {
+          attr('0l1','stroke-dashoffset','400');attr('0l2','stroke-dashoffset','400');
+          addLog('log0','→ GET /dashboard  (no cookie attached — browser has nothing)','r');
+          show('0p3');show('0p3t');
+          await dash('0l3',sp);
+        }
+      },
+      {
+        pills: [0,1,2,3],
+        desc: 'Server has no memory of the login. Returns <strong>401</strong> — user must log in again.',
+        run: async (sp) => {
+          addLog('log0','← 401 Unauthorized — "Who are you?!"','w');
+          hide('0p3');hide('0p3t');show('0p4');show('0p4t');
+          await dash('0l4',sp);
+          await wait(80,sp);
+          hide('0p4');hide('0p4t');
+          show('0note');show('0noteT');
+          addLog('log0','   Login forgotten. Must authenticate on every request. Every. Time.','w');
+          el('v0').classList.add('show');
+        }
+      }
+    ]
+  },
+  {
+    curStep: -1,
+    playing: false,
+    steps: [
+      {
+        pills: [0],
+        desc: 'Browser sends login credentials to the server.',
+        run: async (sp) => {
+          addLog('log1','→ POST /login  {user:"alice", pass:"••••"}','r');
+          show('1p1');show('1p1t');
+          await dash('1l1',sp);
+        }
+      },
+      {
+        pills: [0,1],
+        desc: 'Server validates and responds with <strong>Set-Cookie</strong> — user identity baked into the cookie value.',
+        run: async (sp) => {
+          addLog('log1','← 200 OK  Set-Cookie: user=alice; HttpOnly; Secure; SameSite=Strict','c');
+          hide('1p1');hide('1p1t');show('1p2');show('1p2t');
+          await dash('1l2',sp);
+          await wait(80,sp);
+          hide('1p2');hide('1p2t');
+        }
+      },
+      {
+        pills: [0,1,2],
+        desc: 'Browser <strong>stores the cookie</strong> automatically in its cookie jar. No JavaScript needed.',
+        run: async (sp) => {
+          show('1jar');show('1jart');
+          txt('s1brm','has cookie!');
+          addLog('log1','   Cookie stored in browser jar. HttpOnly — JS cannot read it.','c');
+          await wait(200,sp);
+        }
+      },
+      {
+        pills: [0,1,2,3],
+        desc: 'User navigates to dashboard. Browser <strong>automatically attaches</strong> the cookie to the request.',
+        run: async (sp) => {
+          attr('1l1','stroke-dashoffset','400');attr('1l2','stroke-dashoffset','400');
+          addLog('log1','→ GET /dashboard  Cookie: user=alice  ← browser added this automatically','r');
+          show('1p3');show('1p3t');
+          await dash('1l3',sp);
+        }
+      },
+      {
+        pills: [0,1,2,3,4],
+        desc: 'Server reads the cookie value directly — <strong>no database lookup needed</strong>. Access granted.',
+        run: async (sp) => {
+          addLog('log1','← 200 OK  Server reads cookie → "alice" → renders dashboard','g');
+          hide('1p3');hide('1p3t');show('1p4');show('1p4t');
+          await dash('1l4',sp);
+          await wait(80,sp);
+          hide('1p4');hide('1p4t');
+          show('1note');show('1noteT');
+          addLog('log1','   Zero JS needed. Cookie transport is fully automatic.','g');
+          el('v1').classList.add('show');
+        }
+      }
+    ]
+  },
+  {
+    curStep: -1,
+    playing: false,
+    steps: [
+      {
+        pills: [0],
+        desc: 'Browser sends login credentials to the server.',
+        run: async (sp) => {
+          addLog('log2','→ POST /login  {user:"alice", pass:"••••"}','r');
+          show('2p1');show('2p1t');
+          await dash('2l1',sp,300);
+        }
+      },
+      {
+        pills: [0,1],
+        desc: 'Server validates credentials then <strong>writes a session record</strong> to the session store (Redis/DB).',
+        run: async (sp) => {
+          addLog('log2','   Server: credentials valid → generate sid=x9f3','p');
+          show('2db2');show('2db2t');
+          await dashShort('2ldb1',sp);
+          await wait(250,sp);
+          show('2db1');show('2db1k');show('2db1u');show('2db1r');
+          txt('s2dbm','x9f3→alice');
+          addLog('log2','   Session store: WRITE  sid=x9f3 → {user:alice, role:admin}','p');
+          hide('2db2');hide('2db2t');
+          await wait(200,sp);
+        }
+      },
+      {
+        pills: [0,1,2],
+        desc: 'Server sends back a <strong>Set-Cookie with only the opaque session ID</strong> — no user data in the cookie.',
+        run: async (sp) => {
+          addLog('log2','← 200 OK  Set-Cookie: sid=x9f3; HttpOnly; Secure; SameSite=Strict','c');
+          show('2p2');show('2p2t');
+          await dash('2l2',sp,300);
+          await wait(80,sp);
+          hide('2p2');hide('2p2t');
+        }
+      },
+      {
+        pills: [0,1,2,3],
+        desc: 'Browser stores the sid cookie. On next request, it is <strong>automatically attached</strong>. The browser has no idea what x9f3 means.',
+        run: async (sp) => {
+          show('2jar');show('2jart');
+          txt('s2brm','has sid cookie');
+          attr('2l1','stroke-dashoffset','300');attr('2l2','stroke-dashoffset','300');
+          addLog('log2','→ GET /dashboard  Cookie: sid=x9f3  ← browser just carries the key','r');
+          show('2p3');show('2p3t');
+          await dash('2l3',sp,300);
+        }
+      },
+      {
+        pills: [0,1,2,3,4],
+        desc: 'Server receives sid=x9f3, looks it up in the <strong>session store</strong> to get the real user data.',
+        run: async (sp) => {
+          addLog('log2','   Server: received sid=x9f3 → look up session store...','p');
+          show('2db3');show('2db3t');
+          await dashShort('2ldb2',sp);
+          await wait(200,sp);
+          addLog('log2','   Session store: READ  x9f3 → {user:alice, role:admin}','p');
+          await dashShort('2ldb3',sp);
+          await wait(150,sp);
+          hide('2db3');hide('2db3t');
+        }
+      },
+      {
+        pills: [0,1,2,3,4,5],
+        desc: 'Server responds with the dashboard. Cookie = key, session store = vault. <strong>Server controls everything.</strong>',
+        run: async (sp) => {
+          addLog('log2','← 200 OK  Welcome back, alice! (role=admin)','g');
+          hide('2p3');hide('2p3t');show('2p4');show('2p4t');
+          await dash('2l4',sp,300);
+          await wait(80,sp);
+          hide('2p4');hide('2p4t');
+          show('2note');show('2noteT');
+          addLog('log2','   Cookie = key only. Data never left the server.','g');
+          el('v2').classList.add('show');
+        }
+      }
+    ]
+  }
+];
+
+function updatePills(sIdx, doneUpTo) {
+  const track = el('st'+sIdx);
+  const pills = track.querySelectorAll('.step-pill');
+  const sc = scenarios[sIdx];
+  const activePills = sc.steps[doneUpTo]?.pills || [];
+  pills.forEach((p,i) => {
+    p.classList.remove('active','done');
+    if(i === doneUpTo) p.classList.add('active');
+    else if(activePills.includes(i) && i < doneUpTo) p.classList.add('done');
+    else if(i < doneUpTo) p.classList.add('done');
+  });
+}
+
+function updateDesc(sIdx, stepIdx) {
+  const sc = scenarios[sIdx];
+  if(sc.steps[stepIdx]) el('db'+sIdx).innerHTML = sc.steps[stepIdx].desc;
+}
+
+function sp(sIdx) { return parseFloat(el('sp'+sIdx)?.value)||1; }
+
+async function goStep(sIdx, targetStep) {
+  const sc = scenarios[sIdx];
+  if(sc.playing) return;
+  if(targetStep <= sc.curStep) return;
+  sc.playing = true;
+  el('bp'+sIdx).disabled = true;
+  el('bstep'+sIdx).disabled = true;
+  el('br'+sIdx).disabled = false;
+  const speed = sp(sIdx);
+  for(let i = sc.curStep+1; i <= targetStep; i++) {
+    updatePills(sIdx, i);
+    updateDesc(sIdx, i);
+    await sc.steps[i].run(speed);
+    sc.curStep = i;
+  }
+  sc.playing = false;
+  el('bp'+sIdx).disabled = false;
+  const isLast = sc.curStep >= sc.steps.length - 1;
+  el('bstep'+sIdx).disabled = isLast;
+  if(!isLast) el('bstep'+sIdx).textContent = `Step → (${sc.curStep+2}/${sc.steps.length})`;
+  else el('bstep'+sIdx).textContent = 'Done';
+}
+
+async function stepFwd(sIdx) {
+  const sc = scenarios[sIdx];
+  if(sc.playing) return;
+  const next = sc.curStep + 1;
+  if(next >= sc.steps.length) return;
+  await goStep(sIdx, next);
+}
+
+async function playAll(sIdx) {
+  const sc = scenarios[sIdx];
+  if(sc.playing) return;
+  resetScenario(sIdx);
+  await new Promise(r=>setTimeout(r,60));
+  sc.playing = true;
+  el('bp'+sIdx).disabled = true;
+  el('bstep'+sIdx).disabled = true;
+  el('br'+sIdx).disabled = false;
+  const speed = sp(sIdx);
+  for(let i = 0; i < sc.steps.length; i++) {
+    updatePills(sIdx, i);
+    updateDesc(sIdx, i);
+    await sc.steps[i].run(speed);
+    sc.curStep = i;
+    await wait(300, speed);
+  }
+  sc.playing = false;
+  el('bp'+sIdx).disabled = false;
+  el('bstep'+sIdx).disabled = true;
+  el('bstep'+sIdx).textContent = 'Done';
+}
+
+function resetScenario(sIdx) {
+  const sc = scenarios[sIdx];
+  if(sc.playing) return;
+  sc.curStep = -1;
+  sc.playing = false;
+
+  if(sIdx===0){
+    resetDash(['0l1','0l2','0l3','0l4']);
+    ['0p1','0p1t','0p2','0p2t','0p3','0p3t','0p4','0p4t','0note','0noteT'].forEach(id=>hide(id));
+    el('v0').classList.remove('show');
+    initLog('log0');
+  } else if(sIdx===1){
+    resetDash(['1l1','1l2','1l3','1l4']);
+    ['1p1','1p1t','1p2','1p2t','1jar','1jart','1p3','1p3t','1p4','1p4t','1note','1noteT'].forEach(id=>hide(id));
+    txt('s1brm','no cookie');
+    el('v1').classList.remove('show');
+    initLog('log1');
+  } else if(sIdx===2){
+    resetDash(['2l1','2l2','2l3','2l4'],300);
+    attr('2ldb1','stroke-dashoffset','12');attr('2ldb2','stroke-dashoffset','12');attr('2ldb3','stroke-dashoffset','12');
+    ['2p1','2p1t','2db1','2db1k','2db1u','2db1r','2db2','2db2t','2p2','2p2t','2jar','2jart','2p3','2p3t','2db3','2db3t','2p4','2p4t','2note','2noteT'].forEach(id=>hide(id));
+    txt('s2brm','no cookie');txt('s2dbm','(empty)');
+    el('v2').classList.remove('show');
+    initLog('log2');
+  }
+
+  const track = el('st'+sIdx);
+  const pills = track.querySelectorAll('.step-pill');
+  pills.forEach((p,i)=>{p.classList.remove('active','done');if(i===0)p.classList.add('active');});
+  updateDesc(sIdx,0);
+  el('bp'+sIdx).disabled=false;
+  el('bstep'+sIdx).disabled=false;
+  el('bstep'+sIdx).textContent='Step →';
+}
+
+function sw(n){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===n));
+  [0,1,2].forEach(i=>el('p'+i).classList.toggle('active',i===n));
+  if(window.reportLoginHeight)window.reportLoginHeight();
+}
+
+[0,1,2].forEach(i=>initLog('log'+i));
+</script>
+<script>
+(function(){
+  function report(){
+    if(window.parent===window)return;
+    requestAnimationFrame(function(){
+      var root=document.querySelector('.login-stepped')||document.body;
+      var h=Math.max(document.documentElement.scrollHeight,document.body.scrollHeight,root.scrollHeight);
+      window.parent.postMessage({type:'anim-frame-height',height:h},'*');
+    });
+  }
+  window.reportLoginHeight=report;
+  report();
+  if(typeof ResizeObserver!=='undefined'){
+    new ResizeObserver(report).observe(document.querySelector('.login-stepped')||document.body);
+  }
+})();
+</script>
+</html>

@@ -1,0 +1,609 @@
+<html>
+<style>
+:root{color-scheme:light;
+  --bg:#ffffff;--bg2:#f4f3ee;--bg3:#ecebe4;
+  --txt:#1d1d1c;--txt2:#5f5e5a;--txt3:#888780;
+  --bdr:rgba(0,0,0,0.13);--bdr2:rgba(0,0,0,0.25);
+  --radius:8px;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:transparent;font-family:var(--font);color:var(--txt);font-size:14px;line-height:1.5}
+.login-anim{max-width:720px;margin:0 auto;padding:.75rem 0}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.tab-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:.6rem}
+.tab{font-size:11px;padding:4px 10px;border-radius:6px;border:.5px solid var(--bdr2);cursor:pointer;background:transparent;color:var(--txt2);font-family:var(--font);white-space:nowrap;transition:background .15s}
+.tab:hover{background:var(--bg2)}
+.tab.active{font-weight:500;border-color:#534AB7;background:#EEEDFE;color:#3C3489}
+
+.panel{display:none}
+.panel.active{display:block}
+.stage-label{font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--txt3);margin-bottom:5px}
+.log-box{background:var(--bg2);border:.5px solid var(--bdr);border-radius:var(--radius);padding:9px 11px;min-height:48px;font-size:11px;color:var(--txt2);font-family:var(--mono);line-height:1.75}
+.log-line{opacity:0;transform:translateY(3px);transition:opacity .25s,transform .25s}
+.log-line.show{opacity:1;transform:none}
+.log-line.req{color:#185FA5}.log-line.res{color:#0F6E56}.log-line.err{color:#A32D2D}.log-line.cookie{color:#854F0B}.log-line.session{color:#534AB7}.log-line.neutral{color:var(--txt2)}
+
+.ctrl-row{display:flex;gap:5px;margin-top:.6rem;align-items:center;flex-wrap:wrap}
+.btn{font-family:var(--font);font-size:13px;padding:5px 12px;border-radius:var(--radius);border:.5px solid var(--bdr2);background:transparent;cursor:pointer;color:var(--txt);transition:background .15s}
+.btn:hover{background:var(--bg2)}.btn:active{transform:scale(.97)}.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.primary{border-color:#534AB7;color:#3C3489;background:#EEEDFE}
+
+.spd{display:flex;align-items:center;gap:6px;margin-left:auto;font-size:12px;color:var(--txt2)}
+.verdict{display:flex;gap:8px;align-items:flex-start;margin-top:.6rem;padding:9px 11px;border-radius:var(--radius);border:.5px solid var(--bdr);font-size:12px;line-height:1.6;opacity:0;transition:opacity .4s}
+.verdict.show{opacity:1}
+.verdict.bad{background:#FCEBEB;color:#791F1F;border-color:#F09595}
+.verdict.good{background:#E1F5EE;color:#085041;border-color:#5DCAA5}
+.verdict.info{background:#EEEDFE;color:#3C3489;border-color:#AFA9EC}
+
+.verdict .ico{font-size:15px;flex-shrink:0;margin-top:1px}
+.desc{font-size:12px;color:var(--txt2);margin-bottom:.6rem;line-height:1.55}
+.desc strong{color:var(--txt);font-weight:500}
+.diagram-wrap{background:var(--bg2);border:.5px solid var(--bdr);border-radius:var(--radius);overflow:hidden;margin-bottom:6px}
+.summary-card{padding:8px 10px;border-radius:var(--radius);border:.5px solid var(--bdr);font-size:11px;line-height:1.5}
+.dotrow{display:flex;align-items:center;margin-bottom:.5rem}
+.sdot{width:9px;height:9px;border-radius:50%;background:var(--bdr2);flex-shrink:0;transition:background .25s}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.sdot.act{background:#378ADD;animation:pulse .8s ease-in-out infinite}
+.sdot.done{background:#1D9E75}
+</style>
+
+<div class="login-anim">
+<h2 class="sr-only">Animated comparison of three login approaches: stateless HTTP, cookie-only, and session plus cookie</h2>
+<div style="font-size:16px;font-weight:500;margin-bottom:.25rem">Login — stateless vs cookie vs session</div>
+<div style="font-size:12px;color:var(--txt2);margin-bottom:.6rem">Same login succeeds every time — watch what happens on the second request</div>
+
+<div class="tab-row">
+  <button class="tab active" onclick="switchTab(0)">Stateless HTTP</button>
+  <button class="tab" onclick="switchTab(1)">Cookie (no session)</button>
+  <button class="tab" onclick="switchTab(2)">Session + cookie</button>
+  <button class="tab" onclick="switchTab(3)">Side by side</button>
+</div>
+
+<div id="tab0" class="panel active">
+  <div class="desc">Each request is <strong>completely independent</strong> — the server has zero memory between requests. Watch what happens on request 2.</div>
+  <div class="dotrow" id="dotsA"></div>
+  <div class="diagram-wrap"><svg id="svgA" width="100%" viewBox="0 0 640 200" style="display:block">
+    <defs><marker id="arA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+    <rect x="20" y="76" width="108" height="48" rx="8" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+    <text x="74" y="96" text-anchor="middle" font-size="12" font-weight="500" fill="#3C3489" dominant-baseline="central">Browser</text>
+    <text x="74" y="112" text-anchor="middle" font-size="10" fill="#534AB7" dominant-baseline="central">no memory</text>
+    <rect x="512" y="76" width="108" height="48" rx="8" fill="#F1EFE8" stroke="#B4B2A9" stroke-width="0.5"/>
+    <text x="566" y="96" text-anchor="middle" font-size="12" font-weight="500" fill="#444441" dominant-baseline="central">Server</text>
+    <text x="566" y="112" text-anchor="middle" font-size="10" fill="#5F5E5A" dominant-baseline="central">stateless</text>
+    <rect id="aP1" x="200" y="81" width="168" height="26" rx="5" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5" opacity="0"/>
+    <text id="aP1t" x="284" y="94" text-anchor="middle" font-size="10" fill="#0C447C" dominant-baseline="central" opacity="0">POST /login {user, pass}</text>
+    <rect id="aP2" x="226" y="93" width="148" height="26" rx="5" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5" opacity="0"/>
+    <text id="aP2t" x="300" y="106" text-anchor="middle" font-size="10" fill="#27500A" dominant-baseline="central" opacity="0">200 OK — credentials valid</text>
+    <rect id="aP3" x="200" y="81" width="168" height="26" rx="5" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5" opacity="0"/>
+    <text id="aP3t" x="284" y="94" text-anchor="middle" font-size="10" fill="#0C447C" dominant-baseline="central" opacity="0">GET /dashboard</text>
+    <rect id="aP4" x="204" y="93" width="186" height="26" rx="5" fill="#FCEBEB" stroke="#F09595" stroke-width="0.5" opacity="0"/>
+    <text id="aP4t" x="297" y="106" text-anchor="middle" font-size="10" fill="#791F1F" dominant-baseline="central" opacity="0">401 — Who are you?!</text>
+    <line id="aL1" x1="128" y1="95" x2="510" y2="95" stroke="#378ADD" stroke-width="1.5" marker-end="url(#arA)" stroke-dasharray="400" stroke-dashoffset="400" fill="none"/>
+    <line id="aL2" x1="510" y1="107" x2="128" y2="107" stroke="#639922" stroke-width="1.5" marker-end="url(#arA)" stroke-dasharray="400" stroke-dashoffset="400" fill="none"/>
+    <line id="aL3" x1="128" y1="95" x2="510" y2="95" stroke="#378ADD" stroke-width="1.5" marker-end="url(#arA)" stroke-dasharray="400" stroke-dashoffset="400" fill="none"/>
+    <line id="aL4" x1="510" y1="107" x2="128" y2="107" stroke="#E24B4A" stroke-width="1.5" marker-end="url(#arA)" stroke-dasharray="400" stroke-dashoffset="400" fill="none"/>
+    <text id="aNote" x="320" y="158" text-anchor="middle" font-size="11" fill="#A32D2D" opacity="0">No cookie set → server forgets login immediately</text>
+  </svg></div>
+  <div class="stage-label">Network log</div>
+  <div class="log-box" id="logA"><div class="log-line neutral show">Press Step → or ▶ Play to start…</div></div>
+  <div id="vA" class="verdict bad"><span class="ico" aria-hidden="true">⚠</span><div>Server forgot the login the instant it sent the response. Every protected request returns 401. The user must re-authenticate every single time.</div></div>
+  <div class="ctrl-row">
+    <button class="btn" id="bsA" onclick="stepA()">Step →</button>
+    <button class="btn primary" id="bpA" onclick="playA()">▶ Play</button>
+    <button class="btn" id="brA" onclick="resetA()">↺ Reset</button>
+    <div class="spd"><span>Speed</span><input type="range" min="0.5" max="2" step="0.5" value="1" id="spA" style="width:64px" oninput="el('spAv').textContent=this.value+'×'"><span id="spAv">1×</span></div>
+  </div>
+</div>
+
+<div id="tab1" class="panel">
+  <div class="desc">Server sends a <strong>Set-Cookie</strong> with the user's data (or a signed token) directly. The browser stores and resends it. <strong>No server-side storage needed</strong> — the cookie IS the state.</div>
+  <div class="dotrow" id="dotsB"></div>
+  <div class="diagram-wrap"><svg id="svgB" width="100%" viewBox="0 0 640 220" style="display:block">
+    <defs><marker id="arB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+    <rect x="20" y="70" width="108" height="48" rx="8" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+    <text x="74" y="90" text-anchor="middle" font-size="12" font-weight="500" fill="#3C3489" dominant-baseline="central">Browser</text>
+    <text id="bBrM" x="74" y="106" text-anchor="middle" font-size="10" fill="#534AB7" dominant-baseline="central">no cookie</text>
+    <rect x="512" y="70" width="108" height="48" rx="8" fill="#F1EFE8" stroke="#B4B2A9" stroke-width="0.5"/>
+    <text x="566" y="90" text-anchor="middle" font-size="12" font-weight="500" fill="#444441" dominant-baseline="central">Server</text>
+    <text x="566" y="106" text-anchor="middle" font-size="10" fill="#5F5E5A" dominant-baseline="central">no DB lookup</text>
+    <rect id="bP1" x="200" y="75" width="168" height="26" rx="5" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5" opacity="0"/>
+    <text id="bP1t" x="284" y="88" text-anchor="middle" font-size="10" fill="#0C447C" dominant-baseline="central" opacity="0">POST /login {user, pass}</text>
+    <rect id="bP2" x="170" y="87" width="258" height="26" rx="5" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5" opacity="0"/>
+    <text id="bP2t" x="299" y="100" text-anchor="middle" font-size="10" fill="#27500A" dominant-baseline="central" opacity="0">200 OK + Set-Cookie: user=alice; HttpOnly</text>
+    <rect id="bJar" x="20" y="130" width="108" height="28" rx="6" fill="#FAEEDA" stroke="#FAC775" stroke-width="0.5" opacity="0"/>
+    <text id="bJarT" x="74" y="144" text-anchor="middle" font-size="10" fill="#633806" dominant-baseline="central" opacity="0">user=alice (stored)</text>
+    <rect id="bP3" x="174" y="75" width="248" height="26" rx="5" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5" opacity="0"/>
+    <text id="bP3t" x="298" y="88" text-anchor="middle" font-size="10" fill="#0C447C" dominant-baseline="central" opacity="0">GET /dashboard Cookie: user=alice</text>
+    <rect id="bP4" x="198" y="87" width="216" height="26" rx="5" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5" opacity="0"/>
+    <text id="bP4t" x="306" y="100" text-anchor="middle" font-size="10" fill="#27500A" dominant-baseline="central" opacity="0">200 OK — Welcome back, alice!</text>
+    <line id="bL1" x1="128" y1="89" x2="510" y2="89" stroke="#378ADD" stroke-width="1.5" marker-end="url(#arB)" stroke-dasharray="400" stroke-dashoffset="400" fill="none"/>
+    <line id="bL2" x1="510" y1="101" x2="128" y2="101" stroke="#639922" stroke-width="1.5" marker-end="url(#arB)" stroke-dasharray="400" stroke-dashoffset="400" fill="none"/>
+    <line id="bL3" x1="128" y1="89" x2="510" y2="89" stroke="#378ADD" stroke-width="1.5" marker-end="url(#arB)" stroke-dasharray="400" stroke-dashoffset="400" fill="none"/>
+    <line id="bL4" x1="510" y1="101" x2="128" y2="101" stroke="#639922" stroke-width="1.5" marker-end="url(#arB)" stroke-dasharray="400" stroke-dashoffset="400" fill="none"/>
+    <text id="bNote" x="320" y="178" text-anchor="middle" font-size="10" fill="#5F5E5A" opacity="0">Cookie carries identity — server reads it, no DB needed</text>
+  </svg></div>
+  <div class="stage-label">Network log</div>
+  <div class="log-box" id="logB"><div class="log-line neutral show">Press Step → or ▶ Play to start…</div></div>
+  <div id="vB" class="verdict good"><span class="ico" aria-hidden="true">✓</span><div>Cookie travels automatically on every request. Server reads the user value directly from the cookie — no database lookup needed. Simple, but the user data lives in the browser.</div></div>
+  <div class="ctrl-row">
+    <button class="btn" id="bsB" onclick="stepB()">Step →</button>
+    <button class="btn primary" id="bpB" onclick="playB()">▶ Play</button>
+    <button class="btn" id="brB" onclick="resetB()">↺ Reset</button>
+    <div class="spd"><span>Speed</span><input type="range" min="0.5" max="2" step="0.5" value="1" id="spB" style="width:64px" oninput="el('spBv').textContent=this.value+'×'"><span id="spBv">1×</span></div>
+  </div>
+</div>
+
+<div id="tab2" class="panel">
+  <div class="desc">Cookie holds only a random <strong>session ID</strong>. The actual user data lives in a <strong>server-side store</strong> (memory, Redis, DB). Browser knows nothing — it just carries the key.</div>
+  <div class="dotrow" id="dotsC"></div>
+  <div class="diagram-wrap"><svg id="svgC" width="100%" viewBox="0 0 640 260" style="display:block">
+    <defs><marker id="arC" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+    <rect x="20" y="70" width="108" height="48" rx="8" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+    <text x="74" y="90" text-anchor="middle" font-size="12" font-weight="500" fill="#3C3489" dominant-baseline="central">Browser</text>
+    <text id="cBrM" x="74" y="106" text-anchor="middle" font-size="10" fill="#534AB7" dominant-baseline="central">no cookie</text>
+    <rect x="390" y="70" width="108" height="48" rx="8" fill="#F1EFE8" stroke="#B4B2A9" stroke-width="0.5"/>
+    <text x="444" y="90" text-anchor="middle" font-size="12" font-weight="500" fill="#444441" dominant-baseline="central">Server</text>
+    <text x="444" y="106" text-anchor="middle" font-size="10" fill="#5F5E5A" dominant-baseline="central">validates, looks up</text>
+    <rect x="512" y="70" width="110" height="48" rx="8" fill="#E1F5EE" stroke="#5DCAA5" stroke-width="0.5"/>
+    <text x="567" y="90" text-anchor="middle" font-size="12" font-weight="500" fill="#085041" dominant-baseline="central">Session DB</text>
+    <text id="cDbM" x="567" y="106" text-anchor="middle" font-size="10" fill="#0F6E56" dominant-baseline="central">(empty)</text>
+    <rect id="cP1" x="160" y="75" width="168" height="26" rx="5" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5" opacity="0"/>
+    <text id="cP1t" x="244" y="88" text-anchor="middle" font-size="10" fill="#0C447C" dominant-baseline="central" opacity="0">POST /login {user, pass}</text>
+    <rect id="cDB1" x="500" y="81" width="122" height="26" rx="5" fill="#9FE1CB" stroke="#1D9E75" stroke-width="0.5" opacity="0"/>
+    <text id="cDB1t" x="561" y="94" text-anchor="middle" font-size="10" fill="#04342C" dominant-baseline="central" opacity="0">WRITE sid→alice</text>
+    <rect id="cP2" x="140" y="87" width="230" height="26" rx="5" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5" opacity="0"/>
+    <text id="cP2t" x="255" y="100" text-anchor="middle" font-size="10" fill="#27500A" dominant-baseline="central" opacity="0">200 + Set-Cookie: sid=x9f3; HttpOnly</text>
+    <rect id="cJar" x="20" y="130" width="108" height="28" rx="6" fill="#FAEEDA" stroke="#FAC775" stroke-width="0.5" opacity="0"/>
+    <text id="cJarT" x="74" y="144" text-anchor="middle" font-size="10" fill="#633806" dominant-baseline="central" opacity="0">sid=x9f3 (opaque)</text>
+    <rect id="cP3" x="148" y="75" width="214" height="26" rx="5" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5" opacity="0"/>
+    <text id="cP3t" x="255" y="88" text-anchor="middle" font-size="10" fill="#0C447C" dominant-baseline="central" opacity="0">GET /dashboard Cookie: sid=x9f3</text>
+    <rect id="cDB2" x="500" y="81" width="122" height="26" rx="5" fill="#9FE1CB" stroke="#1D9E75" stroke-width="0.5" opacity="0"/>
+    <text id="cDB2t" x="561" y="94" text-anchor="middle" font-size="10" fill="#04342C" dominant-baseline="central" opacity="0">READ sid→alice</text>
+    <rect id="cP4" x="152" y="87" width="220" height="26" rx="5" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5" opacity="0"/>
+    <text id="cP4t" x="262" y="100" text-anchor="middle" font-size="10" fill="#27500A" dominant-baseline="central" opacity="0">200 OK — Welcome back, alice!</text>
+    <line id="cL1" x1="128" y1="89" x2="388" y2="89" stroke="#378ADD" stroke-width="1.5" marker-end="url(#arC)" stroke-dasharray="300" stroke-dashoffset="300" fill="none"/>
+    <line id="cL1b" x1="498" y1="94" x2="390" y2="94" stroke="#1D9E75" stroke-width="1" stroke-dasharray="6 3" marker-end="url(#arC)" stroke-dashoffset="120" fill="none"/>
+    <line id="cL2" x1="388" y1="101" x2="128" y2="101" stroke="#639922" stroke-width="1.5" marker-end="url(#arC)" stroke-dasharray="300" stroke-dashoffset="300" fill="none"/>
+    <line id="cL3" x1="128" y1="89" x2="388" y2="89" stroke="#378ADD" stroke-width="1.5" marker-end="url(#arC)" stroke-dasharray="300" stroke-dashoffset="300" fill="none"/>
+    <line id="cL3b" x1="390" y1="94" x2="498" y2="94" stroke="#1D9E75" stroke-width="1" stroke-dasharray="6 3" marker-end="url(#arC)" stroke-dashoffset="120" fill="none"/>
+    <line id="cL3c" x1="498" y1="100" x2="390" y2="100" stroke="#1D9E75" stroke-width="1" stroke-dasharray="6 3" marker-end="url(#arC)" stroke-dashoffset="120" fill="none"/>
+    <line id="cL4" x1="388" y1="101" x2="128" y2="101" stroke="#639922" stroke-width="1.5" marker-end="url(#arC)" stroke-dasharray="300" stroke-dashoffset="300" fill="none"/>
+    <rect id="cDbBox" x="512" y="180" width="110" height="54" rx="8" fill="#E1F5EE" stroke="#5DCAA5" stroke-width="0.5" opacity="0"/>
+    <text id="cDbRow1" x="567" y="200" text-anchor="middle" font-size="10" fill="#085041" dominant-baseline="central" opacity="0">sid=x9f3</text>
+    <text id="cDbRow2" x="567" y="216" text-anchor="middle" font-size="10" fill="#0F6E56" dominant-baseline="central" opacity="0">user: alice</text>
+    <text id="cDbRow3" x="567" y="232" text-anchor="middle" font-size="10" fill="#0F6E56" dominant-baseline="central" opacity="0">role: admin</text>
+    <text id="cNote" x="300" y="218" text-anchor="middle" font-size="10" fill="#5F5E5A" opacity="0">Cookie = key only · User data stays on server</text>
+  </svg></div>
+  <div class="stage-label">Network log</div>
+  <div class="log-box" id="logC"><div class="log-line neutral show">Press Step → or ▶ Play to start…</div></div>
+  <div id="vC" class="verdict info"><span class="ico" aria-hidden="true">📦</span><div>The cookie carries only a random, opaque session ID — meaningless to anyone who intercepts it. The real user data (name, role, permissions) lives in the server's session store. Server controls everything.</div></div>
+  <div class="ctrl-row">
+    <button class="btn" id="bsC" onclick="stepC()">Step →</button>
+    <button class="btn primary" id="bpC" onclick="playC()">▶ Play</button>
+    <button class="btn" id="brC" onclick="resetC()">↺ Reset</button>
+    <div class="spd"><span>Speed</span><input type="range" min="0.5" max="2" step="0.5" value="1" id="spC" style="width:64px" oninput="el('spCv').textContent=this.value+'×'"><span id="spCv">1×</span></div>
+  </div>
+</div>
+
+<div id="tab3" class="panel">
+  <div class="desc">Same scenario — three approaches. The login always succeeds. The difference is what happens on <strong>request 2</strong>.</div>
+  <div class="dotrow" id="dotsS"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+    <div>
+      <div style="font-size:11px;font-weight:500;color:#3C3489;margin-bottom:5px;display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#7F77DD;flex-shrink:0"></span>Stateless</div>
+      <svg width="100%" viewBox="0 0 200 220" style="display:block">
+        <defs><marker id="arS0" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+        <rect x="5" y="56" width="60" height="36" rx="6" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+        <text x="35" y="70" text-anchor="middle" font-size="9" font-weight="500" fill="#3C3489" dominant-baseline="central">Browser</text>
+        <text x="35" y="82" text-anchor="middle" font-size="8" fill="#534AB7" dominant-baseline="central">no memory</text>
+        <rect x="135" y="56" width="60" height="36" rx="6" fill="#F1EFE8" stroke="#B4B2A9" stroke-width="0.5"/>
+        <text x="165" y="70" text-anchor="middle" font-size="9" font-weight="500" fill="#444441" dominant-baseline="central">Server</text>
+        <text x="165" y="82" text-anchor="middle" font-size="8" fill="#5F5E5A" dominant-baseline="central">stateless</text>
+        <line id="ss0l1" x1="65" y1="68" x2="133" y2="68" stroke="#378ADD" stroke-width="1" marker-end="url(#arS0)" stroke-dasharray="80" stroke-dashoffset="80" fill="none"/>
+        <text id="ss0t1" x="100" y="62" text-anchor="middle" font-size="8" fill="#185FA5" opacity="0">POST /login</text>
+        <line id="ss0l2" x1="133" y1="76" x2="65" y2="76" stroke="#639922" stroke-width="1" marker-end="url(#arS0)" stroke-dasharray="80" stroke-dashoffset="80" fill="none"/>
+        <text id="ss0t2" x="100" y="88" text-anchor="middle" font-size="8" fill="#0F6E56" opacity="0">200 OK</text>
+        <line id="ss0l3" x1="65" y1="118" x2="133" y2="118" stroke="#378ADD" stroke-width="1" marker-end="url(#arS0)" stroke-dasharray="80" stroke-dashoffset="80" fill="none"/>
+        <text id="ss0t3" x="100" y="112" text-anchor="middle" font-size="8" fill="#185FA5" opacity="0">GET /dashboard</text>
+        <line id="ss0l4" x1="133" y1="128" x2="65" y2="128" stroke="#E24B4A" stroke-width="1" marker-end="url(#arS0)" stroke-dasharray="80" stroke-dashoffset="80" fill="none"/>
+        <text id="ss0t4" x="100" y="142" text-anchor="middle" font-size="8" fill="#A32D2D" opacity="0">401 Who are you?</text>
+        <rect id="ss0box" x="25" y="158" width="150" height="24" rx="5" fill="#FCEBEB" stroke="#F09595" stroke-width="0.5" opacity="0"/>
+        <text id="ss0boxT" x="100" y="170" text-anchor="middle" font-size="9" fill="#791F1F" dominant-baseline="central" opacity="0">ACCESS DENIED</text>
+      </svg>
+    </div>
+    <div>
+      <div style="font-size:11px;font-weight:500;color:#854F0B;margin-bottom:5px;display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#BA7517;flex-shrink:0"></span>Cookie only</div>
+      <svg width="100%" viewBox="0 0 200 220" style="display:block">
+        <defs><marker id="arS1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+        <rect x="5" y="56" width="60" height="36" rx="6" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+        <text x="35" y="70" text-anchor="middle" font-size="9" font-weight="500" fill="#3C3489" dominant-baseline="central">Browser</text>
+        <text id="sc1brm" x="35" y="82" text-anchor="middle" font-size="8" fill="#534AB7" dominant-baseline="central">no cookie</text>
+        <rect x="135" y="56" width="60" height="36" rx="6" fill="#F1EFE8" stroke="#B4B2A9" stroke-width="0.5"/>
+        <text x="165" y="70" text-anchor="middle" font-size="9" font-weight="500" fill="#444441" dominant-baseline="central">Server</text>
+        <text x="165" y="82" text-anchor="middle" font-size="8" fill="#5F5E5A" dominant-baseline="central">no DB</text>
+        <line id="sc1l1" x1="65" y1="68" x2="133" y2="68" stroke="#378ADD" stroke-width="1" marker-end="url(#arS1)" stroke-dasharray="80" stroke-dashoffset="80" fill="none"/>
+        <text id="sc1t1" x="100" y="62" text-anchor="middle" font-size="8" fill="#185FA5" opacity="0">POST /login</text>
+        <line id="sc1l2" x1="133" y1="76" x2="65" y2="76" stroke="#639922" stroke-width="1" marker-end="url(#arS1)" stroke-dasharray="80" stroke-dashoffset="80" fill="none"/>
+        <text id="sc1t2" x="100" y="88" text-anchor="middle" font-size="8" fill="#0F6E56" opacity="0">200 + Set-Cookie</text>
+        <rect id="sc1jar" x="5" y="100" width="60" height="18" rx="4" fill="#FAEEDA" stroke="#FAC775" stroke-width="0.5" opacity="0"/>
+        <text id="sc1jt" x="35" y="109" text-anchor="middle" font-size="8" fill="#633806" dominant-baseline="central" opacity="0">user=alice</text>
+        <line id="sc1l3" x1="65" y1="136" x2="133" y2="136" stroke="#378ADD" stroke-width="1" marker-end="url(#arS1)" stroke-dasharray="80" stroke-dashoffset="80" fill="none"/>
+        <text id="sc1t3" x="100" y="130" text-anchor="middle" font-size="8" fill="#185FA5" opacity="0">GET + cookie</text>
+        <line id="sc1l4" x1="133" y1="146" x2="65" y2="146" stroke="#639922" stroke-width="1" marker-end="url(#arS1)" stroke-dasharray="80" stroke-dashoffset="80" fill="none"/>
+        <text id="sc1t4" x="100" y="160" text-anchor="middle" font-size="8" fill="#0F6E56" opacity="0">200 Welcome!</text>
+        <rect id="sc1box" x="25" y="175" width="150" height="24" rx="5" fill="#E1F5EE" stroke="#5DCAA5" stroke-width="0.5" opacity="0"/>
+        <text id="sc1boxT" x="100" y="187" text-anchor="middle" font-size="9" fill="#085041" dominant-baseline="central" opacity="0">ACCESS GRANTED</text>
+      </svg>
+    </div>
+    <div>
+      <div style="font-size:11px;font-weight:500;color:#085041;margin-bottom:5px;display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#1D9E75;flex-shrink:0"></span>Session + cookie</div>
+      <svg width="100%" viewBox="0 0 200 220" style="display:block">
+        <defs><marker id="arS2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+        <rect x="5" y="56" width="60" height="36" rx="6" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+        <text x="35" y="70" text-anchor="middle" font-size="9" font-weight="500" fill="#3C3489" dominant-baseline="central">Browser</text>
+        <text id="sc2brm" x="35" y="82" text-anchor="middle" font-size="8" fill="#534AB7" dominant-baseline="central">no cookie</text>
+        <rect x="110" y="56" width="52" height="36" rx="6" fill="#F1EFE8" stroke="#B4B2A9" stroke-width="0.5"/>
+        <text x="136" y="70" text-anchor="middle" font-size="9" font-weight="500" fill="#444441" dominant-baseline="central">Server</text>
+        <text x="136" y="82" text-anchor="middle" font-size="8" fill="#5F5E5A" dominant-baseline="central">lookup</text>
+        <rect x="167" y="56" width="30" height="36" rx="5" fill="#E1F5EE" stroke="#5DCAA5" stroke-width="0.5"/>
+        <text x="182" y="74" text-anchor="middle" font-size="8" font-weight="500" fill="#085041" dominant-baseline="central">DB</text>
+        <line id="sc2l1" x1="65" y1="68" x2="108" y2="68" stroke="#378ADD" stroke-width="1" marker-end="url(#arS2)" stroke-dasharray="60" stroke-dashoffset="60" fill="none"/>
+        <text id="sc2t1" x="87" y="62" text-anchor="middle" font-size="7.5" fill="#185FA5" opacity="0">POST /login</text>
+        <line id="sc2ldb1" x1="162" y1="73" x2="167" y2="73" stroke="#1D9E75" stroke-width="0.8" stroke-dasharray="6 2" marker-end="url(#arS2)" stroke-dashoffset="8" fill="none"/>
+        <line id="sc2l2" x1="108" y1="78" x2="65" y2="78" stroke="#639922" stroke-width="1" marker-end="url(#arS2)" stroke-dasharray="60" stroke-dashoffset="60" fill="none"/>
+        <text id="sc2t2" x="87" y="90" text-anchor="middle" font-size="7.5" fill="#0F6E56" opacity="0">200 + Set-Cookie: sid</text>
+        <rect id="sc2jar" x="5" y="102" width="60" height="18" rx="4" fill="#FAEEDA" stroke="#FAC775" stroke-width="0.5" opacity="0"/>
+        <text id="sc2jt" x="35" y="111" text-anchor="middle" font-size="8" fill="#633806" dominant-baseline="central" opacity="0">sid=x9f3</text>
+        <line id="sc2l3" x1="65" y1="138" x2="108" y2="138" stroke="#378ADD" stroke-width="1" marker-end="url(#arS2)" stroke-dasharray="60" stroke-dashoffset="60" fill="none"/>
+        <text id="sc2t3" x="87" y="132" text-anchor="middle" font-size="7.5" fill="#185FA5" opacity="0">GET + sid cookie</text>
+        <line id="sc2ldb2" x1="162" y1="143" x2="167" y2="143" stroke="#1D9E75" stroke-width="0.8" stroke-dasharray="6 2" marker-end="url(#arS2)" stroke-dashoffset="8" fill="none"/>
+        <line id="sc2ldb3" x1="167" y1="151" x2="162" y2="151" stroke="#1D9E75" stroke-width="0.8" stroke-dasharray="6 2" marker-end="url(#arS2)" stroke-dashoffset="8" fill="none"/>
+        <line id="sc2l4" x1="108" y1="148" x2="65" y2="148" stroke="#639922" stroke-width="1" marker-end="url(#arS2)" stroke-dasharray="60" stroke-dashoffset="60" fill="none"/>
+        <text id="sc2t4" x="87" y="162" text-anchor="middle" font-size="7.5" fill="#0F6E56" opacity="0">200 Welcome back!</text>
+        <rect id="sc2box" x="25" y="175" width="150" height="24" rx="5" fill="#E1F5EE" stroke="#5DCAA5" stroke-width="0.5" opacity="0"/>
+        <text id="sc2boxT" x="100" y="187" text-anchor="middle" font-size="9" fill="#085041" dominant-baseline="central" opacity="0">ACCESS GRANTED</text>
+      </svg>
+    </div>
+  </div>
+  <div class="ctrl-row">
+    <button class="btn" id="bsS" onclick="stepSide()">Step →</button>
+    <button class="btn primary" id="bpS" onclick="playSide()">▶ Play</button>
+    <button class="btn" id="brS" onclick="resetSide()">↺ Reset</button>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px">
+    <div class="summary-card" style="background:#FCEBEB;color:#791F1F;border-color:#F09595"><strong style="display:block;margin-bottom:2px">Stateless</strong>No identity across requests. Breaks auth completely.</div>
+    <div class="summary-card" style="background:#FAEEDA;color:#633806;border-color:#EF9F27"><strong style="display:block;margin-bottom:2px">Cookie only</strong>User data in cookie. Simple but no server control.</div>
+    <div class="summary-card" style="background:#E1F5EE;color:#085041;border-color:#5DCAA5"><strong style="display:block;margin-bottom:2px">Session + cookie</strong>Opaque ID in cookie. Data on server. Server can revoke anytime.</div>
+  </div>
+</div>
+</div>
+
+<script>
+function el(id){return document.getElementById(id)}
+function attr(id,a,v){const e=el(id);if(e)e.setAttribute(a,v)}
+function txt(id,t){const e=el(id);if(e)e.textContent=t}
+function wait(ms,sp){return new Promise(r=>setTimeout(r,ms/sp))}
+function dash(id,sp,len=400){
+  return new Promise(r=>{
+    const e=el(id);if(!e){r();return}
+    const dur=0.48/sp;
+    e.style.transition=`stroke-dashoffset ${dur}s ease`;
+    e.setAttribute('stroke-dashoffset','0');
+    setTimeout(r,(dur*1000)+60);
+  })
+}
+function dashShort(id,sp){
+  return new Promise(r=>{
+    const e=el(id);if(!e){r();return}
+    const dur=0.3/sp;
+    e.style.transition=`stroke-dashoffset ${dur}s ease`;
+    e.setAttribute('stroke-dashoffset','0');
+    setTimeout(r,(dur*1000)+40);
+  })
+}
+function show(id){const e=el(id);if(e){e.setAttribute('opacity','1');e.style.opacity='1'}}
+function hide(id){const e=el(id);if(e){e.setAttribute('opacity','0');e.style.opacity='0'}}
+function addLog(box,text,cls='neutral'){
+  const b=el(box);
+  if(!b._lines)b._lines=[];
+  b._lines.push({text,cls});
+  b.innerHTML='';
+  b._lines.slice(-5).forEach(l=>{
+    const d=document.createElement('div');
+    d.className=`log-line ${l.cls}`;
+    d.textContent=l.text;
+    b.appendChild(d);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>d.classList.add('show')));
+  });
+}
+function clearLog(id){const b=el(id);b.innerHTML='';b._lines=[];}
+function resetDash(ids,len=400){ids.forEach(id=>attr(id,'stroke-dashoffset',String(len)))}
+function idleLog(box){const d=document.createElement('div');d.className='log-line neutral show';d.textContent='Press Step → or ▶ Play to start…';el(box).appendChild(d);}
+
+function buildDots(rowId,labels){
+  const row=el(rowId);if(!row)return;row.innerHTML='';
+  labels.forEach(function(lbl,i){
+    const wrap=document.createElement('div');
+    wrap.style.cssText='display:flex;flex-direction:column;align-items:center;gap:2px';
+    const dot=document.createElement('div');dot.className='sdot';dot.id=rowId+'-d'+i;
+    const t=document.createElement('div');t.style.cssText='font-size:9px;color:var(--txt3)';t.textContent=lbl;
+    wrap.appendChild(dot);wrap.appendChild(t);row.appendChild(wrap);
+    if(i<labels.length-1){
+      const seg=document.createElement('div');
+      seg.style.cssText='flex:1;height:.5px;background:var(--bdr);margin:0 3px;margin-bottom:12px';
+      row.appendChild(seg);
+    }
+  });
+}
+function setDot(rowId,i,state){
+  const d=el(rowId+'-d'+i);if(!d)return;
+  d.classList.remove('act','done');
+  if(state)d.classList.add(state);
+}
+
+function makeRunner(cfg){
+  const st={cur:-1,playing:false,pt:null};
+  buildDots(cfg.dotsId,cfg.labels);
+  function syncBtns(){
+    const done=st.cur>=cfg.steps.length-1;
+    el(cfg.ids.step).disabled=done||st.playing;
+    el(cfg.ids.play).disabled=done||st.playing;
+    el(cfg.ids.reset).disabled=st.playing;
+  }
+  async function apply(i){
+    if(i>0)setDot(cfg.dotsId,i-1,'done');
+    setDot(cfg.dotsId,i,'act');
+    const sp=cfg.getSpeed?cfg.getSpeed():1;
+    await cfg.steps[i](sp);
+    if(i===cfg.steps.length-1){
+      setDot(cfg.dotsId,i,'done');
+      if(cfg.onDone)cfg.onDone();
+    }
+    syncBtns();
+    if(window.reportLoginHeight)window.reportLoginHeight();
+  }
+  async function doStep(){
+    if(st.playing||st.cur>=cfg.steps.length-1)return;
+    st.cur++;await apply(st.cur);
+  }
+  async function doPlay(){
+    if(st.playing||st.cur>=cfg.steps.length-1)return;
+    st.playing=true;syncBtns();
+    const sp=cfg.getSpeed?cfg.getSpeed():1;
+    while(st.playing&&st.cur<cfg.steps.length-1){
+      st.cur++;await apply(st.cur);
+      if(st.cur<cfg.steps.length-1)await wait(cfg.playDelay||700,sp);
+    }
+    st.playing=false;syncBtns();
+  }
+  function doReset(){
+    st.playing=false;clearTimeout(st.pt);st.cur=-1;
+    cfg.resetVisual();
+    cfg.labels.forEach(function(_,i){setDot(cfg.dotsId,i,'');});
+    if(cfg.onReset)cfg.onReset();
+    syncBtns();
+    if(window.reportLoginHeight)window.reportLoginHeight();
+  }
+  doReset();
+  return {doStep:doStep,doPlay:doPlay,doReset:doReset};
+}
+
+const runnerA=makeRunner({
+  dotsId:'dotsA',labels:['Login','OK','GET','401','Done'],
+  ids:{step:'bsA',play:'bpA',reset:'brA'},
+  getSpeed:function(){return parseFloat(el('spA').value)||1;},
+  playDelay:650,
+  resetVisual:function(){
+    resetDash(['aL1','aL2','aL3','aL4']);
+    ['aP1','aP1t','aP2','aP2t','aP3','aP3t','aP4','aP4t','aNote'].forEach(hide);
+    el('vA').classList.remove('show');clearLog('logA');idleLog('logA');
+  },
+  onDone:function(){el('vA').classList.add('show');},
+  steps:[
+    async function(sp){
+      addLog('logA','→ POST /login  {user:"alice", pass:"••••"}','req');
+      show('aP1');show('aP1t');await dash('aL1',sp);
+    },
+    async function(sp){
+      addLog('logA','← 200 OK  (credentials valid)','res');
+      hide('aP1');hide('aP1t');show('aP2');show('aP2t');
+      await dash('aL2',sp);
+      hide('aP2');hide('aP2t');
+      addLog('logA','   No Set-Cookie header. Server sends nothing to remember.','neutral');
+    },
+    async function(sp){
+      attr('aL1','stroke-dashoffset','400');attr('aL2','stroke-dashoffset','400');
+      addLog('logA','→ GET /dashboard  (no cookie attached)','req');
+      show('aP3');show('aP3t');await dash('aL3',sp);
+    },
+    async function(sp){
+      addLog('logA','← 401 Unauthorized  — "Who are you?"','err');
+      hide('aP3');hide('aP3t');show('aP4');show('aP4t');
+      await dash('aL4',sp);
+      hide('aP4');hide('aP4t');show('aNote');
+      addLog('logA','   Login forgotten. Must authenticate again every request.','err');
+    },
+    async function(){/* verdict shown in onDone */}
+  ]
+});
+
+const runnerB=makeRunner({
+  dotsId:'dotsB',labels:['Login','Cookie','Store','GET','OK','Done'],
+  ids:{step:'bsB',play:'bpB',reset:'brB'},
+  getSpeed:function(){return parseFloat(el('spB').value)||1;},
+  playDelay:650,
+  resetVisual:function(){
+    resetDash(['bL1','bL2','bL3','bL4']);
+    ['bP1','bP1t','bP2','bP2t','bJar','bJarT','bP3','bP3t','bP4','bP4t','bNote'].forEach(hide);
+    txt('bBrM','no cookie');
+    el('vB').classList.remove('show');clearLog('logB');idleLog('logB');
+  },
+  onDone:function(){el('vB').classList.add('show');},
+  steps:[
+    async function(sp){
+      addLog('logB','→ POST /login  {user:"alice", pass:"••••"}','req');
+      show('bP1');show('bP1t');await dash('bL1',sp);
+    },
+    async function(sp){
+      addLog('logB','← 200 OK  Set-Cookie: user=alice; HttpOnly; Secure','cookie');
+      hide('bP1');hide('bP1t');show('bP2');show('bP2t');
+      await dash('bL2',sp);hide('bP2');hide('bP2t');
+    },
+    async function(){
+      show('bJar');show('bJarT');txt('bBrM','has cookie!');
+      addLog('logB','   Browser stores cookie. user=alice now lives in browser.','cookie');
+    },
+    async function(sp){
+      attr('bL1','stroke-dashoffset','400');attr('bL2','stroke-dashoffset','400');
+      addLog('logB','→ GET /dashboard  Cookie: user=alice  (auto-attached)','req');
+      show('bP3');show('bP3t');await dash('bL3',sp);
+    },
+    async function(sp){
+      addLog('logB','← 200 OK  Server reads cookie → "alice" → renders dashboard','res');
+      hide('bP3');hide('bP3t');show('bP4');show('bP4t');
+      await dash('bL4',sp);
+      hide('bP4');hide('bP4t');show('bNote');
+      addLog('logB','   No DB lookup needed. Cookie was the identity proof.','res');
+    },
+    async function(){}
+  ]
+});
+
+const runnerC=makeRunner({
+  dotsId:'dotsC',labels:['Login','Write','Cookie','GET','Read','OK','Done'],
+  ids:{step:'bsC',play:'bpC',reset:'brC'},
+  getSpeed:function(){return parseFloat(el('spC').value)||1;},
+  playDelay:700,
+  resetVisual:function(){
+    resetDash(['cL1','cL2','cL3','cL4'],300);
+    resetDash(['cL1b','cL3b','cL3c'],120);
+    ['cP1','cP1t','cDB1','cDB1t','cP2','cP2t','cJar','cJarT','cP3','cP3t','cDB2','cDB2t','cP4','cP4t','cDbBox','cDbRow1','cDbRow2','cDbRow3','cNote'].forEach(hide);
+    txt('cBrM','no cookie');txt('cDbM','(empty)');
+    el('vC').classList.remove('show');clearLog('logC');idleLog('logC');
+  },
+  onDone:function(){el('vC').classList.add('show');},
+  steps:[
+    async function(sp){
+      addLog('logC','→ POST /login  {user:"alice", pass:"••••"}','req');
+      show('cP1');show('cP1t');await dash('cL1',sp,300);
+    },
+    async function(sp){
+      addLog('logC','   Server validates credentials → generates session ID: x9f3','session');
+      show('cDB1');show('cDB1t');await dashShort('cL1b',sp);
+      show('cDbBox');show('cDbRow1');show('cDbRow2');show('cDbRow3');
+      txt('cDbM','x9f3→alice');
+      addLog('logC','   Session store: WRITE  sid=x9f3 → {user:"alice", role:"admin"}','session');
+      hide('cDB1');hide('cDB1t');
+    },
+    async function(sp){
+      addLog('logC','← 200 OK  Set-Cookie: sid=x9f3; HttpOnly; Secure; SameSite=Strict','cookie');
+      show('cP2');show('cP2t');await dash('cL2',sp,300);
+      hide('cP2');hide('cP2t');
+      show('cJar');show('cJarT');txt('cBrM','has sid cookie');
+      addLog('logC','   Browser stores opaque ID. Cannot read user data from it.','cookie');
+    },
+    async function(sp){
+      attr('cL1','stroke-dashoffset','300');attr('cL2','stroke-dashoffset','300');
+      addLog('logC','→ GET /dashboard  Cookie: sid=x9f3  (auto-attached)','req');
+      show('cP3');show('cP3t');await dash('cL3',sp,300);
+    },
+    async function(sp){
+      addLog('logC','   Server receives sid=x9f3 → Session store lookup…','session');
+      show('cDB2');show('cDB2t');await dashShort('cL3b',sp);
+      addLog('logC','   Session store: READ  x9f3 → {user:"alice", role:"admin"}','session');
+      await dashShort('cL3c',sp);
+      hide('cDB2');hide('cDB2t');
+    },
+    async function(sp){
+      addLog('logC','← 200 OK  Welcome back, alice! (role=admin)','res');
+      show('cP4');show('cP4t');await dash('cL4',sp,300);
+      hide('cP4');hide('cP4t');show('cNote');
+      addLog('logC','   Cookie = key. Server = vault. Data never left the server.','session');
+    },
+    async function(){}
+  ]
+});
+
+const runnerS=makeRunner({
+  dotsId:'dotsS',labels:['Login','Cookies','GET','Result','Done'],
+  ids:{step:'bsS',play:'bpS',reset:'brS'},
+  playDelay:800,
+  resetVisual:function(){
+    const allL=['ss0l1','ss0l2','ss0l3','ss0l4','sc1l1','sc1l2','sc1l3','sc1l4','sc2l1','sc2l2','sc2l3','sc2l4'];
+    const allT=['ss0t1','ss0t2','ss0t3','ss0t4','sc1t1','sc1t2','sc1t3','sc1t4','sc2t1','sc2t2','sc2t3','sc2t4'];
+    const allE=['ss0box','ss0boxT','sc1jar','sc1jt','sc1box','sc1boxT','sc2jar','sc2jt','sc2box','sc2boxT'];
+    resetDash(allL,80);[...allT,...allE].forEach(hide);
+    txt('sc1brm','no cookie');txt('sc2brm','no cookie');
+    attr('sc2ldb1','stroke-dashoffset','8');
+    attr('sc2ldb2','stroke-dashoffset','8');
+    attr('sc2ldb3','stroke-dashoffset','8');
+  },
+  steps:[
+    async function(sp){
+      ['ss0t1','sc1t1','sc2t1'].forEach(show);
+      await Promise.all(['ss0l1','sc1l1','sc2l1'].map(function(id){return dash(id,sp,80);}));
+    },
+    async function(sp){
+      ['ss0t2','sc1t2','sc2t2'].forEach(show);
+      await Promise.all(['ss0l2','sc1l2','sc2l2'].map(function(id){return dash(id,sp,80);}));
+      show('sc1jar');show('sc1jt');txt('sc1brm','has cookie');
+      show('sc2jar');show('sc2jt');txt('sc2brm','has sid');
+      attr('sc2ldb1','stroke-dashoffset','0');
+    },
+    async function(sp){
+      ['ss0t3','sc1t3','sc2t3'].forEach(show);
+      await Promise.all(['ss0l3','sc1l3','sc2l3'].map(function(id){return dash(id,sp,80);}));
+    },
+    async function(sp){
+      attr('sc2ldb2','stroke-dashoffset','0');attr('sc2ldb3','stroke-dashoffset','0');
+      ['ss0t4','sc1t4','sc2t4'].forEach(show);
+      await Promise.all(['ss0l4','sc1l4','sc2l4'].map(function(id){return dash(id,sp,80);}));
+    },
+    async function(){
+      show('ss0box');show('ss0boxT');
+      show('sc1box');show('sc1boxT');
+      show('sc2box');show('sc2boxT');
+    }
+  ]
+});
+
+function stepA(){runnerA.doStep();}
+function playA(){runnerA.doPlay();}
+function resetA(){runnerA.doReset();}
+function stepB(){runnerB.doStep();}
+function playB(){runnerB.doPlay();}
+function resetB(){runnerB.doReset();}
+function stepC(){runnerC.doStep();}
+function playC(){runnerC.doPlay();}
+function resetC(){runnerC.doReset();}
+function stepSide(){runnerS.doStep();}
+function playSide(){runnerS.doPlay();}
+function resetSide(){runnerS.doReset();}
+
+function switchTab(n){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===n));
+  [0,1,2,3].forEach(i=>el('tab'+i).classList.toggle('active',i===n));
+  if(window.reportLoginHeight)window.reportLoginHeight();
+}
+</script>
+<script>
+(function(){
+  function report(){
+    if(window.parent===window)return;
+    requestAnimationFrame(function(){
+      var el=document.querySelector('.login-anim')||document.body;
+      var h=Math.max(document.documentElement.scrollHeight,document.body.scrollHeight,el.scrollHeight);
+      window.parent.postMessage({type:'anim-frame-height',height:h},'*');
+    });
+  }
+  window.reportLoginHeight=report;
+  report();
+  if(typeof ResizeObserver!=='undefined'){
+    new ResizeObserver(report).observe(document.querySelector('.login-anim')||document.body);
+  }
+})();
+</script>
+</html>

@@ -1,0 +1,452 @@
+<html>
+<style>
+:root{color-scheme:light;
+  --bg:#ffffff;--bg2:#f4f3ee;--bg3:#ecebe4;
+  --txt:#1d1d1c;--txt2:#5f5e5a;--txt3:#888780;
+  --bdr:rgba(0,0,0,0.13);--bdr2:rgba(0,0,0,0.25);
+  --ep:#f4f3ee;--eps:#d3d1c7;
+  --info-bg:#E6F1FB;--info-text:#185FA5;--info-border:#85B7EB;
+  --radius:8px;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:transparent;font-family:var(--font);color:var(--txt);font-size:14px;line-height:1.5}
+.http-anim{max-width:720px;margin:0 auto;padding:1rem}
+button{font-family:var(--font);font-size:13px;padding:6px 12px;background:transparent;color:var(--txt);border:.5px solid var(--bdr2);border-radius:var(--radius);cursor:pointer;transition:background .15s,transform .1s,opacity .15s}
+button:hover{background:var(--bg2)}
+button:active{transform:scale(0.98)}
+button:disabled{opacity:.38;cursor:not-allowed}
+@keyframes fadeIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+.log-e{animation:fadeIn .2s ease forwards;font-size:11px;padding:2px 0;border-bottom:.5px solid var(--bdr);font-family:var(--mono);color:var(--txt2)}
+.log-e:last-child{border-bottom:none}
+.lr{color:#185FA5}.lg{color:#0F6E56}.le{color:#A32D2D}.lw{color:#854F0B}.lp{color:#534AB7}
+
+.sdot{width:9px;height:9px;border-radius:50%;background:var(--bdr2);transition:background .25s;flex-shrink:0}
+.sdot.act{background:#378ADD;animation:blink .8s ease-in-out infinite}
+.sdot.done{background:#1D9E75;animation:none}
+.sdot.err{background:#E24B4A;animation:none}
+.sdot.warn{background:#BA7517;animation:none}
+.sdot.info{background:#534AB7;animation:none}
+.svg-g{transition:opacity .35s}
+.shk{animation:shake .35s ease}
+.code-btn{font-size:11px;padding:3px 9px;font-family:var(--mono);min-width:44px;border:.5px solid;cursor:pointer;border-radius:var(--radius);transition:opacity .2s,transform .15s}
+.code-btn.active{font-weight:500;border-width:1.5px;box-shadow:0 0 0 2px rgba(55,138,221,0.22)}
+.code-btn.dimmed{opacity:.28;cursor:not-allowed}
+.fam-2xx{background:#E1F5EE;color:#085041;border-color:#5DCAA5}
+.fam-3xx{background:#EEEDFE;color:#3C3489;border-color:#AFA9EC}
+.fam-4xx{background:#FAEEDA;color:#633806;border-color:#EF9F27}
+.fam-5xx{background:#FCEBEB;color:#791F1F;border-color:#F09595}
+.fam-net{background:var(--bg2);color:var(--txt2);border-color:var(--bdr2)}
+
+.fam-row{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-bottom:6px}
+.fam-label{font-size:10px;font-family:var(--mono);color:var(--txt3);min-width:30px;letter-spacing:.04em}
+.surface{background:var(--bg2);border-radius:var(--radius);padding:9px 11px;border:.5px solid var(--bdr)}
+.mono{font-family:var(--mono);font-size:11px;color:var(--txt2);line-height:1.65}
+.mute{color:var(--txt3)}
+#tip{position:absolute;z-index:50;max-width:280px;padding:9px 12px;background:var(--bg);border:.5px solid var(--bdr2);border-radius:var(--radius);box-shadow:0 4px 16px rgba(0,0,0,0.12);font-size:11.5px;line-height:1.45;color:var(--txt);pointer-events:none;opacity:0;transition:opacity .12s}
+#tip.show{opacity:1}
+#tip .tip-code{font-family:var(--mono);font-weight:500;font-size:12px;margin-bottom:3px;display:block}
+.tip-2xx .tip-code{color:#0F6E56}.tip-3xx .tip-code{color:#534AB7}
+.tip-4xx .tip-code{color:#BA7517}.tip-5xx .tip-code{color:#A32D2D}
+.tip-net .tip-code{color:#A32D2D}
+.ep-rect{fill:var(--ep);stroke:var(--eps);stroke-width:.5}
+.ep-name{fill:var(--txt)}.ep-sub{fill:var(--txt3)}
+.wire{stroke:var(--bdr2)}
+.method-tabs{display:flex;gap:4px;flex-wrap:wrap}
+.mtab{font-family:var(--mono);font-size:12px;font-weight:500;padding:5px 14px}
+.mtab.active{background:var(--info-bg)!important;color:var(--info-text)!important;border-color:var(--info-border)!important}
+.filter-note{font-size:11px;color:var(--txt3);margin-top:6px;font-style:italic}
+</style>
+
+<div class="http-anim">
+<h2 style="margin:0 0 .75rem 0;font-size:18px;font-weight:500">HTTP protocol animation</h2>
+<div style="position:relative" id="root">
+<div id="tip" role="tooltip"></div>
+
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:.6rem;flex-wrap:wrap">
+  <div>
+    <div style="font-size:14px;font-weight:500" id="ttl">HTTP Request-Response Cycle</div>
+    <div style="font-size:12px;color:var(--txt2);margin-top:2px" id="dsc">Select a method — only its valid responses are shown</div>
+  </div>
+  <div style="display:flex;gap:5px;flex-wrap:wrap">
+    <button id="btn-step">Step →</button>
+    <button id="btn-play">▶ Play</button>
+    <button id="btn-reset">↺ Reset</button>
+  </div>
+</div>
+
+<div style="display:flex;align-items:center;margin-bottom:.6rem" id="dotrow"></div>
+
+<div style="position:relative;height:250px;margin-bottom:.6rem">
+<svg width="100%" height="250" viewBox="0 0 640 250" style="position:absolute;top:0;left:0">
+<defs>
+  <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+<rect class="ep-rect" id="rbr" x="18" y="84" width="118" height="82" rx="10"/>
+<text x="77" y="114" text-anchor="middle" font-size="22">🖥️</text>
+<text class="ep-name" x="77" y="139" text-anchor="middle" font-size="12">Browser</text>
+<text class="ep-sub" x="77" y="153" text-anchor="middle" font-size="10">client</text>
+<rect class="ep-rect" id="rsv" x="504" y="84" width="118" height="82" rx="10"/>
+<text x="563" y="114" text-anchor="middle" font-size="22">🗄️</text>
+<text class="ep-name" x="563" y="139" text-anchor="middle" font-size="12">Server</text>
+<text class="ep-sub" x="563" y="153" text-anchor="middle" font-size="10">example.com</text>
+<line class="wire" id="wire" x1="136" y1="125" x2="504" y2="125" stroke-width="1" stroke-dasharray="4 4"/>
+<g id="asyn" class="svg-g" style="opacity:0">
+  <text x="320" y="17" text-anchor="middle" font-size="10" fill="#185FA5">TCP SYN</text>
+  <line x1="146" y1="25" x2="494" y2="25" stroke="#378ADD" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="5 3"/>
+</g>
+<g id="aack" class="svg-g" style="opacity:0">
+  <text x="320" y="52" text-anchor="middle" font-size="10" fill="#0F6E56">TCP SYN-ACK</text>
+  <line x1="494" y1="60" x2="146" y2="60" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="5 3"/>
+</g>
+<g id="aclientack" class="svg-g" style="opacity:0">
+  <text x="320" y="82" text-anchor="middle" font-size="10" fill="#185FA5">TCP ACK</text>
+  <line x1="146" y1="90" x2="494" y2="90" stroke="#378ADD" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="5 3"/>
+</g>
+<g id="areq" class="svg-g" style="opacity:0">
+  <text id="tlreq" x="320" y="117" text-anchor="middle" font-size="11" fill="#185FA5" font-weight="500">GET /index.html HTTP/1.1</text>
+  <line x1="146" y1="125" x2="494" y2="125" stroke="#378ADD" stroke-width="2" marker-end="url(#arr)"/>
+</g>
+<g id="ares" class="svg-g" style="opacity:0">
+  <line id="lnres" x1="494" y1="180" x2="146" y2="180" stroke="#1D9E75" stroke-width="2" marker-end="url(#arr)"/>
+  <text id="tlres" x="320" y="196" text-anchor="middle" font-size="11" fill="#0F6E56" font-weight="500">200 OK + body</text>
+</g>
+<g id="badge" class="svg-g" style="opacity:0">
+  <rect id="badgeRect" x="220" y="213" width="200" height="26" rx="13" fill="#E1F5EE" stroke="#5DCAA5" stroke-width=".5"/>
+  <text id="badgeTxt" x="320" y="231" text-anchor="middle" font-size="12" fill="#085041" font-weight="500">✓ 200 OK</text>
+</g>
+</svg>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:.6rem">
+  <div class="surface"><div style="font-size:10px;color:var(--txt3);margin-bottom:3px;letter-spacing:.04em">REQUEST</div><div id="rqh" class="mono"><span class="mute">waiting…</span></div></div>
+  <div class="surface"><div style="font-size:10px;color:var(--txt3);margin-bottom:3px;letter-spacing:.04em">RESPONSE</div><div id="rsh" class="mono"><span class="mute">waiting…</span></div></div>
+</div>
+
+<div class="surface" style="margin-bottom:.6rem">
+  <div style="font-size:10px;color:var(--txt3);margin-bottom:5px;letter-spacing:.04em">EVENT LOG</div>
+  <div id="lg" style="min-height:50px;max-height:88px;overflow-y:auto"><div class="log-e">Pick a method — response codes will filter automatically.</div></div>
+</div>
+
+<!-- Method selector -->
+<div style="margin-bottom:.75rem">
+  <div style="font-size:10px;color:var(--txt3);margin-bottom:5px;letter-spacing:.04em">HTTP METHOD</div>
+  <div class="method-tabs" id="methodTabs"></div>
+</div>
+
+<!-- Response codes (filtered) -->
+<div>
+  <div style="font-size:10px;color:var(--txt3);margin-bottom:5px;letter-spacing:.04em">RESPONSE CODES <span id="filterNote" style="font-style:italic">— showing all valid for <span id="filterMethod">GET</span></span></div>
+  <div class="fam-row"><div class="fam-label">2xx</div><div id="row2xx" style="display:flex;gap:4px;flex-wrap:wrap"></div></div>
+  <div class="fam-row"><div class="fam-label">3xx</div><div id="row3xx" style="display:flex;gap:4px;flex-wrap:wrap"></div></div>
+  <div class="fam-row"><div class="fam-label">4xx</div><div id="row4xx" style="display:flex;gap:4px;flex-wrap:wrap"></div></div>
+  <div class="fam-row"><div class="fam-label">5xx</div><div id="row5xx" style="display:flex;gap:4px;flex-wrap:wrap"></div></div>
+  <div class="fam-row"><div class="fam-label">net</div><div id="rownet" style="display:flex;gap:4px;flex-wrap:wrap"></div></div>
+</div>
+
+</div>
+</div>
+
+<script>
+(function(){
+var root=document.querySelector('.http-anim');
+function $(id){return root.querySelector('#'+id);}
+
+// Which codes are valid per method
+var METHOD_CODES={
+  GET:   ['200','204','301','302','304','307','400','401','403','404','408','410','429','500','502','503','504','dns','reset'],
+  POST:  ['200','201','202','204','303','307','400','401','402','403','404','409','413','415','422','429','500','502','503','507','dns','reset'],
+  PUT:   ['200','201','204','307','308','400','401','403','404','409','413','415','422','500','503','dns','reset'],
+  PATCH: ['200','204','307','400','401','403','404','409','415','422','500','503','dns','reset'],
+  DELETE:['200','202','204','307','401','403','404','409','429','500','503','dns','reset'],
+  //HEAD:  ['200','301','304','401','403','404','429','500','503','dns','reset'],
+  //OPTIONS:['200','204','400','401','403','404','500','dns','reset']
+};
+
+var METHOD_META={
+  GET:    {color:'#185FA5',bg:'#E6F1FB',path:'/index.html',api:'/api/users/42',desc:'Retrieve a resource'},
+  POST:   {color:'#0F6E56',bg:'#E1F5EE',path:'/api/users',api:'/api/users',desc:'Create a new resource'},
+  PUT:    {color:'#854F0B',bg:'#FAEEDA',path:'/api/users/42',api:'/api/users/42',desc:'Replace a resource entirely'},
+  PATCH:  {color:'#534AB7',bg:'#EEEDFE',path:'/api/users/42',api:'/api/users/42',desc:'Partially update a resource'},
+  DELETE: {color:'#A32D2D',bg:'#FCEBEB',path:'/api/users/42',api:'/api/users/42',desc:'Remove a resource'},
+  //HEAD:   {color:'#5F5E5A',bg:'#F1EFE8',path:'/index.html',api:'/api/users/42',desc:'Check headers without body'},
+  //OPTIONS:{color:'#3B6D11',bg:'#EAF3DE',path:'/',api:'/',desc:'Query allowed methods (CORS preflight)'}
+};
+
+var CAT={
+  '200':{fam:'2xx',label:'200 OK',path:'html',icon:'✓',dotState:'done',tip:'Success — resource returned in the body.',desc:'Request was understood and processed',headers:function(){return 'Content-Type: text/html<br>Content-Length: 1256<br>Cache-Control: max-age=3600';},body:'&lt;html&gt;… 1256 bytes …&lt;/html&gt;'},
+  '201':{fam:'2xx',label:'201 Created',path:'api',icon:'✓',dotState:'done',tip:'New resource created — Location header points to it.',desc:'Resource created successfully',headers:function(){return 'Content-Type: application/json<br>Location: /api/users/42<br>Content-Length: 64';},body:'{ "id": 42, "name": "Maya" }'},
+  '202':{fam:'2xx',label:'202 Accepted',path:'api',icon:'✓',dotState:'done',tip:'Request accepted for async processing — not yet complete.',desc:'Accepted for async processing',headers:function(){return 'Content-Type: application/json<br>Location: /api/jobs/9f2a<br>Content-Length: 52';},body:'{ "job_id": "9f2a", "status": "queued" }'},
+  '204':{fam:'2xx',label:'204 No Content',path:'api',icon:'✓',dotState:'done',tip:'Success — no body to return.',desc:'Success with no response body',headers:function(){return 'Content-Length: 0<br>Connection: keep-alive';},body:'(empty)'},
+  '301':{fam:'3xx',label:'301 Moved Permanently',path:'html',icon:'↪',dotState:'info',tip:'Resource permanently moved — update bookmarks and search engines.',desc:'Resource moved permanently',headers:function(){return 'Location: https://www.example.com'+getPath()+'<br>Cache-Control: max-age=31536000<br>Content-Length: 0';},body:'(empty — follow Location)'},
+  '302':{fam:'3xx',label:'302 Found',path:'html',icon:'↪',dotState:'info',tip:'Temporary redirect — keep the original URL.',desc:'Temporary redirect',headers:function(){return 'Location: /maintenance.html<br>Content-Length: 0';},body:'(empty — follow Location)'},
+  '303':{fam:'3xx',label:'303 See Other',path:'api',icon:'↪',dotState:'info',tip:'After POST, redirect to the new resource using GET.',desc:'Redirect to result using GET',headers:function(){return 'Location: /api/users/42<br>Content-Length: 0';},body:'(empty — GET the Location)'},
+  '304':{fam:'3xx',label:'304 Not Modified',path:'html',icon:'↻',dotState:'info',tip:'Cached copy is still fresh — no body sent.',desc:'Cached copy is still valid',headers:function(){return 'ETag: "abc123"<br>Cache-Control: max-age=3600<br>Content-Length: 0';},body:'(empty — use cached body)',reqExtra:'If-None-Match: "abc123"'},
+  '307':{fam:'3xx',label:'307 Temporary Redirect',path:'api',icon:'↪',dotState:'info',tip:'Temporary redirect — re-send with same method and body.',desc:'Temporary redirect (keep method)',headers:function(){return 'Location: https://backup.example.com'+getPath()+'<br>Content-Length: 0';},body:'(empty — follow Location)'},
+  '308':{fam:'3xx',label:'308 Permanent Redirect',path:'api',icon:'↪',dotState:'info',tip:'Permanent redirect — re-send with same method and body to new URL.',desc:'Permanent redirect (keep method)',headers:function(){return 'Location: https://v2.example.com'+getPath()+'<br>Cache-Control: max-age=31536000<br>Content-Length: 0';},body:'(empty — follow Location)'},
+  '400':{fam:'4xx',label:'400 Bad Request',path:'api',icon:'⚠',dotState:'warn',tip:'Server cannot parse the request — malformed syntax or invalid params.',desc:'Malformed request',headers:function(){return 'Content-Type: application/json<br>Content-Length: 58';},body:'{ "error": "invalid JSON at line 3" }',processDesc:'Parsing body — fails validation'},
+  '401':{fam:'4xx',label:'401 Unauthorized',path:'api',icon:'🔒',dotState:'warn',tip:'Missing or invalid authentication credentials.',desc:'Authentication required',headers:function(){return 'WWW-Authenticate: Bearer realm="api"<br>Content-Type: application/json<br>Content-Length: 42';},body:'{ "error": "missing or invalid token" }',processDesc:'Checking auth — no valid credentials found'},
+  '402':{fam:'4xx',label:'402 Payment Required',path:'api',icon:'💳',dotState:'warn',tip:'Quota or subscription limit reached.',desc:'Payment or quota required',headers:function(){return 'Content-Type: application/json<br>Content-Length: 64';},body:'{ "error": "subscription expired" }',processDesc:'Checking billing — quota exceeded'},
+  '403':{fam:'4xx',label:'403 Forbidden',path:'api',icon:'⛔',dotState:'warn',tip:'Authenticated but not authorised to access this resource.',desc:'Authenticated but not allowed',headers:function(){return 'Content-Type: application/json<br>Content-Length: 48';},body:'{ "error": "permission denied" }',processDesc:'Checking permissions — access denied'},
+  '404':{fam:'4xx',label:'404 Not Found',path:'api',icon:'⚠',dotState:'warn',tip:'No resource exists at this URL.',desc:'Resource does not exist',headers:function(){return 'Content-Type: application/json<br>Content-Length: 42';},body:'{ "error": "resource not found" }',processDesc:'Looking up resource — not found'},
+  '408':{fam:'4xx',label:'408 Request Timeout',path:'html',icon:'⏱',dotState:'warn',tip:'Client took too long to send the request — server is closing the connection.',desc:'Client too slow — connection closed',headers:function(){return 'Connection: close<br>Content-Length: 0';},body:'(empty)',processDesc:'Waiting for full request — gave up'},
+  '409':{fam:'4xx',label:'409 Conflict',path:'api',icon:'⚠',dotState:'warn',tip:'Request conflicts with current resource state (e.g. duplicate, lock conflict).',desc:'Conflict with current state',headers:function(){return 'Content-Type: application/json<br>Content-Length: 72';},body:'{ "error": "resource already exists" }',processDesc:'Validating — conflict detected'},
+  '410':{fam:'4xx',label:'410 Gone',path:'html',icon:'✗',dotState:'warn',tip:'Resource existed but has been permanently removed.',desc:'Resource permanently deleted',headers:function(){return 'Content-Length: 0';},body:'(empty)',processDesc:'Looking up resource — permanently removed'},
+  '413':{fam:'4xx',label:'413 Payload Too Large',path:'api',icon:'⚠',dotState:'warn',tip:'Request body exceeds the server size limit.',desc:'Request body too large',headers:function(){return 'Content-Type: application/json<br>Content-Length: 52<br>Retry-After: 0';},body:'{ "error": "body exceeds 10mb limit" }',processDesc:'Checking body size — limit exceeded'},
+  '415':{fam:'4xx',label:'415 Unsupported Media Type',path:'api',icon:'⚠',dotState:'warn',tip:'The Content-Type header is not accepted by this endpoint.',desc:'Content-Type not accepted',headers:function(){return 'Accept: application/json<br>Content-Type: application/json<br>Content-Length: 58';},body:'{ "error": "use application/json" }',processDesc:'Checking Content-Type — not supported'},
+  '422':{fam:'4xx',label:'422 Unprocessable Entity',path:'api',icon:'⚠',dotState:'warn',tip:'Body is valid JSON/XML but fails business logic validation.',desc:'Valid syntax, fails validation',headers:function(){return 'Content-Type: application/json<br>Content-Length: 88';},body:'{ "error": "email already in use" }',processDesc:'Validating business rules — fails'},
+  '429':{fam:'4xx',label:'429 Too Many Requests',path:'api',icon:'⏱',dotState:'warn',tip:'Rate limit exceeded — slow down and retry.',desc:'Rate limit exceeded',headers:function(){return 'Retry-After: 60<br>X-RateLimit-Limit: 100<br>Content-Length: 42';},body:'{ "error": "rate limit exceeded" }',processDesc:'Checking rate limit — exceeded'},
+  '500':{fam:'5xx',label:'500 Internal Server Error',path:'api',icon:'✗',dotState:'err',tip:'Server encountered an unexpected condition.',desc:'Server crashed handling request',headers:function(){return 'Content-Type: application/json<br>Content-Length: 68<br>Connection: close';},body:'{ "error": "internal server error", "id": "err_x9f2" }',processDesc:'Unhandled exception in handler',shake:true},
+  '501':{fam:'5xx',label:'501 Not Implemented',path:'api',icon:'✗',dotState:'err',tip:'Server does not support this method or feature.',desc:'Method not supported by server',headers:function(){return 'Allow: GET, POST<br>Content-Type: application/json<br>Content-Length: 48';},body:'{ "error": "method not implemented" }',processDesc:'Checking supported methods — not found'},
+  '502':{fam:'5xx',label:'502 Bad Gateway',path:'api',icon:'✗',dotState:'err',tip:'Gateway received an invalid response from the upstream server.',desc:'Bad response from upstream',headers:function(){return 'Content-Type: application/json<br>Content-Length: 56<br>Connection: close';},body:'{ "error": "bad gateway" }',processDesc:'Forwarding to upstream — bad response',shake:true},
+  '503':{fam:'5xx',label:'503 Service Unavailable',path:'api',icon:'✗',dotState:'err',tip:'Server overloaded or down for maintenance.',desc:'Server not ready',headers:function(){return 'Retry-After: 30<br>Content-Type: application/json<br>Content-Length: 42';},body:'{ "error": "service unavailable" }',processDesc:'Server overloaded — rejecting request'},
+  '504':{fam:'5xx',label:'504 Gateway Timeout',path:'api',icon:'⏱',dotState:'err',tip:'Gateway did not receive a timely response from upstream.',desc:'Upstream timed out',headers:function(){return 'Content-Type: application/json<br>Content-Length: 52<br>Connection: close';},body:'{ "error": "upstream timed out" }',processDesc:'Upstream did not respond in time',shake:true},
+  '507':{fam:'5xx',label:'507 Insufficient Storage',path:'api',icon:'✗',dotState:'err',tip:'Server cannot store the representation needed to complete the request.',desc:'Server storage full',headers:function(){return 'Content-Type: application/json<br>Content-Length: 48';},body:'{ "error": "storage quota exceeded" }',processDesc:'Writing resource — storage full'},
+  'dns': {fam:'net',label:'DNS Failure',icon:'✗',dotState:'err',tip:'Hostname could not be resolved to an IP address.',desc:'DNS lookup failed'},
+  'reset':{fam:'net',label:'TCP Reset',icon:'✗',dotState:'err',tip:'Server sent RST during TCP handshake — connection refused.',desc:'TCP connection reset by server'}
+};
+
+var FAM_COLOR={
+  '2xx':{c:'#0F6E56',bg:'#E1F5EE',bd:'#5DCAA5',txt:'#085041',logCls:'lg'},
+  '3xx':{c:'#534AB7',bg:'#EEEDFE',bd:'#AFA9EC',txt:'#3C3489',logCls:'lp'},
+  '4xx':{c:'#BA7517',bg:'#FAEEDA',bd:'#EF9F27',txt:'#633806',logCls:'lw'},
+  '5xx':{c:'#A32D2D',bg:'#FCEBEB',bd:'#F09595',txt:'#791F1F',logCls:'le'},
+  'net':{c:'#A32D2D',bg:'#FCEBEB',bd:'#F09595',txt:'#791F1F',logCls:'le'}
+};
+
+// all codes by family for rendering
+var ALL_CODES={
+  '2xx':['200','201','202','204'],
+  '3xx':['301','302','303','304','307','308'],
+  '4xx':['400','401','402','403','404','408','409','410','413','415','422','429'],
+  '5xx':['500','501','502','503','504','507'],
+  'net':['dns','reset']
+};
+
+var meth='GET', code='200', cur=-1, playing=false, pt=null, steps=[];
+
+function getPath(){
+  var M=METHOD_META[meth];
+  return M ? M.api : '/api/resource';
+}
+function getRequestPath(){
+  var M=METHOD_META[meth];
+  var s=code!=='dns'&&code!=='reset'&&CAT[code]?CAT[code]:null;
+  if(!s)return M?M.path:'/';
+  return s.path==='api'?M.api:M.path;
+}
+function hasBody(){return meth==='POST'||meth==='PUT'||meth==='PATCH';}
+
+function sv(id){var e=$(id);if(!e)return;e.style.transition='opacity .35s';e.style.opacity=1;}
+function hd(id){var e=$(id);if(!e)return;e.style.transition='opacity .25s';e.style.opacity=0;}
+function greenWire(){$('wire').setAttribute('stroke','#1D9E75');$('wire').setAttribute('stroke-dasharray','none');}
+function addLog(msg,cls){var d=$('lg'),e=document.createElement('div');e.className='log-e '+(cls||'');e.textContent=msg;d.appendChild(e);d.scrollTop=d.scrollHeight;}
+function shake(id){var e=$(id);e.classList.remove('shk');void e.offsetWidth;e.classList.add('shk');setTimeout(function(){e.classList.remove('shk');},400);}
+function setTD(t,d){$('ttl').textContent=t;$('dsc').textContent=d;}
+
+function buildSteps(){
+  var path=getRequestPath();
+  if(code==='dns') return [
+    {t:'DNS Lookup',d:'Attempting to resolve hostname',dot:0,dotState:'act',fn:function(){addLog('[DNS] Resolving…');}},
+    {t:'DNS — Failed',d:'NXDOMAIN — no IP address returned',dot:0,dotState:'err',fn:function(){addLog('[DNS] NXDOMAIN — hostname not found','le');shake('rbr');setBadge('net','✗ DNS_PROBE_POSSIBLE');}}
+  ];
+  if(code==='reset') return [
+    {t:'DNS Lookup',d:'Resolving hostname to IP',dot:0,dotState:'act',fn:function(){addLog('[DNS] Resolving…');addLog('[DNS] → 93.184.216.34 ✓','lg');}},
+    {t:'TCP — SYN',d:'Browser sends SYN',dot:1,dotState:'act',fn:function(){sv('asyn');addLog('[TCP] SYN → server','lr');}},
+    {t:'TCP — Reset',d:'Server sent RST — connection refused',dot:2,dotState:'err',fn:function(){addLog('[TCP] RST ← server','le');shake('rsv');setBadge('net','✗ ERR_CONNECTION_RESET');}}
+  ];
+
+  var s=CAT[code];
+  var fc=FAM_COLOR[s.fam];
+  return [
+    {t:'DNS Lookup',d:'Resolving example.com to an IP',dot:0,dotState:'act',fn:function(){addLog('[DNS] Resolving example.com…');addLog('[DNS] → 93.184.216.34 ✓','lg');}},
+    {t:'TCP — SYN / SYN-ACK / ACK',d:'Three-way handshake establishes connection',dot:1,dotState:'act',fn:function(){sv('asyn');sv('aack');sv('aclientack');addLog('[TCP] SYN → server','lr');addLog('[TCP] SYN-ACK ← server','lg');addLog('[TCP] ACK → server (connected)','lr');greenWire();}},
+    {t:meth+' '+path,d:'Browser sends '+meth+' request over the TCP connection',dot:2,dotState:'act',fn:function(){
+      sv('areq');
+      $('tlreq').textContent=meth+' '+path+' HTTP/1.1';
+      addLog('[HTTP] '+meth+' '+path+' HTTP/1.1','lr');
+      var hdrs='<span style="color:#185FA5">'+meth+' '+path+' HTTP/1.1</span><br>Host: example.com<br>Accept: text/html,application/json';
+      if(s.reqExtra)hdrs+='<br>'+s.reqExtra;
+      if(hasBody())hdrs+='<br>Content-Type: application/json<br>Content-Length: 48';
+      else hdrs+='<br>Connection: keep-alive';
+      $('rqh').innerHTML=hdrs;
+    }},
+    {t:'Server processing',d:s.processDesc||'Server runs handler and prepares response',dot:3,dotState:(s.fam==='5xx'||s.fam==='4xx')?'warn':'act',fn:function(){
+      addLog('[Server] Parsing '+meth+' request…','lw');
+      if(s.processDesc)addLog('[Server] '+s.processDesc,(s.fam==='5xx'||s.fam==='4xx')?'le':'lw');
+      else addLog('[Server] Handler executed','lg');
+      if(s.shake)shake('rsv');
+    }},
+    {t:'HTTP Response — '+s.label,d:s.desc,dot:4,dotState:s.dotState,fn:function(){
+      $('lnres').setAttribute('stroke',fc.c);
+      $('tlres').setAttribute('fill',fc.c);
+      $('tlres').textContent=s.label;
+      sv('ares');
+      setBadge(s.fam,s.icon+' '+s.label);
+      addLog('[HTTP] '+s.label+' ← server',fc.logCls);
+      $('rsh').innerHTML='<span style="color:'+fc.c+'">HTTP/1.1 '+s.label+'</span><br>'+s.headers()+'<br><br><span class="mute">body:</span> '+s.body;
+    }}
+  ];
+}
+
+function setBadge(fam,text){
+  var fc=FAM_COLOR[fam];
+  $('badgeRect').setAttribute('fill',fc.bg);
+  $('badgeRect').setAttribute('stroke',fc.bd);
+  $('badgeTxt').setAttribute('fill',fc.txt);
+  $('badgeTxt').textContent=text;
+  sv('badge');
+}
+
+var DOT_LABELS_NORMAL=['DNS','TCP','Request','Process','Response'];
+var DOT_LABELS_DNS=['DNS','Fail'];
+var DOT_LABELS_RESET=['DNS','SYN','RST'];
+
+function buildDots(){
+  var labels=code==='dns'?DOT_LABELS_DNS:code==='reset'?DOT_LABELS_RESET:DOT_LABELS_NORMAL;
+  var row=$('dotrow');row.innerHTML='';
+  labels.forEach(function(lbl,i){
+    var wrap=document.createElement('div');
+    wrap.style.cssText='display:flex;flex-direction:column;align-items:center;gap:2px';
+    var d=document.createElement('div');d.className='sdot';d.id='d'+i;
+    var t=document.createElement('div');t.style.cssText='font-size:9px;color:var(--txt3)';t.textContent=lbl;
+    wrap.appendChild(d);wrap.appendChild(t);row.appendChild(wrap);
+    if(i<labels.length-1){
+      var seg=document.createElement('div');
+      seg.style.cssText='flex:1;height:.5px;background:var(--bdr);margin:0 3px;margin-bottom:12px';
+      row.appendChild(seg);
+    }
+  });
+}
+
+function dot(i,s){var d=$('d'+i);if(!d)return;d.classList.remove('act','done','err','warn','info');if(s)d.classList.add(s);}
+
+function applyStep(i){
+  var s=steps[i];
+  if(i>0){
+    var prev=$('d'+(i-1));
+    if(prev){
+      var keep=prev.classList.contains('err')||prev.classList.contains('warn')||prev.classList.contains('info');
+      if(!keep){prev.classList.remove('act','done');prev.classList.add('done');}
+    }
+  }
+  dot(s.dot,s.dotState);setTD(s.t,s.d);s.fn();
+  if(i===steps.length-1){$('btn-step').disabled=true;if(!playing)$('btn-play').disabled=true;}
+}
+
+function doStep(){if(cur>=steps.length-1)return;cur++;applyStep(cur);}
+function doPlay(){
+  if(playing)return;playing=true;
+  $('btn-play').disabled=true;$('btn-step').disabled=true;
+  (function loop(){
+    if(!playing||cur>=steps.length-1){playing=false;$('btn-play').disabled=(cur>=steps.length-1);$('btn-step').disabled=(cur>=steps.length-1);return;}
+    cur++;applyStep(cur);pt=setTimeout(loop,850);
+  })();
+}
+function doReset(){
+  playing=false;clearTimeout(pt);cur=-1;
+  ['asyn','aack','aclientack','areq','ares','badge'].forEach(hd);
+  $('wire').setAttribute('stroke','');$('wire').setAttribute('stroke-dasharray','4 4');
+  $('lnres').setAttribute('stroke','#1D9E75');$('tlres').setAttribute('fill','#0F6E56');
+  $('lg').innerHTML='<div class="log-e">Pick a method — response codes filter automatically.</div>';
+  $('rqh').innerHTML='<span class="mute">waiting…</span>';
+  $('rsh').innerHTML='<span class="mute">waiting…</span>';
+  $('btn-step').disabled=false;$('btn-play').disabled=false;
+  var M=METHOD_META[meth];
+  setTD(meth+' Request',M.desc+' — hover a code, click to run');
+  buildDots();steps=buildSteps();
+}
+
+// ── Method tabs ──────────────────────────────────────
+function buildMethodTabs(){
+  var el=$('methodTabs');el.innerHTML='';
+  Object.keys(METHOD_META).forEach(function(m){
+    var M=METHOD_META[m];
+    var b=document.createElement('button');
+    b.className='mtab'+(m===meth?' active':'');
+    b.textContent=m;
+    if(m===meth){b.style.background=M.bg;b.style.color=M.color;b.style.borderColor=M.color;}
+    b.addEventListener('click',function(){setMethod(m);});
+    el.appendChild(b);
+  });
+}
+
+// ── Code buttons with filtering ──────────────────────
+function buildCodeButtons(){
+  var valid=METHOD_CODES[meth]||[];
+  $('filterMethod').textContent=meth;
+
+  Object.keys(ALL_CODES).forEach(function(fam){
+    var row=$('row'+fam);row.innerHTML='';
+    ALL_CODES[fam].forEach(function(k){
+      var s=CAT[k];if(!s)return;
+      var isValid=valid.indexOf(k)!==-1;
+      var b=document.createElement('button');
+      b.className='code-btn fam-'+fam+(k===code?' active':'')+(isValid?'':' dimmed');
+      b.id='c'+k;
+      b.textContent=k==='dns'?'DNS Fail':k==='reset'?'TCP Reset':k;
+      b.title=s.label;
+      b.disabled=!isValid;
+      if(isValid){
+        b.addEventListener('click',function(){setCode(k);});
+        b.addEventListener('mouseenter',function(){showTip(b,s);});
+        b.addEventListener('mouseleave',hideTip);
+        b.addEventListener('focus',function(){showTip(b,s);});
+        b.addEventListener('blur',hideTip);
+      }
+      row.appendChild(b);
+    });
+  });
+}
+
+function setMethod(m){
+  meth=m;
+  // If current code is not valid for new method, pick first valid code
+  var valid=METHOD_CODES[m]||[];
+  if(valid.indexOf(code)===-1) code=valid[0]||'200';
+  buildMethodTabs();
+  buildCodeButtons();
+  doReset();
+}
+
+function setCode(c){
+  code=c;
+  buildCodeButtons();
+  doReset();
+}
+
+// ── Tooltip ──────────────────────────────────────────
+var tip=$('tip');
+function showTip(btn,s){
+  if(!s)return;
+  tip.className='tip-'+s.fam;tip.classList.add('show');
+  tip.innerHTML='<span class="tip-code">'+s.label+'</span>'+(s.tip||s.desc||'');
+  var br=btn.getBoundingClientRect(),rr=root.getBoundingClientRect();
+  tip.style.left='0';tip.style.top='0';
+  var tw=tip.offsetWidth,th=tip.offsetHeight;
+  var x=br.left-rr.left+br.width/2-tw/2;
+  var y=br.top-rr.top-th-8;
+  var maxX=rr.width-tw-4;
+  if(x<4)x=4;if(x>maxX)x=maxX;
+  if(y<0)y=br.top-rr.top+br.height+8;
+  tip.style.left=x+'px';tip.style.top=y+'px';
+}
+function hideTip(){tip.classList.remove('show');}
+
+$('btn-step').addEventListener('click',doStep);
+$('btn-play').addEventListener('click',doPlay);
+$('btn-reset').addEventListener('click',doReset);
+
+// Init
+buildMethodTabs();
+buildCodeButtons();
+doReset();
+})();
+</script>
+</html>

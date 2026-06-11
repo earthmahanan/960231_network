@@ -1,0 +1,724 @@
+<html>
+<style>
+:root{color-scheme:light;
+  --bg:#ffffff;--bg2:#f4f3ee;--bg3:#ecebe4;
+  --txt:#1d1d1c;--txt2:#5f5e5a;--txt3:#888780;
+  --bdr:rgba(0,0,0,0.13);--bdr2:rgba(0,0,0,0.25);
+  --ep:#f4f3ee;--eps:#d3d1c7;
+  --radius:8px;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+
+body{background:transparent;font-family:var(--font);color:var(--txt);font-size:14px}
+button{font-family:var(--font);font-size:13px;padding:5px 12px;background:transparent;color:var(--txt);border:.5px solid var(--bdr2);border-radius:var(--radius);cursor:pointer;transition:background .15s}
+button:hover{background:var(--bg2)}button:active{transform:scale(.97)}button:disabled{opacity:.35;cursor:not-allowed}
+.surf{background:var(--bg2);border-radius:var(--radius);border:.5px solid var(--bdr);padding:9px 12px}
+.mono{font-family:var(--mono);font-size:11px;color:var(--txt2);line-height:1.65}
+.mute{color:var(--txt3)}
+@keyframes fi{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:translateY(0)}}
+.log-e{font-family:var(--mono);font-size:11px;padding:2px 0;border-bottom:.5px solid var(--bdr);color:var(--txt2);animation:fi .2s ease}
+.log-e:last-child{border-bottom:none}
+.lbl{color:#185FA5}.lgr{color:#0F6E56}.le{color:#A32D2D}.lw{color:#854F0B}.lp{color:#534AB7}.lo{color:#993C1D}
+
+.sdot{width:9px;height:9px;border-radius:50%;background:var(--bdr2);flex-shrink:0;transition:background .25s}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.sdot.act{background:#378ADD;animation:pulse .8s ease-in-out infinite}
+.sdot.done{background:#1D9E75}.sdot.err{background:#E24B4A}.sdot.warn{background:#BA7517}
+.pill{display:inline-flex;align-items:center;font-size:11px;padding:2px 9px;border-radius:20px;border:.5px solid}
+.p-sess{background:#E6F1FB;color:#0C447C;border-color:#85B7EB}
+.p-cook{background:#FAEEDA;color:#633806;border-color:#EF9F27}
+.p-jwt{background:#EEEDFE;color:#3C3489;border-color:#AFA9EC}
+.p-tok{background:#E1F5EE;color:#085041;border-color:#5DCAA5}
+.p-oauth{background:#FAECE7;color:#712B13;border-color:#F0997B}
+.p-sso{background:#EAF3DE;color:#3B6D11;border-color:#8FC15D}
+.p-sl{background:#E8F4F8;color:#0C4A6E;border-color:#7EC8E3}
+
+.scen-btn{font-size:11px;padding:4px 10px;border-radius:6px;border:.5px solid var(--bdr2);cursor:pointer;background:transparent;color:var(--txt2);font-family:var(--font)}
+.scen-btn:hover{background:var(--bg2)}
+.scen-btn.active{font-weight:500;border-color:#534AB7;background:#EEEDFE;color:#3C3489}
+
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px}
+.compare-card{padding:7px 9px;border-radius:6px;border:.5px solid var(--bdr);font-size:11px;line-height:1.45}
+.compare-card strong{display:block;font-size:11px;margin-bottom:2px}
+.compare-card.dim{opacity:.35}
+.compare-card.hl{box-shadow:0 0 0 2px rgba(55,138,221,.25)}
+</style>
+
+<div style="padding:.75rem 0;max-width:720px;margin:0 auto">
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:.6rem;flex-wrap:wrap">
+  <div>
+    <div style="font-size:16px;font-weight:500" id="ttl">Authentication concepts</div>
+    <div style="font-size:12px;color:var(--txt2);margin-top:2px" id="dsc">Pick a concept and step through how it works</div>
+  </div>
+  <div style="display:flex;gap:5px;flex-wrap:wrap">
+    <button id="btnStep">Step →</button>
+    <button id="btnPlay">▶ Play</button>
+    <button id="btnReset">↺ Reset</button>
+  </div>
+</div>
+
+<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:.6rem">
+  <button class="scen-btn active" id="sc-overview">Compare all</button>
+  <button class="scen-btn" id="sc-session">Session</button>
+  <button class="scen-btn" id="sc-cookie">Cookie</button>
+  <button class="scen-btn" id="sc-jwt">JWT</button>
+  <button class="scen-btn" id="sc-stateless">Stateless</button>
+  <button class="scen-btn" id="sc-token">Token</button>
+  <button class="scen-btn" id="sc-oauth">OAuth 2.0</button>
+  <button class="scen-btn" id="sc-sso">SSO</button>
+</div>
+
+<div style="display:flex;align-items:center;margin-bottom:.5rem" id="dotrow"></div>
+
+<div style="background:var(--bg2);border:.5px solid var(--bdr);border-radius:var(--radius);overflow:hidden">
+  <svg id="diagram" width="100%" style="display:block;overflow:visible"></svg>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:.6rem">
+  <div class="surf"><div style="font-size:10px;color:var(--txt3);margin-bottom:3px;letter-spacing:.04em" id="leftLbl">BROWSER / CLIENT</div><div id="leftPanel" class="mono"><span class="mute">waiting…</span></div></div>
+  <div class="surf"><div style="font-size:10px;color:var(--txt3);margin-bottom:3px;letter-spacing:.04em" id="rightLbl">SERVER</div><div id="rightPanel" class="mono"><span class="mute">waiting…</span></div></div>
+</div>
+
+<div class="surf" style="margin-top:8px">
+  <div style="font-size:10px;color:var(--txt3);margin-bottom:4px;letter-spacing:.04em">EVENT LOG</div>
+  <div id="log" style="min-height:44px;max-height:88px;overflow-y:auto"><div class="log-e">Choose a concept tab and press ▶ Play or Step →</div></div>
+</div>
+
+<div id="compareBox" class="surf" style="margin-top:8px;display:none">
+  <div style="font-size:10px;color:var(--txt3);margin-bottom:5px;letter-spacing:.04em">KEY DIFFERENCES</div>
+  <div class="compare-grid" id="compareGrid"></div>
+</div>
+
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:.6rem" id="pills"></div>
+</div>
+
+<script>
+var scenario='overview', cur=-1, playing=false, pt=null, steps=[], arrowDefs=[];
+var layout='two'; // two | three
+
+function $(id){return document.getElementById(id);}
+var svg=$('diagram');
+
+var VW=660, EP_W=100, EP_H=80, LANE=38, TOP=12;
+var isDark=function(){return false;}
+
+var C={
+  sess:'#185FA5', cook:'#BA7517', jwt:'#534AB7', tok:'#0F6E56',
+  oauth:'#D85A30', sso:'#3B6D11', sl:'#2A8CB0', ok:'#1D9E56', err:'#A32D2D', mute:'#888780'
+};
+
+function svgEl(tag,attrs,parent){
+  var el=document.createElementNS('http://www.w3.org/2000/svg',tag);
+  for(var k in attrs) el.setAttribute(k,String(attrs[k]));
+  if(parent) parent.appendChild(el);
+  return el;
+}
+
+function slotX(slot){
+  if(layout==='three'){
+    if(slot==='L') return 24;
+    if(slot==='M') return 270;
+    return 516;
+  }
+  if(slot==='L') return 28;
+  return 532;
+}
+
+function arrowPoints(dir, fromSlot, toSlot){
+  var y=function(){}; // set per arrow
+  return {x1:0,x2:0}; // placeholder
+}
+
+function buildSVG(){
+  var dark=isDark();
+  var n=arrowDefs.length;
+  var epTop=TOP+n*LANE+14;
+  var totalH=epTop+EP_H+18;
+  svg.setAttribute('viewBox','0 0 '+VW+' '+totalH);
+  svg.setAttribute('height',String(totalH));
+  svg.innerHTML='';
+
+  var defs=svgEl('defs',{},svg);
+  var colors=['#378ADD','#1D9E75','#7F77DD','#BA7517','#534AB7','#185FA5','#D85A30','#3B6D11','#A32D2D'];
+  colors.forEach(function(c){
+    var m=svgEl('marker',{id:'m'+c.slice(1),viewBox:'0 0 10 10',refX:'8',refY:'5',markerWidth:'6',markerHeight:'6',orient:'auto-start-reverse'},defs);
+    svgEl('path',{d:'M2 1L8 5L2 9',fill:'none',stroke:c,'stroke-width':'1.5','stroke-linecap':'round','stroke-linejoin':'round'},m);
+  });
+
+  var epFill=dark?'#2e2e2b':'#f4f3ee';
+  var epStroke=dark?'rgba(255,255,255,0.22)':'rgba(0,0,0,0.22)';
+  var nameFill=dark?'#ecebe4':'#1d1d1c';
+  var subFill='#888780';
+
+  var eps=getEndpoints();
+  eps.forEach(function(ep){
+    if(!ep.show) return;
+    var x=slotX(ep.slot)-EP_W/2;
+    var g=svgEl('g',{id:'ep-'+ep.id},svg);
+    svgEl('rect',{x:x,y:epTop,width:EP_W,height:EP_H,rx:'10',fill:epFill,stroke:epStroke,'stroke-width':'.5'},g);
+    var t=svgEl('text',{x:x+EP_W/2,y:epTop+24,'text-anchor':'middle','font-size':'22'},g); t.textContent=ep.icon;
+    svgEl('text',{x:x+EP_W/2,y:epTop+48,'text-anchor':'middle','font-size':'12','font-weight':'500',fill:nameFill},g).textContent=ep.name;
+    svgEl('text',{x:x+EP_W/2,y:epTop+64,'text-anchor':'middle','font-size':'10',fill:subFill},g).textContent=ep.sub;
+  });
+
+  // browser cookie jar (cookie scenario)
+  var jar=svgEl('g',{id:'cookieJar',opacity:'0'},svg);
+  svgEl('rect',{x:slotX('L')-36,y:epTop-52,width:72,height:38,rx:'8',fill:dark?'#412402':'#FAEEDA',stroke:dark?'#854F0B':'#EF9F27','stroke-width':'.5'},jar);
+  svgEl('text',{x:slotX('L'),y:epTop-32,'text-anchor':'middle','font-size':'10',fill:dark?'#FAC775':'#633806'},jar).textContent='🍪 Cookie jar';
+  svgEl('text',{x:slotX('L'),y:epTop-20,'text-anchor':'middle','font-size':'9',fill:subFill},jar).textContent='browser storage';
+
+  // server session store
+  var store=svgEl('g',{id:'sessionStore',opacity:'0'},svg);
+  var sx=layout==='three'?slotX('M'):slotX('R');
+  svgEl('rect',{x:sx-40,y:epTop-52,width:80,height:38,rx:'8',fill:dark?'#042C53':'#E6F1FB',stroke:dark?'#185FA5':'#85B7EB','stroke-width':'.5'},store);
+  svgEl('text',{x:sx,y:epTop-32,'text-anchor':'middle','font-size':'10',fill:dark?'#B5D4F4':'#0C447C'},store).textContent='📦 Session store';
+  svgEl('text',{x:sx,y:epTop-20,'text-anchor':'middle','font-size':'9',fill:subFill},store).textContent='server memory / DB';
+
+  arrowDefs.forEach(function(a,i){
+    a._y=TOP+i*LANE+LANE/2;
+    a._g=svgEl('g',{id:'ag'+i,opacity:'0'},svg);
+  });
+}
+
+function getEndpoints(){
+  if(scenario==='oauth'||scenario==='sso'){
+    return [
+      {id:'browser',slot:'L',icon:'🖥️',name:'Browser',sub:'user agent',show:true},
+      {id:'app',slot:'M',icon:'📱',name:'App',sub:'your application',show:true},
+      {id:'idp',slot:'R',icon:'🔐',name:'IdP',sub:'login.example.com',show:true}
+    ];
+  }
+  if(scenario==='overview'){
+    return [{id:'browser',slot:'L',icon:'🖥️',name:'Client',sub:'holds credentials',show:true},{id:'server',slot:'R',icon:'🗄️',name:'Services',sub:'issue & verify',show:true}];
+  }
+  return [
+    {id:'browser',slot:'L',icon:'🖥️',name:'Browser',sub:'stores cookies / tokens',show:true},
+    {id:'server',slot:'R',icon:'🗄️',name:'Server',sub:'api.example.com',show:true}
+  ];
+}
+
+function revealArrow(idx){
+  var a=arrowDefs[idx];
+  if(!a||a._done) return;
+  a._done=true;
+  var g=a._g;
+  g.setAttribute('opacity','1');
+  var y=a._y;
+  var x1=slotX(a.from)+(a.from==='L'?EP_W/2+8:-EP_W/2-8);
+  var x2=slotX(a.to)+(a.to==='L'?EP_W/2+8:-EP_W/2-8);
+  if(a.from===a.to){ x1=slotX(a.from); x2=slotX(a.to); }
+  var mid=(x1+x2)/2;
+  var c=a.color;
+  var markId='m'+c.slice(1);
+  svgEl('line',{x1:x1,y1:y,x2:x2,y2:y,stroke:c,'stroke-width':a.thick?'2.5':'1.5','stroke-dasharray':a.dash?'6 4':'none','stroke-linecap':'round','marker-end':'url(#'+markId+')'},g);
+  svgEl('text',{x:mid,y:y-8,'text-anchor':'middle','font-size':'11','font-weight':'500',fill:c},g).textContent=a.label;
+  if(a.badge){
+    var pw=Math.max(a.badge.length*6.5+24,72);
+    var bx=mid-pw/2, by=y+8;
+    svgEl('rect',{x:bx,y:by,width:pw,height:18,rx:'9',fill:a.badgeBg||'#EEEDFE',stroke:a.badgeBd||'#AFA9EC','stroke-width':'.5'},g);
+    svgEl('text',{x:mid,y:by+12,'text-anchor':'middle','font-size':'10',fill:a.badgeFg||'#3C3489'},g).textContent=a.badge;
+  }
+}
+
+function showOverlay(id){var el=$(id);if(el)el.setAttribute('opacity','1');}
+function hideOverlay(id){var el=$(id);if(el)el.setAttribute('opacity','0');}
+
+function addLog(msg,cls){
+  var d=$('log'),e=document.createElement('div');
+  e.className='log-e '+(cls||'');e.textContent=msg;
+  d.appendChild(e);d.scrollTop=d.scrollHeight;
+}
+function setTD(t,d){$('ttl').textContent=t;$('dsc').textContent=d;}
+function setLeft(h){$('leftPanel').innerHTML=h;}
+function setRight(h){$('rightPanel').innerHTML=h;}
+function setLabels(l,r){$('leftLbl').textContent=l;$('rightLbl').textContent=r;}
+
+var COMPARE=[
+  {id:'session',title:'Session',color:'#E6F1FB',bd:'#85B7EB',txt:'#0C447C',text:'Server-side record of who you are. Lives in memory or a database — not in the browser.'},
+  {id:'cookie',title:'Cookie',color:'#FAEEDA',bd:'#EF9F27',txt:'#633806',text:'Small file the browser stores and sends back automatically. Often carries the session ID — but is not the session itself.'},
+  {id:'jwt',title:'JWT',color:'#EEEDFE',bd:'#AFA9EC',txt:'#3C3489',text:'Signed JSON token (header.payload.signature). Often used for stateless auth — server verifies the signature, not a session row.'},
+  {id:'stateless',title:'Stateless',color:'#E8F4F8',bd:'#7EC8E3',txt:'#0C4A6E',text:'Server keeps no per-user session in memory or DB. Each request carries credentials (e.g. JWT); any server node can validate without shared state.'},
+  {id:'token',title:'Token',color:'#E1F5EE',bd:'#5DCAA5',txt:'#085041',text:'General credential string. Access tokens, refresh tokens, API keys. May be a JWT or an opaque random string.'},
+  {id:'oauth',title:'OAuth 2.0',color:'#FAECE7',bd:'#F0997B',txt:'#712B13',text:'Authorization framework — lets an app access your data without your password. Issues tokens after user consent.'},
+  {id:'sso',title:'SSO',color:'#EAF3DE',bd:'#8FC15D',txt:'#3B6D11',text:'Single Sign-On — log in once at a central IdP, access many apps. Uses shared identity + cookies or tokens at the IdP.'}
+];
+
+function renderCompare(highlight){
+  var box=$('compareBox');box.style.display='block';
+  var grid=$('compareGrid');grid.innerHTML='';
+  COMPARE.forEach(function(c){
+    var d=document.createElement('div');
+    d.className='compare-card'+(highlight===c.id?' hl':'')+(highlight&&highlight!==c.id?' dim':'');
+    d.style.background=c.color;d.style.borderColor=c.bd;d.style.color=c.txt;
+    d.innerHTML='<strong>'+c.title+'</strong>'+c.text;
+    grid.appendChild(d);
+  });
+}
+
+function hideCompare(){ $('compareBox').style.display='none'; }
+
+var PILLS={
+  overview:[{t:'7 concepts',c:'p-jwt'},{t:'Stateful vs stateless',c:'p-sl'},{t:'Not interchangeable',c:'p-oauth'}],
+  session:[{t:'Server-side state',c:'p-sess'},{t:'Session ID only in cookie',c:'p-cook'},{t:'Revoke = delete session',c:'p-sess'},{t:'Opposite of stateless',c:'p-sl'}],
+  cookie:[{t:'Browser storage',c:'p-cook'},{t:'HttpOnly flag',c:'p-cook'},{t:'Sent every request',c:'p-cook'},{t:'Not auth by itself',c:'p-sess'}],
+  jwt:[{t:'Self-contained',c:'p-jwt'},{t:'Stateless verify',c:'p-sl'},{t:'Bearer header',c:'p-tok'},{t:'Cannot revoke easily',c:'p-jwt'}],
+  stateless:[{t:'No server memory',c:'p-sl'},{t:'JWT common pattern',c:'p-jwt'},{t:'Any node verifies',c:'p-sl'},{t:'vs Session = stateful',c:'p-sess'}],
+  token:[{t:'Access token',c:'p-tok'},{t:'Refresh token',c:'p-tok'},{t:'Opaque or JWT',c:'p-jwt'},{t:'Short-lived access',c:'p-tok'}],
+  oauth:[{t:'Authorization',c:'p-oauth'},{t:'Auth code flow',c:'p-oauth'},{t:'No password to app',c:'p-oauth'},{t:'Scopes = permissions',c:'p-oauth'}],
+  sso:[{t:'One login',c:'p-sso'},{t:'Central IdP',c:'p-sso'},{t:'Shared session',c:'p-sess'},{t:'SAML / OIDC',c:'p-jwt'}]
+};
+
+function renderPills(){
+  var bar=$('pills');bar.innerHTML='';
+  (PILLS[scenario]||[]).forEach(function(p){
+    var s=document.createElement('span');s.className='pill '+p.c;s.textContent=p.t;
+    bar.appendChild(s);
+  });
+}
+
+function getArrows(){
+  if(scenario==='session') return [
+    {from:'L',to:'R',color:C.sess,label:'POST /login  { user, password }'},
+    {from:'R',to:'L',color:C.sess,label:'Set-Cookie: session_id=sess_8f3a  (HttpOnly)',badge:'session created',badgeBg:'#E6F1FB',badgeFg:'#0C447C',badgeBd:'#85B7EB'},
+    {from:'L',to:'R',color:C.cook,dash:true,label:'GET /dashboard  Cookie: session_id=sess_8f3a'},
+    {from:'R',to:'L',color:C.ok,label:'200 OK  (server looked up session → user #42)'}
+  ];
+  if(scenario==='cookie') return [
+    {from:'R',to:'L',color:C.cook,label:'Set-Cookie: theme=dark; Path=/; Max-Age=31536000'},
+    {from:'L',to:'R',color:C.cook,dash:true,label:'GET /  Cookie: theme=dark; session_id=sess_8f3a'},
+    {from:'L',to:'L',color:C.cook,label:'Browser stores in cookie jar — auto-attached per domain',dash:true},
+    {from:'R',to:'L',color:C.cook,label:'Set-Cookie: session_id=…; HttpOnly; Secure; SameSite=Lax',badge:'🍪 HttpOnly = no JS access',badgeBg:'#FAEEDA',badgeFg:'#633806',badgeBd:'#EF9F27'}
+  ];
+  if(scenario==='jwt') return [
+    {from:'L',to:'R',color:C.sess,label:'POST /login  { user, password }'},
+    {from:'R',to:'L',color:C.jwt,label:'{ "token": "eyJhbG…" }  (signed JWT)',badge:'header.payload.signature',badgeBg:'#EEEDFE',badgeFg:'#3C3489',badgeBd:'#AFA9EC'},
+    {from:'L',to:'R',color:C.jwt,thick:true,label:'GET /api/me  Authorization: Bearer eyJhbG…'},
+    {from:'R',to:'L',color:C.ok,label:'200 OK  (verify signature + expiry — no DB)'}
+  ];
+  if(scenario==='stateless') return [
+    {from:'L',to:'R',color:C.sess,dash:true,label:'Stateful: GET /api  Cookie: session_id=sess_8f3a'},
+    {from:'R',to:'L',color:C.sess,label:'Lookup session store → user #42',badge:'server remembers',badgeBg:'#E6F1FB',badgeFg:'#0C447C',badgeBd:'#85B7EB'},
+    {from:'L',to:'R',color:C.jwt,thick:true,label:'Stateless: GET /api  Authorization: Bearer eyJhbG…'},
+    {from:'R',to:'L',color:C.sl,label:'Verify JWT only — no Redis / DB lookup',badge:'no session store',badgeBg:'#E8F4F8',badgeFg:'#0C4A6E',badgeBd:'#7EC8E3'},
+    {from:'L',to:'R',color:C.sl,dash:true,label:'Same JWT hits API server 2 — verifies independently'},
+    {from:'R',to:'L',color:C.ok,label:'200 OK — scale out without sticky sessions'}
+  ];
+  if(scenario==='token') return [
+    {from:'L',to:'R',color:C.sess,label:'POST /oauth/token  (client credentials)'},
+    {from:'R',to:'L',color:C.tok,label:'access_token=8f3a…  refresh_token=9c2b…  expires_in=3600'},
+    {from:'L',to:'R',color:C.tok,thick:true,label:'GET /api/data  Authorization: Bearer 8f3a…'},
+    {from:'R',to:'L',color:C.ok,label:'200 OK  (token valid, scope: read:data)'},
+    {from:'L',to:'R',color:C.tok,dash:true,label:'access_token expired → POST /token  grant=refresh_token'},
+    {from:'R',to:'L',color:C.tok,label:'new access_token=1a7d…  (refresh token rotated)'}
+  ];
+  if(scenario==='oauth') return [
+    {from:'L',to:'M',color:C.oauth,label:'Click "Login with Google"'},
+    {from:'M',to:'L',color:C.oauth,label:'302 → https://idp.example/authorize?client_id=…&scope=email'},
+    {from:'L',to:'R',color:C.sso,label:'User signs in at IdP (password never sent to App)'},
+    {from:'R',to:'L',color:C.oauth,label:'302 → app.example/callback?code=AUTH_92x'},
+    {from:'M',to:'R',color:C.oauth,dash:true,label:'POST /token  code=AUTH_92x  client_secret=…  (server-side)'},
+    {from:'R',to:'M',color:C.tok,label:'access_token + refresh_token'},
+    {from:'M',to:'L',color:C.ok,label:'Logged in — app stores token, calls APIs',badge:'OAuth = authorization',badgeBg:'#FAECE7',badgeFg:'#712B13',badgeBd:'#F0997B'}
+  ];
+  if(scenario==='sso') return [
+    {from:'L',to:'R',color:C.sso,label:'Login at IdP — username + password'},
+    {from:'R',to:'L',color:C.cook,label:'Set-Cookie: SSO_SESSION=abc  Domain=.example.com'},
+    {from:'L',to:'M',color:C.sso,label:'Visit App A → redirect to IdP'},
+    {from:'R',to:'M',color:C.ok,label:'IdP: SSO cookie valid → instant redirect + token',badge:'no password prompt',badgeBg:'#EAF3DE',badgeFg:'#3B6D11',badgeBd:'#8FC15D'},
+    {from:'L',to:'M',color:C.sso,dash:true,label:'Visit App B → redirect to IdP'},
+    {from:'R',to:'M',color:C.ok,label:'Same SSO session → App B logged in immediately'}
+  ];
+  if(scenario==='overview') return [
+    {from:'L',to:'R',color:C.sess,label:'Session — state on server (stateful)'},
+    {from:'L',to:'R',color:C.cook,label:'Cookie — how the browser carries IDs'},
+    {from:'L',to:'R',color:C.jwt,label:'JWT — signed claims in every request'},
+    {from:'L',to:'R',color:C.sl,label:'Stateless — server stores nothing per user'},
+    {from:'L',to:'R',color:C.tok,label:'Token — credential used in APIs'},
+    {from:'L',to:'R',color:C.oauth,label:'OAuth 2.0 — delegate access safely'},
+    {from:'L',to:'R',color:C.sso,label:'SSO — one login, many apps'}
+  ];
+  return [];
+}
+
+function buildSteps(){
+  if(scenario==='overview') return [
+    {l:'Session',t:'Session — server-side state',d:'After login the server creates a session record (user id, roles, expiry). The browser never sees the full session — only a reference ID.',
+     show:[0],hl:'session',fn:function(){
+       setLabels('WHAT IT IS','WHERE IT LIVES');
+       setLeft('<span style="color:#185FA5">Session</span><br>Who is logged in<br>Cart, preferences, roles<br><span class="mute">stored on server</span>');
+       setRight('<span style="color:#0F6E56">Server DB / Redis</span><br>sess_8f3a → { user: 42 }<br>Can be revoked instantly');
+       renderCompare('session');addLog('[Session] Server-side record — referenced by ID','lbl');
+     }},
+    {l:'Cookie',t:'Cookie — browser storage & transport',d:'A cookie is a name=value pair the browser saves and automatically sends with matching requests. It often stores the session ID, but cookies can hold anything.',
+     show:[1],hl:'cookie',fn:function(){
+       setLeft('<span style="color:#BA7517">Cookie jar</span><br>session_id=sess_8f3a<br>theme=dark<br><span class="mute">sent with every request</span>');
+       setRight('<span style="color:#854F0B">Set-Cookie header</span><br>HttpOnly · Secure · SameSite<br>Controls lifetime & scope');
+       renderCompare('cookie');addLog('[Cookie] Browser mechanism — not the same as session','lw');
+     }},
+    {l:'JWT',t:'JWT — self-contained signed token',d:'A JWT encodes claims (user id, expiry, roles) and a signature. The server verifies the signature instead of looking up a session — useful for APIs and microservices.',
+     show:[2],hl:'jwt',fn:function(){
+       setLeft('<span style="color:#534AB7">eyJhbGciOiJIUzI1NiJ9</span><br>.eyJzdWIiOiI0MiJ9<br>.SflKxwRJ…<br><span class="mute">header.payload.sig</span>');
+       setRight('<span style="color:#534AB7">Verify signature</span><br>Check exp, iss, aud<br>No DB hit (stateless)');
+       renderCompare('jwt');addLog('[JWT] Signed JSON — stateless verification','lp');
+     }},
+    {l:'Stateless',t:'Stateless — server stores nothing',d:'The server does not keep a session table. The client sends a self-contained proof (usually a JWT) on every request. Any API instance can validate it with the shared secret or public key.',
+     show:[3],hl:'stateless',fn:function(){
+       setLabels('CLIENT SENDS PROOF','SERVER VERIFIES');
+       setLeft('<span style="color:#2A8CB0">Authorization: Bearer …</span><br>Claims inside token<br><span class="mute">no session_id lookup</span>');
+       setRight('<span style="color:#2A8CB0">Crypto verify only</span><br>No Redis / DB per request<br>Scales horizontally');
+       renderCompare('stateless');addLog('[Stateless] No per-user state on server — opposite of session','lbl');
+     }},
+    {l:'Token',t:'Token — general credential',d:'"Token" is the umbrella term. OAuth issues access & refresh tokens. They may be JWTs or opaque random strings. Sent as Bearer tokens or query params.',
+     show:[4],hl:'token',fn:function(){
+       setLeft('<span style="color:#0F6E56">Authorization:</span><br>Bearer 8f3a9c2b…<br><span class="mute">access token</span>');
+       setRight('<span style="color:#0F6E56">Token endpoint</span><br>access_token (short)<br>refresh_token (long)<br>scope: read:profile');
+       renderCompare('token');addLog('[Token] Credential string — format varies','lgr');
+     }},
+    {l:'OAuth',t:'OAuth 2.0 — delegated authorization',d:'OAuth lets App A access your GitHub photos without learning your GitHub password. You approve scopes at the provider; the app gets a limited access token.',
+     show:[5],hl:'oauth',fn:function(){
+       setLabels('USER / BROWSER','AUTHORIZATION');
+       setLeft('<span style="color:#D85A30">User consents</span><br>scope: read:email<br>Password stays at IdP');
+       setRight('<span style="color:#D85A30">OAuth 2.0 flows</span><br>Authorization code (web)<br>Client credentials (M2M)<br>PKCE (mobile/SPA)');
+       renderCompare('oauth');addLog('[OAuth 2.0] Authorization framework — not the same as authentication','lo');
+     }},
+    {l:'SSO',t:'SSO — single sign-on across apps',d:'With SSO you authenticate once at a central Identity Provider (IdP). Every connected app checks that IdP — you are not prompted again.',
+     show:[6],hl:'sso',fn:function(){
+       setLeft('<span style="color:#3B6D11">One login</span><br>IdP session cookie<br>Apps trust the IdP');
+       setRight('<span style="color:#3B6D11">App A, App B, App C</span><br>All use same IdP<br>Often OIDC / SAML under the hood');
+       renderCompare('sso');addLog('[SSO] One identity — many applications','lgr');
+       addLog('[Done] Stateful (session) vs stateless (JWT) is the core architectural split','lgr');
+     }}
+  ];
+
+  if(scenario==='stateless') return [
+    {l:'Stateful',t:'Stateful — server remembers you',d:'Classic sessions: the browser only sends a session ID; the server must look up that ID in Redis or a database on every request.',
+     show:[0],fn:function(){
+       hideCompare();setLabels('BROWSER','APP SERVER (STATEFUL)');
+       showOverlay('sessionStore');
+       hideOverlay('cookieJar');
+       setLeft('GET /api/users<br>Cookie: session_id=sess_8f3a');
+       setRight('<span style="color:#185FA5">Must query session store</span><br>sess_8f3a → user #42');
+       addLog('[Stateful] Cookie carries only an ID — server holds state','lbl');
+     }},
+    {l:'Lookup',t:'Every request hits the store',d:'If Redis is down or the session expired, the user is logged out. Adding more API servers requires a shared session store or sticky load balancing.',
+     show:[1],fn:function(){
+       setRight('<span style="color:#854F0B">Redis / DB lookup</span><br>~1–5 ms per request<br>Revoke = delete row ✓');
+       addLog('[Stateful] Shared session store or sticky sessions needed','lw');
+     }},
+    {l:'Stateless',t:'Stateless — proof travels with the request',d:'The client sends a JWT (or signed token) containing user id, roles, and expiry. The server never stores who is logged in between requests.',
+     show:[2],fn:function(){
+       hideOverlay('sessionStore');
+       setLabels('BROWSER','API SERVER (STATELESS)');
+       setLeft('<span style="color:#534AB7">Authorization: Bearer eyJ…</span><br>payload: { sub:42, exp:… }');
+       addLog('[Stateless] Credentials in header — server stores nothing','lp');
+     }},
+    {l:'Verify',t:'Verify without a database',d:'The server checks the signature with a secret or public key and validates exp/iss/aud claims. No session table, no Redis round-trip.',
+     show:[3],fn:function(){
+       setRight('<span style="color:#2A8CB0">Verify signature ✓</span><br>Check exp, iss, aud<br><span class="mute">no DB / Redis</span>');
+       addLog('[Stateless] JWT verified locally on this node','lgr');
+     }},
+    {l:'Scale',t:'Any server can handle the request',d:'API server 2 receives the same JWT and verifies it independently — no shared session cluster. This is why microservices favor stateless auth.',
+     show:[4,5],fn:function(){
+       setRight('<span style="color:#0F6E56">API server 2</span><br>Same JWT → same result<br>No sticky sessions');
+       addLog('[Scale] Horizontal scaling without shared session state','lgr');
+     }},
+    {l:'Done',t:'Stateful vs stateless',d:'Sessions are stateful (easy revoke, server control). JWT auth is stateless (fast, scalable, harder to revoke before expiry). Many apps use short JWTs plus refresh tokens.',
+     show:[],fn:function(){
+       renderCompare('stateless');
+       addLog('[Done] Session = stateful · JWT = common stateless pattern','lgr');
+     }}
+  ];
+
+  if(scenario==='session') return [
+    {l:'Login',t:'User submits credentials',d:'The browser sends username and password over HTTPS to the application server.',
+     show:[0],fn:function(){
+       hideCompare();setLabels('BROWSER','APP SERVER');
+       setLeft('POST /login<br>user: maya@example.com<br>password: ••••••');
+       setRight('<span class="mute">awaiting credentials…</span>');
+       addLog('[Browser] POST /login','lbl');
+     }},
+    {l:'Create',t:'Server creates a session',d:'The server validates credentials, creates a session record in memory or Redis/DB, and generates a random session ID.',
+     show:[1],fn:function(){
+       showOverlay('sessionStore');
+       setRight('<span style="color:#185FA5">CREATE session</span><br>sess_8f3a → { user:42, role:user }<br>expires: 30 min');
+       addLog('[Server] Session sess_8f3a created in store','lgr');
+     }},
+    {l:'Cookie',t:'Session ID sent as a cookie',d:'Only the opaque session ID is sent to the browser — not the full session data. HttpOnly prevents JavaScript from reading it.',
+     show:[2],fn:function(){
+       showOverlay('cookieJar');
+       setLeft('<span style="color:#BA7517">Set-Cookie received</span><br>session_id=sess_8f3a<br>HttpOnly; Secure');
+       addLog('[Server] Set-Cookie: session_id=sess_8f3a','lw');
+     }},
+    {l:'Request',t:'Authenticated request',d:'Every subsequent request automatically includes the cookie. The server looks up sess_8f3a in its store.',
+     show:[3],fn:function(){
+       setLeft('GET /dashboard<br>Cookie: session_id=sess_8f3a');
+       setRight('<span style="color:#0F6E56">Lookup sess_8f3a → user #42</span><br>200 OK');
+       addLog('[Browser] Cookie sent automatically','lbl');
+       addLog('[Server] Session found — request authorized','lgr');
+     }},
+    {l:'Done',t:'Why sessions matter',d:'Sessions are easy to revoke (delete the record). The downside: the server must store state and look it up on every request.',
+     show:[],fn:function(){
+       addLog('[Done] Session = server state · Cookie = how the ID travels','lgr');
+     }}
+  ];
+
+  if(scenario==='cookie') return [
+    {l:'Set',t:'Server sets a cookie',d:'Any server response can include Set-Cookie headers. The browser persists them and attaches them to future requests for that domain.',
+     show:[0],fn:function(){
+       hideCompare();setLabels('BROWSER','SERVER');
+       showOverlay('cookieJar');
+       setRight('Set-Cookie: theme=dark<br>Path=/  Max-Age=31536000');
+       addLog('[Server] Set-Cookie: theme=dark','lw');
+     }},
+    {l:'Store',t:'Browser stores in cookie jar',d:'Cookies are keyed by domain + path. They persist across tabs and browser restarts (until expiry).',
+     show:[2],fn:function(){
+       setLeft('<span style="color:#BA7517">Cookie jar</span><br>example.com:<br>  theme=dark<br>  session_id=sess_8f3a');
+       addLog('[Browser] Cookies saved locally','lbl');
+     }},
+    {l:'Send',t:'Auto-sent on every request',d:'The browser adds a Cookie header without JavaScript doing anything. This is why cookies work for server-rendered pages.',
+     show:[1],fn:function(){
+       setLeft('GET /<br>Cookie: theme=dark;<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;session_id=sess_8f3a');
+       setRight('Server reads Cookie header');
+       addLog('[Browser] Cookie header attached automatically','lbl');
+     }},
+    {l:'Secure',t:'Security flags',d:'HttpOnly blocks XSS from stealing the cookie. Secure requires HTTPS. SameSite reduces CSRF risk.',
+     show:[3],fn:function(){
+       setRight('<span style="color:#BA7517">Set-Cookie: session_id=…</span><br>HttpOnly  Secure  SameSite=Lax');
+       addLog('[Server] HttpOnly — JS cannot read session_id','lw');
+       addLog('[Tip] Cookie ≠ Session — cookie is transport, session is server data','lp');
+     }},
+    {l:'Done',t:'Cookie in one sentence',d:'A cookie is how the browser remembers and sends data. It is not authentication by itself — it only carries identifiers or preferences.',
+     show:[],fn:function(){addLog('[Done] Cookie = browser storage + automatic transport','lgr');}}
+  ];
+
+  if(scenario==='jwt') return [
+    {l:'Login',t:'User authenticates',d:'Same login form as a session-based app — credentials go to the server.',
+     show:[0],fn:function(){
+       hideCompare();setLabels('BROWSER','API SERVER');
+       setLeft('POST /login');setRight('Validate credentials…');
+       addLog('[Browser] POST /login','lbl');
+     }},
+    {l:'Issue',t:'Server issues a signed JWT',d:'The server builds a payload (sub, exp, roles), signs it with a secret or private key, and returns the compact token.',
+     show:[1],fn:function(){
+       setLeft('<span style="color:#534AB7">Token stored</span><br>localStorage or memory<br><span class="mute">not HttpOnly by default</span>');
+       setRight('<span style="color:#534AB7">JWT payload</span><br>{ sub:42, exp:…, role:user }<br>signed with HS256 / RS256');
+       addLog('[Server] JWT issued — eyJhbGciOi…','lp');
+     }},
+    {l:'API',t:'Bearer token on API calls',d:'The client sends Authorization: Bearer &lt;jwt&gt; instead of a cookie. Ideal for SPAs and mobile apps talking to APIs.',
+     show:[2],fn:function(){
+       setLeft('GET /api/me<br>Authorization: Bearer eyJ…');
+       addLog('[Browser] Bearer token in header','lbl');
+     }},
+    {l:'Verify',t:'Server verifies without DB',d:'The server checks the signature and expiry. No session store lookup — but revocation requires a blocklist or short expiry.',
+     show:[3],fn:function(){
+       setRight('<span style="color:#0F6E56">Signature valid ✓</span><br>exp not passed ✓<br>→ user #42');
+       addLog('[Server] JWT verified statelessly','lgr');
+     }},
+    {l:'Done',t:'JWT vs Session',d:'JWTs scale well across services (stateless). Sessions are easier to revoke immediately. Many systems use both: short-lived JWT + refresh token.',
+     show:[],fn:function(){addLog('[Done] JWT = self-contained · Session = server lookup','lgr');}}
+  ];
+
+  if(scenario==='token') return [
+    {l:'Grant',t:'Client requests tokens',d:'After login or OAuth, the authorization server issues an access token (short-lived) and often a refresh token (long-lived).',
+     show:[0],fn:function(){
+       hideCompare();setLabels('CLIENT','AUTH SERVER');
+       setLeft('POST /oauth/token<br>grant_type=authorization_code');
+       addLog('[Client] Requesting tokens','lbl');
+     }},
+    {l:'Issue',t:'Tokens issued',d:'Access token authorizes API calls. Refresh token obtains new access tokens without re-login. Tokens may be JWT or opaque.',
+     show:[1],fn:function(){
+       setRight('<span style="color:#0F6E56">access_token</span>  TTL: 1h<br><span style="color:#0F6E56">refresh_token</span> TTL: 30d<br>scope: read:data');
+       addLog('[Auth] access_token + refresh_token issued','lgr');
+     }},
+    {l:'Use',t:'Access token used',d:'APIs validate the access token and check scopes. The resource server does not need the user password.',
+     show:[2],fn:function(){
+       setLeft('GET /api/data<br>Authorization: Bearer 8f3a…');
+       setRight('scope check: read:data ✓');
+       addLog('[API] Token accepted','lgr');
+     }},
+    {l:'Refresh',t:'Token refresh',d:'When the access token expires, the client exchanges the refresh token for a new access token — no user interaction.',
+     show:[4,5],fn:function(){
+       setLeft('POST /token<br>grant=refresh_token');
+       setRight('new access_token issued');
+       addLog('[Client] Access token expired — refreshing','lw');
+       addLog('[Auth] New access_token issued','lgr');
+     }},
+    {l:'Done',t:'Token vs JWT',d:'Every JWT is a token, but not every token is a JWT. OAuth access tokens are often opaque strings validated by the auth server.',
+     show:[],fn:function(){addLog('[Done] Token = credential · JWT = one possible format','lgr');}}
+  ];
+
+  if(scenario==='oauth') return [
+    {l:'Start',t:'User clicks "Login with IdP"',d:'The app redirects the browser to the OAuth authorization endpoint — never collecting the password itself.',
+     show:[0,1],fn:function(){
+       hideCompare();setLabels('BROWSER','APP + IdP');
+       setLeft('Click "Continue with IdP"');
+       setRight('Redirect → /authorize<br>client_id, redirect_uri, scope, state');
+       addLog('[App] Redirecting to IdP /authorize','lo');
+     }},
+    {l:'Consent',t:'User authenticates at IdP',d:'The user logs in directly with the identity provider and approves the requested scopes (e.g. email, calendar).',
+     show:[2],fn:function(){
+       setLeft('Login at IdP<br>Approve scopes: email, profile');
+       addLog('[IdP] User authenticated + consented','lgr');
+     }},
+    {l:'Code',t:'Authorization code returned',d:'The IdP redirects back to the app with a short-lived authorization code — not the access token itself (kept off the browser).',
+     show:[3],fn:function(){
+       setLeft('GET /callback?code=AUTH_92x&state=…');
+       addLog('[IdP] Redirect with authorization code','lo');
+     }},
+    {l:'Exchange',t:'Server exchanges code for tokens',d:'The app backend calls the token endpoint with the code + client_secret. This happens server-side, never in the browser.',
+     show:[4,5],fn:function(){
+       setRight('<span style="color:#D85A30">POST /token</span><br>code + client_secret<br>→ access_token, refresh_token');
+       addLog('[App] Server-side token exchange','lo');
+     }},
+    {l:'Done',t:'OAuth 2.0 in one sentence',d:'OAuth is about authorization (what an app can do), not just authentication. OpenID Connect (OIDC) adds identity (who the user is) on top of OAuth.',
+     show:[6],fn:function(){
+       setLeft('<span style="color:#0F6E56">Logged in ✓</span>');
+       addLog('[Done] OAuth = delegate access · password never shared with app','lgr');
+     }}
+  ];
+
+  if(scenario==='sso') return [
+    {l:'Login',t:'First login at Identity Provider',d:'The user enters credentials once at the central IdP (Okta, Azure AD, Google Workspace, etc.).',
+     show:[0],fn:function(){
+       hideCompare();setLabels('BROWSER','IdP');
+       setLeft('POST /login at IdP');
+       addLog('[User] Logging in at central IdP','lbl');
+     }},
+    {l:'SSO cookie',t:'IdP establishes SSO session',d:'The IdP sets a domain-wide session cookie. All apps trusting this IdP can detect the existing login.',
+     show:[1],fn:function(){
+       showOverlay('cookieJar');
+       setLeft('<span style="color:#3B6D11">Cookie: SSO_SESSION=abc</span><br>Domain: .example.com');
+       addLog('[IdP] SSO session cookie set','lgr');
+     }},
+    {l:'App A',t:'Visit App A — silent login',d:'App A redirects to the IdP. The IdP sees the SSO cookie and immediately redirects back — no password form.',
+     show:[2,3],fn:function(){
+       setRight('<span style="color:#0F6E56">App A</span><br>token issued instantly');
+       addLog('[App A] Redirect to IdP → SSO cookie valid → instant return','lgr');
+     }},
+    {l:'App B',t:'Visit App B — still logged in',d:'Same process. The user did not re-enter a password. This is the core value of SSO.',
+     show:[4,5],fn:function(){
+       setRight('<span style="color:#0F6E56">App B</span><br>logged in without prompt');
+       addLog('[App B] Same SSO session — no second login','lgr');
+     }},
+    {l:'Done',t:'SSO vs OAuth',d:'SSO is the user experience (login once). OAuth is often the protocol underneath. Enterprise SSO commonly uses SAML or OpenID Connect.',
+     show:[],fn:function(){addLog('[Done] SSO = one identity · many apps trust one IdP','lgr');}}
+  ];
+
+  return [];
+}
+
+function buildDots(labels){
+  var row=$('dotrow');row.innerHTML='';
+  labels.forEach(function(lbl,i){
+    var wrap=document.createElement('div');
+    wrap.style.cssText='display:flex;flex-direction:column;align-items:center;gap:2px';
+    var dot=document.createElement('div');dot.className='sdot';dot.id='dot'+i;
+    var t=document.createElement('div');t.style.cssText='font-size:9px;color:var(--txt3)';t.textContent=lbl;
+    wrap.appendChild(dot);wrap.appendChild(t);row.appendChild(wrap);
+    if(i<labels.length-1){
+      var seg=document.createElement('div');
+      seg.style.cssText='flex:1;height:.5px;background:var(--bdr);margin:0 3px;margin-bottom:12px';
+      row.appendChild(seg);
+    }
+  });
+}
+function setDot(i,s){
+  var d=$('dot'+i);if(!d)return;
+  var c={act:'#378ADD',done:'#1D9E75',err:'#E24B4A',warn:'#BA7517'};
+  d.style.background=c[s]||'var(--bdr2)';
+  d.style.animation=s==='act'?'pulse .8s ease-in-out infinite':'none';
+}
+
+function applyStep(i){
+  var s=steps[i];
+  if(i>0) setDot(i-1,'done');
+  setDot(i,'act');
+  setTD(s.t,s.d);
+  (s.show||[]).forEach(revealArrow);
+  s.fn();
+  if(i===steps.length-1){
+    $('btnStep').disabled=true;
+    if(!playing) $('btnPlay').disabled=true;
+  }
+}
+function doStep(){if(cur>=steps.length-1)return;cur++;applyStep(cur);}
+function doPlay(){
+  if(playing)return;playing=true;
+  $('btnPlay').disabled=true;$('btnStep').disabled=true;
+  (function loop(){
+    if(!playing||cur>=steps.length-1){
+      playing=false;
+      $('btnPlay').disabled=(cur>=steps.length-1);
+      $('btnStep').disabled=(cur>=steps.length-1);
+      return;
+    }
+    cur++;applyStep(cur);
+    pt=setTimeout(loop,2200);
+  })();
+}
+function doReset(){
+  playing=false;clearTimeout(pt);cur=-1;
+  layout=(scenario==='oauth'||scenario==='sso')?'three':'two';
+  arrowDefs=getArrows().map(function(a){a._done=false;return a;});
+  buildSVG();
+  $('btnStep').disabled=false;$('btnPlay').disabled=false;
+  $('log').innerHTML='<div class="log-e">Choose a concept tab and press ▶ Play or Step →</div>';
+  setLeft('<span class="mute">waiting…</span>');
+  setRight('<span class="mute">waiting…</span>');
+  var LABELS={
+    overview:['Session','Cookie','JWT','Stateless','Token','OAuth','SSO'],
+    session:['Login','Create','Cookie','Request','Done'],
+    cookie:['Set','Store','Send','Secure','Done'],
+    jwt:['Login','Issue','API','Verify','Done'],
+    stateless:['Stateful','Lookup','Stateless','Verify','Scale','Done'],
+    token:['Grant','Issue','Use','Refresh','Done'],
+    oauth:['Start','Consent','Code','Exchange','Done'],
+    sso:['Login','Cookie','App A','App B','Done']
+  };
+  buildDots(LABELS[scenario]||[]);
+  steps=buildSteps();
+  if(scenario==='overview') renderCompare(null);
+  else hideCompare();
+  var titles={
+    overview:['Authentication concepts','How Session, Cookie, JWT, Stateless, Token, OAuth 2.0, and SSO differ'],
+    session:['Session — server-side state','Stateful auth: data lives on the server'],
+    cookie:['Cookie — browser transport','How identifiers travel between browser and server'],
+    jwt:['JWT — JSON Web Token','Signed credentials — often used for stateless APIs'],
+    stateless:['Stateless authentication','Server stores no per-user session between requests'],
+    token:['Token — access & refresh','Short-lived access, long-lived refresh'],
+    oauth:['OAuth 2.0 — delegated access','Authorize apps without sharing your password'],
+    sso:['SSO — single sign-on','One login, many applications']
+  };
+  setTD(titles[scenario][0],titles[scenario][1]);
+  renderPills();
+}
+function setScenario(s){
+  scenario=s;
+  document.querySelectorAll('.scen-btn').forEach(function(b){b.classList.remove('active');});
+  $('sc-'+s).classList.add('active');
+  doReset();
+}
+
+$('btnStep').addEventListener('click',doStep);
+$('btnPlay').addEventListener('click',doPlay);
+$('btnReset').addEventListener('click',doReset);
+['overview','session','cookie','jwt','stateless','token','oauth','sso'].forEach(function(s){
+  $('sc-'+s).addEventListener('click',function(){setScenario(s);});
+});
+doReset();
+</script>
+<script>
+(function(){
+  function report(){
+    if(window.parent===window)return;
+    requestAnimationFrame(function(){
+      var h=Math.max(document.documentElement.scrollHeight,document.body.scrollHeight);
+      window.parent.postMessage({type:'anim-frame-height',height:h},'*');
+    });
+  }
+  report();
+  if(typeof ResizeObserver!=='undefined') new ResizeObserver(report).observe(document.body);
+})();
+</script>
+</html>

@@ -1,0 +1,513 @@
+<html>
+<style>
+:root{color-scheme:light;
+  --bg:#ffffff;--bg2:#f4f3ee;--bg3:#ecebe4;
+  --txt:#1d1d1c;--txt2:#5f5e5a;--txt3:#888780;
+  --bdr:rgba(0,0,0,0.13);--bdr2:rgba(0,0,0,0.25);
+  --ep:#f4f3ee;--eps:#d3d1c7;
+  --radius:8px;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+
+body{background:transparent;font-family:var(--font);color:var(--txt);font-size:14px}
+button{font-family:var(--font);font-size:13px;padding:5px 12px;background:transparent;color:var(--txt);border:.5px solid var(--bdr2);border-radius:var(--radius);cursor:pointer;transition:background .15s}
+button:hover{background:var(--bg2)}button:active{transform:scale(.97)}button:disabled{opacity:.35;cursor:not-allowed}
+.surf{background:var(--bg2);border-radius:var(--radius);border:.5px solid var(--bdr);padding:9px 12px}
+.mono{font-family:var(--mono);font-size:11px;color:var(--txt2);line-height:1.65}
+.mute{color:var(--txt3)}
+@keyframes fi{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:translateY(0)}}
+.log-e{font-family:var(--mono);font-size:11px;padding:2px 0;border-bottom:.5px solid var(--bdr);color:var(--txt2);animation:fi .2s ease}
+.log-e:last-child{border-bottom:none}
+.lbl{color:#185FA5}.lgr{color:#0F6E56}.le{color:#A32D2D}.lw{color:#854F0B}.lp{color:#534AB7}
+
+.sdot{width:9px;height:9px;border-radius:50%;background:var(--bdr2);flex-shrink:0;transition:background .25s}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.sdot.act{background:#378ADD;animation:pulse .8s ease-in-out infinite}
+.sdot.done{background:#1D9E75}.sdot.err{background:#E24B4A}.sdot.warn{background:#BA7517}
+.pill{display:inline-flex;align-items:center;font-size:11px;padding:2px 9px;border-radius:20px;border:.5px solid}
+.p-tls{background:#EEEDFE;color:#3C3489;border-color:#AFA9EC}
+.p-enc{background:#E1F5EE;color:#085041;border-color:#5DCAA5}
+.p-cert{background:#FAEEDA;color:#633806;border-color:#EF9F27}
+.p-http{background:#E6F1FB;color:#0C447C;border-color:#85B7EB}
+
+.scen-btn{font-size:11px;padding:4px 10px;border-radius:6px;border:.5px solid var(--bdr2);cursor:pointer;background:transparent;color:var(--txt2);font-family:var(--font)}
+.scen-btn:hover{background:var(--bg2)}
+.scen-btn.active{font-weight:500;border-color:#534AB7;background:#EEEDFE;color:#3C3489}
+
+</style>
+
+<div style="padding:.75rem 0">
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:.6rem;flex-wrap:wrap">
+  <div>
+    <div style="font-size:16px;font-weight:500" id="ttl">HTTPS — How it works</div>
+    <div style="font-size:12px;color:var(--txt2);margin-top:2px" id="dsc">Select a scenario and step through</div>
+  </div>
+  <div style="display:flex;gap:5px;flex-wrap:wrap">
+    <button id="btnStep">Step →</button>
+    <button id="btnPlay">▶ Play</button>
+    <button id="btnReset">↺ Reset</button>
+  </div>
+</div>
+
+<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:.6rem">
+  <button class="scen-btn active" id="sc-full">Full handshake</button>
+  <button class="scen-btn" id="sc-resume">Session resume</button>
+  <button class="scen-btn" id="sc-badcert">Bad certificate</button>
+  <button class="scen-btn" id="sc-hsts">HSTS upgrade</button>
+  <button class="scen-btn" id="sc-mitm">MITM blocked</button>
+</div>
+
+<div style="display:flex;align-items:center;margin-bottom:.5rem" id="dotrow"></div>
+
+<div style="background:var(--bg2);border:.5px solid var(--bdr);border-radius:var(--radius);overflow:hidden">
+  <svg id="diagram" width="100%" style="display:block;overflow:visible"></svg>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:.6rem">
+  <div class="surf"><div style="font-size:10px;color:var(--txt3);margin-bottom:3px;letter-spacing:.04em">CLIENT</div><div id="leftPanel" class="mono"><span class="mute">waiting…</span></div></div>
+  <div class="surf"><div style="font-size:10px;color:var(--txt3);margin-bottom:3px;letter-spacing:.04em">SERVER</div><div id="rightPanel" class="mono"><span class="mute">waiting…</span></div></div>
+</div>
+
+<div class="surf" style="margin-top:8px">
+  <div style="font-size:10px;color:var(--txt3);margin-bottom:4px;letter-spacing:.04em">EVENT LOG</div>
+  <div id="log" style="min-height:44px;max-height:80px;overflow-y:auto"><div class="log-e">Choose a scenario and press ▶ Play or Step →</div></div>
+</div>
+
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:.6rem" id="pills"></div>
+</div>
+
+<script>
+var scenario='full', cur=-1, playing=false, pt=null, steps=[], arrowDefs=[];
+
+function $(id){return document.getElementById(id);}
+var svg=document.getElementById('diagram');
+
+var VW=640;           // viewBox width
+var EP_W=110, EP_H=88;
+var LX=EP_W+16;       // arrow left anchor
+var RX=VW-EP_W-16;    // arrow right anchor
+var LANE=40;          // vertical space per arrow
+var TOP=14;           // padding above first arrow
+var isDark=function(){return false;}
+
+function svgEl(tag,attrs,parent){
+  var el=document.createElementNS('http://www.w3.org/2000/svg',tag);
+  for(var k in attrs) el.setAttribute(k,String(attrs[k]));
+  if(parent) parent.appendChild(el);
+  return el;
+}
+
+function buildSVG(){
+  var dark=isDark();
+  var n=arrowDefs.length;
+  var epTop=TOP+n*LANE+16;
+  var totalH=epTop+EP_H+20;
+
+  svg.setAttribute('viewBox','0 0 '+VW+' '+totalH);
+  svg.setAttribute('height',String(totalH));
+  svg.innerHTML='';
+
+  // arrow marker defs
+  var defs=svgEl('defs',{},svg);
+  var colors=['#378ADD','#1D9E75','#7F77DD','#BA7517','#534AB7','#185FA5','#A32D2D'];
+  colors.forEach(function(c){
+    var m=svgEl('marker',{id:'m'+c.slice(1),viewBox:'0 0 10 10',refX:'8',refY:'5',markerWidth:'6',markerHeight:'6',orient:'auto-start-reverse'},defs);
+    svgEl('path',{d:'M2 1L8 5L2 9',fill:'none',stroke:c,'stroke-width':'1.5','stroke-linecap':'round','stroke-linejoin':'round'},m);
+  });
+
+  // endpoint fills
+  var epFill=dark?'#2e2e2b':'#f4f3ee';
+  var epStroke=dark?'rgba(255,255,255,0.22)':'rgba(0,0,0,0.22)';
+  var nameFill=dark?'#ecebe4':'#1d1d1c';
+  var subFill=dark?'#888780':'#888780';
+
+  function drawEP(x,icon,name,sub){
+    svgEl('rect',{x:x,y:epTop,width:EP_W,height:EP_H,rx:'10',fill:epFill,stroke:epStroke,'stroke-width':'.5'},svg);
+    var t=svgEl('text',{x:x+EP_W/2,y:epTop+26,'text-anchor':'middle','dominant-baseline':'central','font-size':'24'},svg);
+    t.textContent=icon;
+    var n2=svgEl('text',{x:x+EP_W/2,y:epTop+50,'text-anchor':'middle','dominant-baseline':'central','font-size':'13','font-weight':'500',fill:nameFill},svg);
+    n2.textContent=name;
+    var s=svgEl('text',{x:x+EP_W/2,y:epTop+66,'text-anchor':'middle','dominant-baseline':'central','font-size':'11',fill:subFill},svg);
+    s.textContent=sub;
+  }
+  drawEP(6,'🖥️','Browser','client');
+  drawEP(VW-EP_W-6,'🗄️','Server','example.com');
+
+  // CA box (hidden)
+  var caG=svgEl('g',{id:'caBox',opacity:'0'},svg);
+  svgEl('rect',{x:VW/2-38,y:epTop+4,width:76,height:60,rx:'8',fill:dark?'#412402':'#FAEEDA',stroke:dark?'#854F0B':'#EF9F27','stroke-width':'.5'},caG);
+  var ct=svgEl('text',{x:VW/2,y:epTop+22,'text-anchor':'middle','font-size':'18'},caG); ct.textContent='🏛️';
+  var cl=svgEl('text',{x:VW/2,y:epTop+39,'text-anchor':'middle','font-size':'10',fill:dark?'#FAC775':'#633806'},caG); cl.textContent='Certificate';
+  var cl2=svgEl('text',{x:VW/2,y:epTop+52,'text-anchor':'middle','font-size':'10',fill:dark?'#FAC775':'#633806'},caG); cl2.textContent='Authority';
+
+  // Attacker box (hidden)
+  var atkG=svgEl('g',{id:'atkBox',opacity:'0'},svg);
+  svgEl('rect',{x:VW/2-38,y:epTop+4,width:76,height:60,rx:'8',fill:dark?'#501313':'#FCEBEB',stroke:dark?'#791F1F':'#F09595','stroke-width':'.5'},atkG);
+  var at=svgEl('text',{x:VW/2,y:epTop+24,'text-anchor':'middle','font-size':'20'},atkG); at.textContent='😈';
+  var al=svgEl('text',{x:VW/2,y:epTop+41,'text-anchor':'middle','font-size':'10',fill:dark?'#F7C1C1':'#791F1F'},atkG); al.textContent='Attacker';
+  var al2=svgEl('text',{x:VW/2,y:epTop+54,'text-anchor':'middle','font-size':'10',fill:dark?'#F7C1C1':'#791F1F'},atkG); al2.textContent='(MITM)';
+
+  // placeholder groups for each arrow — drawn later
+  arrowDefs.forEach(function(a,i){
+    a._y=TOP+i*LANE+LANE/2;
+    a._epTop=epTop;
+    a._g=svgEl('g',{id:'ag'+i},svg);
+  });
+}
+
+function revealArrow(idx){
+  var a=arrowDefs[idx];
+  if(!a||a._done) return;
+  a._done=true;
+  var dark=isDark();
+  var g=a._g;
+  var y=a._y;
+  var fromRight=a.dir==='left';
+  var x1=fromRight?RX:LX;
+  var x2=fromRight?LX:RX;
+  var mid=(x1+x2)/2;
+  var c=a.color;
+  var markId='m'+c.slice(1);
+  var dash=a.dash?'7 5':'none';
+
+  // draw the line directly — no animation needed, just make it visible
+  svgEl('line',{x1:x1,y1:y,x2:x2,y2:y,stroke:c,'stroke-width':a.thick?'2.5':'1.5','stroke-dasharray':dash,'stroke-linecap':'round','marker-end':'url(#'+markId+')'},g);
+
+  // label above
+  var lbl=svgEl('text',{x:mid,y:y-9,'text-anchor':'middle','font-size':'11.5','font-weight':'500',fill:c},g);
+  lbl.textContent=a.label;
+
+  // badge pill below (optional)
+  if(a.badge){
+    var bgC=a.badgeBg||(dark?'#26215C':'#EEEDFE');
+    var fgC=a.badgeFg||(dark?'#CECBF6':'#3C3489');
+    var bdC=a.badgeBd||(dark?'#534AB7':'#AFA9EC');
+    var pw=Math.max(a.badge.length*7+28,80);
+    var bx=mid-pw/2, by=y+6;
+    svgEl('rect',{x:bx,y:by,width:pw,height:20,rx:'10',fill:bgC,stroke:bdC,'stroke-width':'.5'},g);
+    var bt=svgEl('text',{x:mid,y:by+13,'text-anchor':'middle','dominant-baseline':'central','font-size':'11',fill:fgC},g);
+    bt.textContent=a.badge;
+  }
+}
+
+// Show the CA/Attacker overlay boxes
+function showBox(id){
+  var el=document.getElementById(id);
+  if(el){el.setAttribute('opacity','1');}
+}
+
+// logging / panels
+function addLog(msg,cls){
+  var d=$('log'),e=document.createElement('div');
+  e.className='log-e '+(cls||'');e.textContent=msg;
+  d.appendChild(e);d.scrollTop=d.scrollHeight;
+}
+function setTD(t,d){$('ttl').textContent=t;$('dsc').textContent=d;}
+function setLeft(h){$('leftPanel').innerHTML=h;}
+function setRight(h){$('rightPanel').innerHTML=h;}
+
+// dot row
+function buildDots(labels){
+  var row=$('dotrow');row.innerHTML='';
+  labels.forEach(function(lbl,i){
+    var wrap=document.createElement('div');
+    wrap.style.cssText='display:flex;flex-direction:column;align-items:center;gap:2px';
+    var dot=document.createElement('div');dot.className='sdot';dot.id='dot'+i;
+    var t=document.createElement('div');t.style.cssText='font-size:9px;color:var(--txt3)';t.textContent=lbl;
+    wrap.appendChild(dot);wrap.appendChild(t);row.appendChild(wrap);
+    if(i<labels.length-1){
+      var seg=document.createElement('div');
+      seg.style.cssText='flex:1;height:.5px;background:var(--bdr);margin:0 3px;margin-bottom:12px';
+      row.appendChild(seg);
+    }
+  });
+}
+function setDot(i,s){
+  var d=$('dot'+i);if(!d)return;
+  var c={act:'#378ADD',done:'#1D9E75',err:'#E24B4A',warn:'#BA7517'};
+  d.style.background=c[s]||'var(--bdr2)';
+  d.style.animation=s==='act'?'pulse .8s ease-in-out infinite':'none';
+}
+
+// pills
+var PILLS={
+  full:[{t:'TLS 1.3',c:'p-tls'},{t:'2 round-trips',c:'p-tls'},{t:'AES-256-GCM',c:'p-enc'},{t:'X.509 cert',c:'p-cert'},{t:'HTTPS',c:'p-http'}],
+  resume:[{t:'0-RTT',c:'p-tls'},{t:'Session ticket',c:'p-tls'},{t:'1 round-trip',c:'p-enc'},{t:'~50ms faster',c:'p-http'}],
+  badcert:[{t:'Cert error',c:'p-cert'},{t:'Browser blocks',c:'p-cert'},{t:'ERR_CERT_*',c:'p-cert'},{t:'Chain broken',c:'p-tls'}],
+  hsts:[{t:'HSTS header',c:'p-tls'},{t:'Force HTTPS',c:'p-enc'},{t:'307 redirect',c:'p-http'},{t:'Preload list',c:'p-tls'}],
+  mitm:[{t:'MITM attempt',c:'p-cert'},{t:'Cert mismatch',c:'p-cert'},{t:'Browser blocks',c:'p-cert'},{t:'Identity + encryption',c:'p-enc'}]
+};
+function renderPills(){
+  var bar=$('pills');bar.innerHTML='';
+  (PILLS[scenario]||[]).forEach(function(p){
+    var s=document.createElement('span');s.className='pill '+p.c;s.textContent=p.t;bar.appendChild(s);
+  });
+}
+
+// colors
+var C={
+  tcp:'#378ADD',tcpG:'#1D9E75',tls:'#7F77DD',cert:'#BA7517',
+  key:'#1D9E75',enc:'#534AB7',http:'#185FA5',ok:'#1D9E75',err:'#A32D2D'
+};
+
+function getArrows(){
+  if(scenario==='full') return [
+    {dir:'right',color:C.tcp,  dash:true, label:'TCP SYN'},
+    {dir:'left', color:C.tcpG, dash:true, label:'TCP SYN-ACK'},
+    {dir:'right',color:C.tcp,  dash:true, label:'TCP ACK'},
+    {dir:'right',color:C.tls,  dash:false,label:'ClientHello  (TLS 1.3, cipher suites, nonce, SNI)'},
+    {dir:'left', color:C.tls,  dash:false,label:'ServerHello + Certificate  (public key, CA-signed)'},
+    {dir:'right',color:C.key,  dash:false,label:'Key exchange  (DH share — session keys derived independently)'},
+    {dir:'left', color:C.enc,  dash:false,thick:true,label:'Finished 🔒  (handshake verified)',badge:'🔒 TLS tunnel open',badgeBg:isDark()?'#26215C':'#EEEDFE',badgeFg:isDark()?'#CECBF6':'#3C3489',badgeBd:isDark()?'#534AB7':'#AFA9EC'},
+    {dir:'right',color:C.enc,  dash:false,thick:true,label:'🔒  GET /index.html HTTP/1.1  (encrypted inside TLS)'},
+    {dir:'left', color:C.ok,   dash:false,thick:true,label:'🔒  200 OK  (encrypted inside TLS)',badge:'✓ 200 OK',badgeBg:isDark()?'#04342C':'#E1F5EE',badgeFg:isDark()?'#9FE1CB':'#04342C',badgeBd:isDark()?'#0F6E56':'#1D9E75'},
+  ];
+  if(scenario==='resume') return [
+    {dir:'right',color:C.tcp, dash:true, label:'TCP SYN / SYN-ACK / ACK'},
+    {dir:'right',color:C.enc, dash:false,thick:true,label:'ClientHello + Session ticket + 🔒 GET /index.html  (0-RTT early data)'},
+    {dir:'left', color:C.ok,  dash:false,thick:true,label:'ServerHello + 🔒 200 OK  (1 round-trip)',badge:'✓ 0-RTT resume — 1 round-trip',badgeBg:isDark()?'#04342C':'#E1F5EE',badgeFg:isDark()?'#9FE1CB':'#04342C',badgeBd:isDark()?'#0F6E56':'#1D9E75'},
+  ];
+  if(scenario==='badcert') return [
+    {dir:'right',color:C.tcp,  dash:true, label:'TCP SYN / SYN-ACK / ACK'},
+    {dir:'right',color:C.tls,  dash:false,label:'ClientHello  (TLS 1.3)'},
+    {dir:'left', color:C.cert, dash:false,label:'ServerHello + Certificate  (untrusted / expired / mismatched)'},
+    {dir:'right',color:C.cert, dash:true, label:'Browser checks certificate chain with CA'},
+    {dir:'left', color:C.err,  dash:true, label:'Chain INVALID — issuer not in trust store'},
+    {dir:'right',color:C.err,  dash:false,thick:true,label:'TLS Alert: bad_certificate  (connection aborted)',badge:'✗ ERR_CERT_AUTHORITY_INVALID',badgeBg:isDark()?'#501313':'#FCEBEB',badgeFg:isDark()?'#F7C1C1':'#791F1F',badgeBd:isDark()?'#791F1F':'#F09595'},
+  ];
+  if(scenario==='hsts') return [
+    {dir:'right',color:C.http, dash:false,label:'GET http://example.com/  (plain HTTP, port 80 — unencrypted)'},
+    {dir:'left', color:C.tls,  dash:false,label:'307 Redirect → https://  +  Strict-Transport-Security header'},
+    {dir:'right',color:C.tcp,  dash:true, label:'TCP SYN / SYN-ACK / ACK  (port 443)'},
+    {dir:'right',color:C.tls,  dash:false,label:'TLS 1.3 ClientHello + handshake'},
+    {dir:'left', color:C.ok,   dash:false,thick:true,label:'🔒 200 OK  (HSTS stored — future visits skip HTTP)',badge:'✓ HTTPS enforced for 1 year',badgeBg:isDark()?'#04342C':'#E1F5EE',badgeFg:isDark()?'#9FE1CB':'#04342C',badgeBd:isDark()?'#0F6E56':'#1D9E75'},
+  ];
+  if(scenario==='mitm') return [
+    {dir:'right',color:C.tcp,  dash:true, label:'TCP SYN / SYN-ACK / ACK  (intercepted by attacker)'},
+    {dir:'right',color:C.tls,  dash:false,label:'ClientHello  (TLS 1.3)'},
+    {dir:'left', color:C.err,  dash:false,label:'FAKE Certificate  (self-signed by attacker, not CA-trusted)'},
+    {dir:'right',color:C.cert, dash:true, label:'Browser checks certificate chain with CA'},
+    {dir:'left', color:C.err,  dash:true, label:'NOT in trust store — signature invalid'},
+    {dir:'right',color:C.err,  dash:false,thick:true,label:'TLS Alert: certificate_unknown  (MITM blocked)',badge:'✗ MITM blocked — no data sent',badgeBg:isDark()?'#501313':'#FCEBEB',badgeFg:isDark()?'#F7C1C1':'#791F1F',badgeBd:isDark()?'#791F1F':'#F09595'},
+  ];
+  return [];
+}
+
+function buildSteps(){
+  if(scenario==='full') return [
+    {l:'TCP', t:'TCP three-way handshake', d:'HTTPS runs on top of TCP — a reliable connection must be established before TLS can start',
+     show:[0,1,2], fn:function(){
+       setLeft('<span style="color:#378ADD">SYN →</span> initiating TCP…<br><span style="color:#1D9E75">← SYN-ACK</span> server acks<br><span style="color:#378ADD">ACK →</span> connected');
+       addLog('[TCP] SYN → server','lbl');
+       setTimeout(function(){addLog('[TCP] SYN-ACK ← server','lgr');},250);
+       setTimeout(function(){addLog('[TCP] ACK → connected','lbl');},500);
+     }},
+    {l:'Hello', t:'ClientHello', d:'Browser announces TLS version, supported ciphers, and a random nonce. No secrets sent yet.',
+     show:[3], fn:function(){
+       setLeft('<span style="color:#7F77DD">ClientHello →</span><br>TLS 1.3<br>Ciphers: AES-256-GCM, ChaCha20<br>Nonce: 32 bytes  SNI: example.com');
+       addLog('[TLS] ClientHello → server','lp');
+     }},
+    {l:'Cert', t:'ServerHello + Certificate', d:"Server picks a cipher and sends its certificate — its public key plus identity, signed by a trusted CA",
+     show:[4], fn:function(){
+       setRight('<span style="color:#7F77DD">← ServerHello</span><br>Cipher: AES-256-GCM<br>Certificate: example.com<br>Signed by: DigiCert CA');
+       addLog('[TLS] ServerHello + Certificate ← server','lp');
+       showBox('caBox');
+     }},
+    {l:'Verify', t:'Browser verifies the certificate', d:'Browser walks the certificate chain up to a trusted root CA — confirming this really is example.com',
+     show:[], fn:function(){
+       setLeft('<span style="color:#BA7517">Verifying chain…</span><br>example.com → DigiCert → Root CA<br>Expiry ✓  Domain ✓  Not revoked ✓');
+       addLog('[Browser] Checking certificate chain…','lw');
+       setTimeout(function(){addLog('[Browser] Certificate valid — chain trusted ✓','lgr');},700);
+     }},
+    {l:'Keys', t:'Diffie-Hellman key exchange', d:"Each side sends a DH public share. Both independently derive the same session key — the secret never crosses the wire",
+     show:[5], fn:function(){
+       setLeft('<span style="color:#1D9E75">DH key share →</span><br>Session key derived locally');
+       setRight('<span style="color:#1D9E75">← DH key share</span><br>Session key derived independently<br>(same value — magic of DH)');
+       addLog('[TLS] Key exchange → server','lp');
+       addLog('[TLS] Both sides derive the same session key','lgr');
+     }},
+    {l:'Finish', t:'Finished — tunnel established', d:'Both sides confirm the handshake with an encrypted Finished message. The TLS tunnel is open.',
+     show:[6], fn:function(){
+       addLog('[TLS] Finished (encrypted) ↔ server','lp');
+       addLog('[TLS] 🔒 Tunnel open — all traffic now encrypted','lgr');
+     }},
+    {l:'GET', t:'Encrypted HTTP request', d:"The HTTP request is wrapped in a TLS record. An eavesdropper sees only cipher text — not the URL, headers, or cookies",
+     show:[7], fn:function(){
+       setLeft('<span style="color:#185FA5">GET /index.html HTTP/1.1</span><br>Host: example.com<br>Cookie: session=…<br><br><span style="color:#534AB7">↑ encrypted inside TLS</span>');
+       addLog('[HTTPS] 🔒 GET /index.html → server (encrypted)','lbl');
+     }},
+    {l:'200', t:'Encrypted HTTP response', d:'Server sends the response inside the TLS tunnel — confidentiality, integrity, and authenticity all guaranteed',
+     show:[8], fn:function(){
+       setRight('<span style="color:#1D9E75">200 OK</span><br>Content-Type: text/html<br>Strict-Transport-Security: max-age=31536000<br><br><span style="color:#534AB7">↑ encrypted inside TLS</span>');
+       addLog('[HTTPS] 🔒 200 OK ← server (encrypted)','lgr');
+       addLog('[Done] Page delivered securely ✓','lgr');
+     }},
+  ];
+
+  if(scenario==='resume') return [
+    {l:'TCP', t:'TCP three-way handshake', d:'TCP connection established as normal on port 443',
+     show:[0], fn:function(){
+       setLeft('<span style="color:#378ADD">TCP connected</span><br>Session ticket found in cache<br>Age: 2 hours — still valid');
+       addLog('[TCP] SYN → SYN-ACK → ACK — connected','lbl');
+       addLog('[Browser] Session ticket found — attempting 0-RTT','lp');
+     }},
+    {l:'0-RTT', t:'ClientHello + early data (0-RTT)', d:'Browser sends the session ticket AND the HTTP request in the very first message — zero extra round-trip',
+     show:[1], fn:function(){
+       setLeft('<span style="color:#534AB7">ClientHello + 0-RTT →</span><br>Session ticket (encrypted)<br>Early data: GET /index.html<br>→ saves a full round-trip');
+       addLog('[TLS] ClientHello + session ticket + 🔒 GET /index.html','lp');
+     }},
+    {l:'Done', t:'Server resumes and responds', d:'Server recognises the ticket, recovers the session key, decrypts the early data, and responds — total: 1 round-trip',
+     show:[2], fn:function(){
+       setRight('<span style="color:#1D9E75">Session resumed ✓</span><br>Ticket recognised<br>Early data: GET /index.html ✓<br>200 OK sent');
+       addLog('[Server] Session resumed — key recovered','lgr');
+       addLog('[Done] 0-RTT: 1 round-trip vs 2 for full handshake ✓','lgr');
+     }},
+  ];
+
+  if(scenario==='badcert') return [
+    {l:'TCP', t:'TCP handshake', d:'Connection established on port 443 as normal',
+     show:[0], fn:function(){addLog('[TCP] connected','lbl');}},
+    {l:'Hello', t:'ClientHello sent', d:'TLS begins normally',
+     show:[1], fn:function(){addLog('[TLS] ClientHello → server','lp');}},
+    {l:'Cert', t:'Server sends a bad certificate', d:'The certificate is self-signed, expired, or does not match the domain — cannot be traced to any trusted CA',
+     show:[2], fn:function(){
+       setRight('<span style="color:#A32D2D">Suspect certificate</span><br>Signed by: UNKNOWN CA<br>Status: cannot verify chain');
+       addLog('[TLS] Certificate ← server (untrusted issuer)','lw');
+     }},
+    {l:'Verify', t:'Chain check — FAILS', d:"Browser finds no trusted root for this certificate and refuses to continue",
+     show:[3,4], fn:function(){
+       showBox('caBox');
+       setLeft('<span style="color:#A32D2D">Certificate INVALID</span><br>Chain: broken / unknown CA<br>→ blocking connection');
+       addLog('[Browser] Checking chain…','lw');
+       setTimeout(function(){addLog('[CA] Issuer not in trust store','le');},350);
+       setTimeout(function(){addLog('[Browser] ERR_CERT_AUTHORITY_INVALID','le');},700);
+     }},
+    {l:'Block', t:'TLS Alert — connection aborted', d:'Browser fires a TLS Alert and tears down the connection. The HTTP request is never sent.',
+     show:[5], fn:function(){
+       addLog('[TLS] Alert: bad_certificate → server','le');
+       addLog('[Browser] Connection BLOCKED — error page shown ✓','le');
+     }},
+  ];
+
+  if(scenario==='hsts') return [
+    {l:'HTTP', t:'User visits plain HTTP', d:"Browser sends an unencrypted request on port 80 — visible to anyone on the network",
+     show:[0], fn:function(){
+       setLeft('<span style="color:#185FA5">GET http://example.com/</span><br>Port 80 — plain text<br>Visible to anyone on the network');
+       addLog('[Browser] GET http://example.com/ (plain HTTP)','lbl');
+     }},
+    {l:'307', t:'Server redirects + sets HSTS', d:'Server returns 307 and the Strict-Transport-Security header — browser stores the policy',
+     show:[1], fn:function(){
+       setRight('<span style="color:#534AB7">307 Internal Redirect</span><br>Location: https://example.com/<br>Strict-Transport-Security:<br>  max-age=31536000; includeSubDomains');
+       addLog('[Server] 307 → https:// + HSTS header','lp');
+       addLog('[Browser] HSTS policy stored (1 year)','lp');
+     }},
+    {l:'TCP', t:'New TCP on port 443', d:'Browser opens a fresh connection to the HTTPS port',
+     show:[2], fn:function(){addLog('[TCP] SYN → SYN-ACK → ACK (port 443)','lbl');}},
+    {l:'TLS', t:'TLS handshake completes', d:'Full TLS 1.3 handshake — browser now has a verified encrypted channel',
+     show:[3], fn:function(){
+       addLog('[TLS] ClientHello + handshake → server','lp');
+       addLog('[TLS] 🔒 Tunnel established','lgr');
+     }},
+    {l:'Done', t:'HTTPS delivered + HSTS active', d:'Future visits: browser upgrades http→https internally before sending any packet — the plain HTTP step disappears forever',
+     show:[4], fn:function(){
+       setLeft('<span style="color:#1D9E75">HSTS active</span><br>Next visit: browser upgrades<br>http→https before sending anything<br>No plain HTTP ever sent again');
+       addLog('[HTTPS] 🔒 200 OK — page delivered','lgr');
+       addLog('[Done] HSTS eliminates the first-visit plain-HTTP window ✓','lgr');
+     }},
+  ];
+
+  if(scenario==='mitm') return [
+    {l:'TCP', t:'Attacker intercepts TCP', d:"A rogue node sits between browser and server — it receives the TCP SYN and responds as if it were the server",
+     show:[0], fn:function(){
+       showBox('atkBox');
+       setLeft('<span style="color:#A32D2D">Connection intercepted</span><br>Attacker routing traffic through self<br>→ will impersonate server');
+       addLog('[Network] TCP connection intercepted by attacker','le');
+     }},
+    {l:'Hello', t:'ClientHello reaches attacker', d:'Browser sends ClientHello — attacker receives it, not the real server',
+     show:[1], fn:function(){addLog('[TLS] ClientHello → (intercepted by attacker)','lp');}},
+    {l:'Fake', t:'Attacker sends fake certificate', d:"Attacker generates a certificate for example.com but signs it with its own key — not a CA's",
+     show:[2], fn:function(){
+       setRight('<span style="color:#A32D2D">FAKE certificate</span><br>Subject: example.com<br>Signed by: Attacker self-signed<br>NOT in browser trust store');
+       addLog('[Attacker] Sending self-signed cert for example.com','le');
+     }},
+    {l:'Detect', t:'Browser detects the forgery', d:'Browser checks every trusted root CA — none signed this certificate. Forgery detected.',
+     show:[3,4], fn:function(){
+       showBox('caBox');
+       setLeft('<span style="color:#A32D2D">Certificate FORGED</span><br>Attacker key ≠ any trusted CA<br>→ TLS alert firing');
+       addLog('[Browser] Verifying certificate chain…','lw');
+       setTimeout(function(){addLog('[CA] Signature not from any trusted root','le');},350);
+       setTimeout(function(){addLog('[Browser] MITM detected — ERR_CERT_AUTHORITY_INVALID','le');},700);
+     }},
+    {l:'Block', t:'MITM blocked — nothing sent', d:'Browser drops the connection. The attacker never saw the request. This is exactly what certificate verification prevents.',
+     show:[5], fn:function(){
+       addLog('[TLS] Alert: certificate_unknown (connection closed)','le');
+       addLog('[Browser] MITM attack BLOCKED — no data transmitted ✓','lgr');
+     }},
+  ];
+  return [];
+}
+
+// step engine
+function applyStep(i){
+  var s=steps[i];
+  if(i>0) setDot(i-1,'done');
+  setDot(i,'act');
+  setTD(s.t,s.d);
+  (s.show||[]).forEach(revealArrow);
+  s.fn();
+  if(i===steps.length-1){
+    $('btnStep').disabled=true;
+    if(!playing) $('btnPlay').disabled=true;
+  }
+}
+function doStep(){if(cur>=steps.length-1)return;cur++;applyStep(cur);}
+function doPlay(){
+  if(playing)return;playing=true;
+  $('btnPlay').disabled=true;$('btnStep').disabled=true;
+  (function loop(){
+    if(!playing||cur>=steps.length-1){
+      playing=false;
+      $('btnPlay').disabled=(cur>=steps.length-1);
+      $('btnStep').disabled=(cur>=steps.length-1);
+      return;
+    }
+    cur++;applyStep(cur);
+    pt=setTimeout(loop,2400);
+  })();
+}
+function doReset(){
+  playing=false;clearTimeout(pt);cur=-1;
+  arrowDefs=getArrows();
+  buildSVG();
+  $('btnStep').disabled=false;$('btnPlay').disabled=false;
+  $('log').innerHTML='<div class="log-e">Choose a scenario and press ▶ Play or Step →</div>';
+  $('leftPanel').innerHTML='<span class="mute">waiting…</span>';
+  $('rightPanel').innerHTML='<span class="mute">waiting…</span>';
+  var LABELS={
+    full:['TCP','Hello','Cert','Verify','Keys','Finish','GET','200'],
+    resume:['TCP','0-RTT','Done'],
+    badcert:['TCP','Hello','Cert','Verify','Block'],
+    hsts:['HTTP','307','TCP','TLS','Done'],
+    mitm:['TCP','Hello','Fake','Detect','Block']
+  };
+  buildDots(LABELS[scenario]||[]);
+  steps=buildSteps();
+  setTD('HTTPS — How it works','Select a scenario and step through');
+  renderPills();
+}
+function setScenario(s){
+  scenario=s;
+  document.querySelectorAll('.scen-btn').forEach(function(b){b.classList.remove('active');});
+  $('sc-'+s).classList.add('active');
+  doReset();
+}
+$('btnStep').addEventListener('click',doStep);
+$('btnPlay').addEventListener('click',doPlay);
+$('btnReset').addEventListener('click',doReset);
+['full','resume','badcert','hsts','mitm'].forEach(function(s){
+  $('sc-'+s).addEventListener('click',function(){setScenario(s);});
+});
+doReset();
+</script>
+</html>

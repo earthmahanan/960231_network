@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cookies — Wristband analogy</title>
+<style>
+:root{color-scheme:light;
+  --color-background-primary:#ffffff;--color-background-secondary:#f4f3ee;
+  --color-text-primary:#1d1d1c;--color-text-secondary:#5f5e5a;--color-text-tertiary:#888780;
+  --color-border-primary:rgba(0,0,0,0.25);--color-border-secondary:rgba(0,0,0,0.18);--color-border-tertiary:rgba(0,0,0,0.13);
+  --border-radius-lg:8px;--border-radius-md:6px;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+}
+
+body{background:transparent;font-family:var(--font)}
+.analogy-anim{max-width:720px;margin:0 auto;padding:.75rem 0}
+</style>
+</head>
+<body>
+<div class="analogy-anim">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.stage{background:#E8F4FD;border-radius:var(--border-radius-lg);overflow:hidden;position:relative}
+.caption-box{background:var(--color-background-primary);padding:10px 16px 0;border-top:0.5px solid var(--color-border-tertiary)}
+.caption{font-size:13px;color:var(--color-text-secondary);line-height:1.6;min-height:48px;transition:opacity .25s}
+.caption strong{color:var(--color-text-primary);font-weight:500}
+.step-track{display:flex;gap:0;margin:10px 16px 0;border-radius:var(--border-radius-md);overflow:hidden;border:0.5px solid var(--color-border-tertiary)}
+.step-pill{flex:1;padding:5px 4px;font-size:10px;font-weight:500;text-align:center;color:var(--color-text-secondary);background:var(--color-background-secondary);cursor:pointer;border:none;border-right:0.5px solid var(--color-border-tertiary);transition:all .18s;line-height:1.3}
+.step-pill:last-child{border-right:none}
+.step-pill.active{background:#EEEDFE;color:#3C3489}
+.step-pill.done{background:#E1F5EE;color:#085041}
+.ctrl{display:flex;gap:6px;padding:10px 16px 14px;align-items:center;flex-wrap:wrap;background:var(--color-background-primary)}
+.btn{font-size:11px;padding:5px 12px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:transparent;cursor:pointer;color:var(--color-text-primary);transition:background .15s}
+.btn:hover{background:var(--color-background-secondary)}
+.btn:disabled{opacity:.35;cursor:default}
+.btn.accent{border-color:#534AB7;color:#3C3489}
+.btn.go{border-color:#0F6E56;color:#0F6E56}
+.btn.danger{border-color:#A32D2D;color:#A32D2D}
+.spd{display:flex;align-items:center;gap:5px;margin-left:auto;font-size:11px;color:var(--color-text-secondary)}
+</style>
+
+<h2 class="sr-only">Animated theme park wristband analogy for HTTP cookies: visitor pays, staff snap a wristband (Set-Cookie), visitor rides all day without showing a ticket, a thief steals the wristband and rides as the visitor, then the visitor cuts off the wristband and is locked out.</h2>
+
+<div class="stage">
+<svg id="scene" width="100%" viewBox="0 0 680 360" role="img">
+<title>Theme park cookie analogy — the wristband</title>
+<desc>A theme park scene showing a visitor receiving a wristband at the gate, using it at rides, a thief stealing it, and cutting it off.</desc>
+
+<!-- Sky -->
+<rect x="0" y="0" width="680" height="260" fill="#C8E8F5"/>
+<!-- Ground -->
+<rect x="0" y="255" width="680" height="105" fill="#A8D878"/>
+<rect x="0" y="253" width="680" height="6" fill="#88B858"/>
+<!-- Path -->
+<rect x="60" y="253" width="560" height="12" fill="#D4C4A0"/>
+
+<!-- Sun -->
+<circle cx="620" cy="48" r="32" fill="#FFD44A"/>
+<line x1="620" y1="10" x2="620" y2="2" stroke="#FFD44A" stroke-width="2"/>
+<line x1="648" y1="20" x2="654" y2="14" stroke="#FFD44A" stroke-width="2"/>
+<line x1="658" y1="48" x2="666" y2="48" stroke="#FFD44A" stroke-width="2"/>
+<line x1="648" y1="76" x2="654" y2="82" stroke="#FFD44A" stroke-width="2"/>
+
+<!-- Clouds -->
+<ellipse cx="80" cy="50" rx="45" ry="22" fill="white" opacity=".85"/>
+<ellipse cx="110" cy="42" rx="32" ry="18" fill="white" opacity=".85"/>
+<ellipse cx="55" cy="44" rx="28" ry="16" fill="white" opacity=".85"/>
+<ellipse cx="300" cy="38" rx="38" ry="18" fill="white" opacity=".75"/>
+<ellipse cx="328" cy="30" rx="26" ry="14" fill="white" opacity=".75"/>
+
+<!-- === GATE === -->
+<rect x="48" y="140" width="14" height="115" rx="3" fill="#8B5E3C"/>
+<rect x="130" y="140" width="14" height="115" rx="3" fill="#8B5E3C"/>
+<rect x="44" y="130" width="104" height="18" rx="4" fill="#E84040"/>
+<text x="96" y="143" text-anchor="middle" font-size="11" font-weight="500" fill="white" dominant-baseline="central">ENTRANCE</text>
+<rect x="62" y="255" width="68" height="4" rx="2" fill="#C84030"/>
+<!-- Gate bar -->
+<rect id="gate-bar" x="62" y="220" width="68" height="6" rx="3" fill="#E84040"/>
+
+<!-- === RIDE 1 === -->
+<rect x="260" y="170" width="80" height="90" rx="6" fill="#7B4AB8"/>
+<rect x="255" y="160" width="90" height="20" rx="4" fill="#9B6AD8"/>
+<text x="300" y="172" text-anchor="middle" font-size="10" font-weight="500" fill="white" dominant-baseline="central">ROLLER COASTER</text>
+<rect x="275" y="195" width="50" height="40" rx="4" fill="#6B3AA8"/>
+<!-- Ride operator 1 -->
+<circle cx="300" cy="240" r="10" fill="#F5D5A8" stroke="#D4A870" stroke-width="0.5"/>
+<rect x="290" y="250" width="20" height="18" rx="3" fill="#3A7AB8"/>
+<circle id="r1eye-l" cx="296" cy="239" r="2" fill="#5C3A1E"/>
+<circle id="r1eye-r" cx="304" cy="239" r="2" fill="#5C3A1E"/>
+<path id="r1mouth" d="M297 244 Q300 247 303 244" stroke="#5C3A1E" stroke-width="1" fill="none" stroke-linecap="round"/>
+<!-- Check icon R1 -->
+<g id="r1check" opacity="0">
+  <circle cx="322" cy="232" r="10" fill="#1D9E75"/>
+  <path d="M317 232 L320 235 L327 229" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<!-- Scan beam R1 -->
+<line id="r1beam" x1="310" y1="258" x2="310" y2="258" stroke="#1D9E75" stroke-width="2" stroke-dasharray="3 2" opacity="0"/>
+
+<!-- === RIDE 2 === -->
+<rect x="460" y="170" width="80" height="90" rx="6" fill="#E85A20"/>
+<rect x="455" y="160" width="90" height="20" rx="4" fill="#F07840"/>
+<text x="500" y="172" text-anchor="middle" font-size="10" font-weight="500" fill="white" dominant-baseline="central">FERRIS WHEEL</text>
+<circle cx="500" cy="205" r="22" fill="#E07030" stroke="#C05018" stroke-width="0.5"/>
+<circle cx="500" cy="205" r="6" fill="#F07840"/>
+<rect x="495" y="225" width="10" height="20" rx="2" fill="#C05018"/>
+<!-- Operator 2 -->
+<circle cx="500" cy="244" r="10" fill="#F5D5A8" stroke="#D4A870" stroke-width="0.5"/>
+<rect x="490" y="254" width="20" height="18" rx="3" fill="#3A7AB8"/>
+<circle id="r2eye-l" cx="496" cy="243" r="2" fill="#5C3A1E"/>
+<circle id="r2eye-r" cx="504" cy="243" r="2" fill="#5C3A1E"/>
+<path id="r2mouth" d="M497 248 Q500 251 503 248" stroke="#5C3A1E" stroke-width="1" fill="none" stroke-linecap="round"/>
+<g id="r2check" opacity="0">
+  <circle cx="522" cy="236" r="10" fill="#1D9E75"/>
+  <path d="M517 236 L520 239 L527 233" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<line id="r2beam" x1="510" y1="262" x2="510" y2="262" stroke="#1D9E75" stroke-width="2" stroke-dasharray="3 2" opacity="0"/>
+
+<!-- === VISITOR === -->
+<g id="visitor">
+  <circle cx="96" cy="218" r="13" fill="#F5D5A8" stroke="#D4A870" stroke-width="0.5"/>
+  <rect x="83" y="231" width="26" height="28" rx="4" fill="#4A7AB8"/>
+  <circle cx="90" cy="217" r="2.5" fill="#5C3A1E"/>
+  <circle cx="102" cy="217" r="2.5" fill="#5C3A1E"/>
+  <path id="vis-mouth" d="M91 223 Q96 226 101 223" stroke="#5C3A1E" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <!-- Wristband on wrist (hidden initially) -->
+  <rect id="wristband" x="80" y="247" width="14" height="6" rx="3" fill="#FF6B35" stroke="#CC4A18" stroke-width="0.5" opacity="0"/>
+</g>
+<text id="vis-label" x="96" y="278" text-anchor="middle" font-size="10" fill="#27500A" font-weight="500">You</text>
+
+<!-- === STAFF at gate === -->
+<circle cx="148" cy="218" r="13" fill="#F5D5A8" stroke="#D4A870" stroke-width="0.5"/>
+<rect x="136" y="231" width="26" height="28" rx="4" fill="#CC3030"/>
+<circle cx="143" cy="217" r="2.5" fill="#5C3A1E"/>
+<circle cx="153" cy="217" r="2.5" fill="#5C3A1E"/>
+<path d="M143 223 Q148 226 153 223" stroke="#5C3A1E" stroke-width="1" fill="none" stroke-linecap="round"/>
+<text x="148" y="278" text-anchor="middle" font-size="10" fill="#27500A" font-weight="500">Staff</text>
+
+<!-- === THIEF (hidden) === -->
+<g id="thief" opacity="0">
+  <circle cx="200" cy="218" r="13" fill="#D4B898" stroke="#B4986A" stroke-width="0.5"/>
+  <rect x="188" y="231" width="26" height="28" rx="4" fill="#2C2C2A"/>
+  <circle cx="196" cy="217" r="2.5" fill="#5C3A1E"/>
+  <circle cx="207" cy="217" r="2.5" fill="#5C3A1E"/>
+  <path d="M196 223 Q201 226 206 223" stroke="#5C3A1E" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <text x="201" y="278" text-anchor="middle" font-size="10" fill="#791F1F" font-weight="500">Thief</text>
+  <rect id="thief-band" x="184" y="247" width="14" height="6" rx="3" fill="#FF6B35" stroke="#CC4A18" stroke-width="0.5" opacity="0"/>
+</g>
+
+<!-- === SPEECH BUBBLES === -->
+<!-- Pay speech -->
+<g id="bub-pay" opacity="0">
+  <rect x="2" y="178" width="80" height="26" rx="8" fill="white" stroke="#B4B2A9" stroke-width="0.5"/>
+  <polygon points="30,204 40,216 50,204" fill="white" stroke="#B4B2A9" stroke-width="0.5"/>
+  <polygon points="31,203 49,203 40,214" fill="white"/>
+  <text x="42" y="194" text-anchor="middle" font-size="10" fill="#444441" dominant-baseline="central">I'd like to enter!</text>
+</g>
+<!-- Ticket paid -->
+<g id="bub-ticket" opacity="0">
+  <rect x="150" y="175" width="110" height="34" rx="8" fill="#E1F5EE" stroke="#5DCAA5" stroke-width="0.5"/>
+  <polygon points="168,209 178,218 188,209" fill="#E1F5EE" stroke="#5DCAA5" stroke-width="0.5"/>
+  <polygon points="169,208 187,208 178,216" fill="#E1F5EE"/>
+  <text x="205" y="188" text-anchor="middle" font-size="10" fill="#085041" dominant-baseline="central">Welcome! Here's</text>
+  <text x="205" y="202" text-anchor="middle" font-size="10" fill="#085041" dominant-baseline="central">your wristband!</text>
+</g>
+<!-- Set-Cookie label -->
+<g id="label-setcookie" opacity="0">
+  <rect x="148" y="148" width="144" height="20" rx="10" fill="#FAEEDA" stroke="#FAC775" stroke-width="0.5"/>
+  <text x="220" y="158" text-anchor="middle" font-size="10" fill="#633806" dominant-baseline="central" font-weight="500">Set-Cookie: sid=WB42; HttpOnly</text>
+</g>
+<!-- Ride 1 scan bubble -->
+<g id="bub-r1" opacity="0">
+  <rect x="216" y="198" width="76" height="26" rx="8" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+  <polygon points="270,224 278,234 286,224" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+  <polygon points="271,223 285,223 278,232" fill="#EEEDFE"/>
+  <text x="254" y="214" text-anchor="middle" font-size="10" fill="#3C3489" dominant-baseline="central">Wrist check...</text>
+</g>
+<g id="bub-r1ok" opacity="0">
+  <rect x="220" y="196" width="70" height="26" rx="8" fill="#E1F5EE" stroke="#5DCAA5" stroke-width="0.5"/>
+  <polygon points="265,222 273,232 281,222" fill="#E1F5EE" stroke="#5DCAA5" stroke-width="0.5"/>
+  <polygon points="266,221 280,221 273,230" fill="#E1F5EE"/>
+  <text x="255" y="212" text-anchor="middle" font-size="10" fill="#085041" dominant-baseline="central">Enjoy the ride!</text>
+</g>
+<!-- Ride 2 scan bubble -->
+<g id="bub-r2" opacity="0">
+  <rect x="416" y="202" width="76" height="26" rx="8" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+  <polygon points="470,228 478,238 486,228" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+  <polygon points="471,227 485,227 478,236" fill="#EEEDFE"/>
+  <text x="454" y="218" text-anchor="middle" font-size="10" fill="#3C3489" dominant-baseline="central">Wrist check...</text>
+</g>
+<g id="bub-r2ok" opacity="0">
+  <rect x="416" y="202" width="76" height="26" rx="8" fill="#E1F5EE" stroke="#5DCAA5" stroke-width="0.5"/>
+  <polygon points="470,228 478,238 486,228" fill="#E1F5EE" stroke="#5DCAA5" stroke-width="0.5"/>
+  <polygon points="471,227 485,227 478,236" fill="#E1F5EE"/>
+  <text x="454" y="218" text-anchor="middle" font-size="10" fill="#085041" dominant-baseline="central">Enjoy the ride!</text>
+</g>
+<!-- Thief bubble -->
+<g id="bub-thief" opacity="0">
+  <rect x="158" y="175" width="90" height="34" rx="8" fill="#FCEBEB" stroke="#F09595" stroke-width="0.5"/>
+  <polygon points="195,209 205,218 215,209" fill="#FCEBEB" stroke="#F09595" stroke-width="0.5"/>
+  <polygon points="196,208 214,208 205,216" fill="#FCEBEB"/>
+  <text x="203" y="188" text-anchor="middle" font-size="10" fill="#791F1F" dominant-baseline="central">Hehe, their</text>
+  <text x="203" y="202" text-anchor="middle" font-size="10" fill="#791F1F" dominant-baseline="central">wristband!</text>
+</g>
+<!-- Stolen wristband warning -->
+<g id="warn-stolen" opacity="0">
+  <rect x="160" y="100" width="360" height="40" rx="8" fill="#FCEBEB" stroke="#F09595" stroke-width="0.5"/>
+  <text x="340" y="116" text-anchor="middle" font-size="12" font-weight="500" fill="#791F1F" dominant-baseline="central">Stolen wristband = stolen session!</text>
+  <text x="340" y="132" text-anchor="middle" font-size="10" fill="#A32D2D" dominant-baseline="central">Thief can ride all day as you.</text>
+</g>
+<!-- Cut wristband -->
+<g id="bub-cut" opacity="0">
+  <rect x="2" y="175" width="88" height="34" rx="8" fill="#FCEBEB" stroke="#F09595" stroke-width="0.5"/>
+  <polygon points="38,209 48,220 58,209" fill="#FCEBEB" stroke="#F09595" stroke-width="0.5"/>
+  <polygon points="39,208 57,208 48,218" fill="#FCEBEB"/>
+  <text x="46" y="188" text-anchor="middle" font-size="10" fill="#791F1F" dominant-baseline="central">I'm clearing</text>
+  <text x="46" y="202" text-anchor="middle" font-size="10" fill="#791F1F" dominant-baseline="central">my cookies!</text>
+</g>
+<g id="warn-cut" opacity="0">
+  <rect x="160" y="100" width="360" height="40" rx="8" fill="#FAEEDA" stroke="#FAC775" stroke-width="0.5"/>
+  <text x="340" y="116" text-anchor="middle" font-size="12" font-weight="500" fill="#633806" dominant-baseline="central">Wristband cut = logged out!</text>
+  <text x="340" y="132" text-anchor="middle" font-size="10" fill="#854F0B" dominant-baseline="central">No wristband → gate turns you away.</text>
+</g>
+<!-- Denied at gate -->
+<g id="bub-denied" opacity="0">
+  <rect x="148" y="175" width="90" height="34" rx="8" fill="#FCEBEB" stroke="#F09595" stroke-width="0.5"/>
+  <polygon points="168,209 178,218 188,209" fill="#FCEBEB" stroke="#F09595" stroke-width="0.5"/>
+  <polygon points="169,208 187,208 178,216" fill="#FCEBEB"/>
+  <text x="193" y="188" text-anchor="middle" font-size="10" fill="#791F1F" dominant-baseline="central">No wristband,</text>
+  <text x="193" y="202" text-anchor="middle" font-size="10" fill="#791F1F" dominant-baseline="central">no entry!</text>
+</g>
+<!-- Gate bar closed X -->
+<g id="gate-denied-x" opacity="0">
+  <circle cx="96" cy="223" r="12" fill="#FCEBEB" stroke="#F09595" stroke-width="0.5"/>
+  <line x1="89" y1="216" x2="103" y2="230" stroke="#E24B4A" stroke-width="2" stroke-linecap="round"/>
+  <line x1="103" y1="216" x2="89" y2="230" stroke="#E24B4A" stroke-width="2" stroke-linecap="round"/>
+</g>
+
+<!-- http label top right -->
+<g id="http-label" opacity="0">
+  <rect x="520" y="10" width="148" height="20" rx="10" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+  <text x="594" y="20" text-anchor="middle" font-size="10" fill="#3C3489" dominant-baseline="central" font-weight="500" id="http-label-txt">Set-Cookie: sid=WB42</text>
+</g>
+</svg>
+
+<div class="caption-box">
+  <div class="caption" id="cap">Click <strong>Play</strong> or step through the analogy.</div>
+</div>
+<div class="step-track" id="pills">
+  <button class="step-pill active" onclick="goStep(0)">1. Pay &amp; enter</button>
+  <button class="step-pill" onclick="goStep(1)">2. Get wristband</button>
+  <button class="step-pill" onclick="goStep(2)">3. Ride 1</button>
+  <button class="step-pill" onclick="goStep(3)">4. Ride 2</button>
+  <button class="step-pill" onclick="goStep(4)">5. Thief steals it</button>
+  <button class="step-pill" onclick="goStep(5)">6. Cut it off</button>
+</div>
+<div class="ctrl">
+  <button class="btn accent" id="bPlay" onclick="playAll()">Play</button>
+  <button class="btn go" id="bStep" onclick="stepFwd()">Next step →</button>
+  <button class="btn" id="bReset" onclick="doReset()" disabled>Reset</button>
+  <div class="spd">
+    <span>Speed</span>
+    <input type="range" min="0.5" max="2" step="0.5" value="1" id="spd" style="width:60px" oninput="el('spdv').textContent=this.value+'×'">
+    <span id="spdv">1×</span>
+  </div>
+</div>
+</div>
+
+<script>
+function el(id){return document.getElementById(id)}
+function show(id){const e=el(id);if(e)e.setAttribute('opacity','1')}
+function hide(id){const e=el(id);if(e)e.setAttribute('opacity','0')}
+function setTxt(id,t){const e=el(id);if(e)e.textContent=t}
+function wait(ms,sp){return new Promise(r=>setTimeout(r,ms/(sp||1)))}
+
+function moveEl(id,x,y,dur,sp){
+  return new Promise(r=>{
+    const e=el(id);if(!e){r();return}
+    const d=dur/(sp||1);
+    e.style.transition=`transform ${d}ms ease`;
+    e.setAttribute('transform',`translate(${x},${y})`);
+    setTimeout(r,d+40);
+  })
+}
+
+const captions=[
+  `You walk up to the gate and pay for entry. <strong>"I'd like to enter!"</strong> — just like a browser sending a <strong>POST /login</strong> request with your credentials.`,
+  `Staff snap a <strong>wristband</strong> on your wrist. This is the server sending <strong>Set-Cookie: sid=WB42; HttpOnly</strong>. You carry it everywhere now — automatically.`,
+  `At the Roller Coaster, the operator <strong>glances at your wrist</strong>. No ticket needed. The browser automatically sent <strong>Cookie: sid=WB42</strong>. Access granted instantly.`,
+  `Same at the Ferris Wheel. <strong>No re-authentication.</strong> Just a quick wrist check — the browser silently attached your cookie again. Every endpoint, every time.`,
+  `A thief <strong>steals your wristband</strong>. Now they can ride all day as you. This is a <strong>stolen session cookie</strong> — the server can't tell it's not you. HttpOnly prevents JS theft; Secure prevents interception.`,
+  `You <strong>cut off your wristband</strong> (clear cookies). No wristband → gate turns you away. <strong>Logged out.</strong> The cookie is gone from the browser jar — you must login again.`,
+];
+
+let curStep=-1;let playing=false;
+
+function sp(){return parseFloat(el('spd').value)||1;}
+
+function setCaption(i){
+  const c=el('cap');c.style.opacity='0';
+  setTimeout(()=>{c.innerHTML=captions[i];c.style.opacity='1';},220);
+}
+function updatePills(active){
+  document.querySelectorAll('.step-pill').forEach((p,i)=>{
+    p.classList.remove('active','done');
+    if(i===active)p.classList.add('active');
+    else if(i<active)p.classList.add('done');
+  });
+}
+
+const steps=[
+  async(sp)=>{
+    show('bub-pay');
+    show('http-label');setTxt('http-label-txt','POST /login — credentials');
+    await wait(800,sp);
+  },
+  async(sp)=>{
+    hide('bub-pay');
+    show('bub-ticket');
+    show('label-setcookie');
+    setTxt('http-label-txt','Set-Cookie: sid=WB42; HttpOnly; Secure');
+    await wait(600,sp);
+    show('wristband');
+    await wait(400,sp);
+    hide('bub-ticket');
+    hide('label-setcookie');
+    // gate opens
+    el('gate-bar').setAttribute('transform','translate(0,-30)');
+    await wait(300,sp);
+  },
+  async(sp)=>{
+    // visitor walks to ride 1
+    await moveEl('visitor',204,0,700,sp);
+    await wait(100,sp);
+    show('bub-r1');
+    setTxt('http-label-txt','Cookie: sid=WB42 (auto-sent)');
+    show('r1beam');
+    el('r1beam').setAttribute('x2','292');el('r1beam').setAttribute('y2','250');
+    await wait(500,sp);
+    hide('bub-r1');hide('r1beam');
+    show('r1check');
+    attr2('r1mouth','d','M297 244 Q300 248 303 244');
+    show('bub-r1ok');
+    await wait(600,sp);
+    hide('bub-r1ok');
+  },
+  async(sp)=>{
+    // visitor walks to ride 2
+    await moveEl('visitor',404,0,700,sp);
+    await wait(100,sp);
+    show('bub-r2');
+    setTxt('http-label-txt','Cookie: sid=WB42 (auto-sent)');
+    show('r2beam');
+    el('r2beam').setAttribute('x2','492');el('r2beam').setAttribute('y2','254');
+    await wait(500,sp);
+    hide('bub-r2');hide('r2beam');
+    show('r2check');
+    attr2('r2mouth','d','M497 248 Q500 252 503 248');
+    show('bub-r2ok');
+    await wait(600,sp);
+    hide('bub-r2ok');
+  },
+  async(sp)=>{
+    // visitor walks back a bit
+    await moveEl('visitor',80,0,400,sp);
+    await wait(200,sp);
+    // thief appears
+    show('thief');
+    show('bub-thief');
+    setTxt('http-label-txt','Cookie stolen! Attacker replays it');
+    await wait(700,sp);
+    hide('bub-thief');
+    // wristband vanishes from visitor, appears on thief
+    hide('wristband');
+    show('thief-band');
+    show('warn-stolen');
+    await wait(800,sp);
+  },
+  async(sp)=>{
+    hide('warn-stolen');hide('thief');
+    setTxt('http-label-txt','Cookie jar cleared — no cookie');
+    // visitor back at gate
+    el('visitor').setAttribute('transform','');
+    await wait(200,sp);
+    show('bub-cut');
+    await wait(600,sp);
+    hide('bub-cut');
+    show('warn-cut');
+    show('bub-denied');
+    show('gate-denied-x');
+    await wait(500,sp);
+  },
+];
+
+function attr2(id,a,v){const e=el(id);if(e)e.setAttribute(a,v);}
+
+async function runStep(i){
+  playing=true;
+  el('bPlay').disabled=true;el('bStep').disabled=true;el('bReset').disabled=false;
+  updatePills(i);setCaption(i);
+  await steps[i](sp());
+  curStep=i;playing=false;
+  el('bPlay').disabled=false;
+  const done=curStep>=steps.length-1;
+  el('bStep').disabled=done;
+  el('bStep').textContent=done?'Done!':`Next step → (${curStep+2}/${steps.length})`;
+}
+
+async function stepFwd(){if(playing||curStep>=steps.length-1)return;await runStep(curStep+1);}
+async function goStep(i){if(playing||i<=curStep)return;for(let j=curStep+1;j<=i;j++){await runStep(j);if(j<i)await wait(200,sp());}}
+async function playAll(){
+  if(playing)return;doReset();await wait(80,1);
+  for(let i=0;i<steps.length;i++){await runStep(i);if(i<steps.length-1)await wait(500,sp());}
+}
+
+function doReset(){
+  if(playing)return;
+  curStep=-1;playing=false;
+  ['bub-pay','bub-ticket','label-setcookie','wristband','bub-r1','r1beam','r1check','bub-r1ok','bub-r2','r2beam','r2check','bub-r2ok','thief','bub-thief','thief-band','warn-stolen','bub-cut','warn-cut','bub-denied','gate-denied-x','http-label'].forEach(id=>hide(id));
+  el('gate-bar').removeAttribute('transform');
+  el('visitor').removeAttribute('transform');
+  attr2('r1mouth','d','M297 244 Q300 247 303 244');
+  attr2('r2mouth','d','M497 248 Q500 251 503 248');
+  document.querySelectorAll('.step-pill').forEach((p,i)=>{p.classList.remove('active','done');if(i===0)p.classList.add('active');});
+  el('cap').innerHTML='Click <strong>Play</strong> or step through the analogy.';
+  el('bPlay').disabled=false;el('bStep').disabled=false;
+  el('bStep').textContent='Next step →';el('bReset').disabled=true;
+  setTxt('http-label-txt','Set-Cookie: sid=WB42');
+}
+</script>
+</div>
+<script>
+(function(){
+  function report(){
+    var root=document.querySelector('.analogy-anim')||document.body;
+    var h=Math.max(document.documentElement.scrollHeight,document.body.scrollHeight,root.scrollHeight);
+    if(window.parent!==window)window.parent.postMessage({type:'anim-frame-height',height:h},'*');
+  }
+  window.addEventListener('load',report);
+  if(typeof ResizeObserver!=='undefined')new ResizeObserver(report).observe(document.querySelector('.analogy-anim')||document.body);
+})();
+</script>
+</body>
+</html>

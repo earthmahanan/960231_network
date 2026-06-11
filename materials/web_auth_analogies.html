@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Web Auth &amp; Cache Analogies</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+:root{color-scheme:light;
+  --color-background-primary:#ffffff;--color-background-secondary:#f4f3ee;
+  --color-text-primary:#1d1d1c;--color-text-secondary:#5f5e5a;--color-text-tertiary:#888780;
+  --color-border-primary:rgba(0,0,0,0.25);--color-border-secondary:rgba(0,0,0,0.18);--color-border-tertiary:rgba(0,0,0,0.13);
+  --border-radius-lg:8px;--border-radius-md:6px;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:transparent;font-family:var(--font);color:var(--color-text-primary);font-size:14px}
+.analogy-overview{max-width:720px;margin:0 auto;padding:.5rem 0}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;padding:8px 0}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px;cursor:pointer;transition:border-color .15s}
+.card:hover{border-color:var(--color-border-secondary)}
+.card.open{border-color:var(--color-border-primary)}
+.card-head{display:flex;align-items:center;gap:10px;margin-bottom:0}
+.icon-wrap{width:40px;height:40px;border-radius:var(--border-radius-md);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.icon-wrap i{font-size:20px}
+.card-title{font-size:13px;font-weight:500;color:var(--color-text-primary)}
+.card-tag{font-size:10px;font-weight:500;padding:2px 7px;border-radius:99px;margin-top:2px;display:inline-block}
+.card-body{display:none;margin-top:12px;border-top:0.5px solid var(--color-border-tertiary);padding-top:12px}
+.card.open .card-body{display:block}
+.analogy-scene{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:6px;display:flex;align-items:center;gap:7px}
+.analogy-scene i{font-size:16px}
+.analogy-text{font-size:12px;color:var(--color-text-secondary);line-height:1.65;margin-bottom:10px}
+.analogy-text strong{color:var(--color-text-primary);font-weight:500}
+.map-row{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.map-item{display:flex;align-items:baseline;gap:8px;font-size:11px}
+.map-label{color:var(--color-text-secondary);min-width:110px;flex-shrink:0}
+.map-val{color:var(--color-text-primary);font-weight:500}
+.tradeoff{font-size:11px;padding:7px 10px;border-radius:var(--border-radius-md);line-height:1.55}
+.chevron{margin-left:auto;font-size:14px;color:var(--color-text-tertiary);transition:transform .18s}
+.card.open .chevron{transform:rotate(180deg)}
+.anim-btn{
+  display:inline-flex;align-items:center;gap:5px;width:100%;margin-top:10px;padding:7px 10px;
+  font-size:11px;font-weight:500;border-radius:var(--border-radius-md);
+  border:0.5px solid #534AB7;background:#EEEDFE;cursor:pointer;color:#3C3489;text-decoration:none;
+  transition:background .15s;
+}
+.anim-btn:hover{background:#E0DCFC}
+</style>
+</head>
+<body>
+
+<div class="analogy-overview">
+<h2 class="sr-only">Eight real-world analogies for web authentication and storage concepts: stateless HTTP, cookies, sessions, JWT, localStorage, OAuth 2.0, web cache, and browser cache — each explained as a relatable everyday scenario.</h2>
+
+<div style="padding:0 0 4px">
+  <p style="font-size:12px;color:var(--color-text-secondary)">Click any card to reveal the analogy, concept map, and trade-offs — then open the animated walkthrough.</p>
+</div>
+
+<div class="grid" id="cards"></div>
+</div>
+
+<script>
+const concepts = [
+  {
+    icon: 'ti-refresh', iconBg: '#F1EFE8', iconColor: '#5F5E5A',
+    tag: 'HTTP fundamentals', tagBg: '#F1EFE8', tagColor: '#444441',
+    title: 'Stateless HTTP', scene: 'ti-building', sceneLabel: 'The goldfish waiter',
+    animId: 'stateless',
+    analogy: `You walk into a restaurant. You order a burger. The waiter brings it. You finish, and five minutes later you ask for ketchup.\n\nThe waiter looks at you blankly. <strong>"I'm sorry — have we met?"</strong>\n\nEvery single interaction starts from zero. The waiter has a perfect short-term memory during one exchange, but once it's done — gone. You could be a first-timer or a loyal regular of 10 years. They have no idea.`,
+    map: [['Restaurant visit','One HTTP request'],['New waiter each visit','New connection, no memory'],['Menu order','Request body / parameters'],['Food delivery','Server response'],['Forgetting you exist','No persistent state']],
+    tradeoff: `Why this is good: any waiter (server) can handle any table (request) — easy to scale massively. Why this is painful: you have to re-introduce yourself every time.`,
+    tradeoffBg: '#F1EFE8', tradeoffColor: '#444441'
+  },
+  {
+    icon: 'ti-cookie', iconBg: '#FAEEDA', iconColor: '#633806',
+    tag: 'Transport', tagBg: '#FAEEDA', tagColor: '#633806',
+    title: 'Cookies', scene: 'ti-ticket', sceneLabel: 'The theme park wristband',
+    animId: 'cookie',
+    analogy: `You pay to enter a theme park. Staff snap a <strong>wristband</strong> on your wrist. For the rest of the day, every ride operator just glances at your wrist — no need to show your ticket again.\n\nThe wristband is your cookie. The park put it on you (Set-Cookie). You carry it everywhere without thinking about it. Each ride operator (server endpoint) reads it automatically.\n\nIf someone steals your wristband — they can ride all day as you. If you cut it off (clear cookies) — you're out.`,
+    map: [['Paying admission','POST /login'],['Staff snapping wristband','Server: Set-Cookie header'],['Wristband on your wrist','Cookie stored in browser'],['Showing wrist at each ride','Browser auto-sends Cookie header'],['Waterproof band','Secure; HttpOnly flags']],
+    tradeoff: `Wristbands are convenient but transferable. HttpOnly = the ink is invisible to cameras (JS). Secure = the band is waterproof (HTTPS only). SameSite = the band only works inside this park, not the one next door (no cross-site).`,
+    tradeoffBg: '#FAEEDA', tradeoffColor: '#633806'
+  },
+  {
+    icon: 'ti-database', iconBg: '#E1F5EE', iconColor: '#085041',
+    tag: 'Server-side state', tagBg: '#E1F5EE', tagColor: '#085041',
+    title: 'Sessions', scene: 'ti-coat-off', sceneLabel: 'The hotel coat check',
+    animId: 'session',
+    analogy: `You arrive at a fancy hotel. You hand your coat to the coat-check attendant. They give you a small <strong>numbered ticket: #4471</strong>.\n\nYou don't carry your coat around. The hotel holds it in a back room. All you have is the ticket number.\n\nWhen you want your coat back, you hand in #4471. The attendant goes to the back, retrieves your coat, and returns it.\n\nIf the hotel burns down (server restart), your coat is gone even though you have the ticket. But as long as the hotel exists, only staff can see what's in that back room — never you.`,
+    map: [['Handing over the coat','POST /login with credentials'],['Ticket #4471','Session ID cookie (sid=a3f9)'],['Back room coat storage','Server-side session store (Redis)'],['Returning the ticket','Browser sends Cookie: sid=a3f9'],['Hotel retrieving your coat','Server looks up session in store'],['Hotel can lose your coat','Server can revoke session instantly']],
+    tradeoff: `The ticket means nothing to anyone else — it's just a random number. The real value (your coat / your user data) never leaves the hotel (server). The hotel can refuse to honor any ticket at any time — instant revocation.`,
+    tradeoffBg: '#E1F5EE', tradeoffColor: '#085041'
+  },
+  {
+    icon: 'ti-id', iconBg: '#EEEDFE', iconColor: '#3C3489',
+    tag: 'Stateless token', tagBg: '#EEEDFE', tagColor: '#3C3489',
+    title: 'JWT', scene: 'ti-license', sceneLabel: `Your driver's licence`,
+    animId: 'jwt',
+    analogy: `You want to rent a car. Instead of calling the government to verify you exist every time, the rental agent just <strong>looks at your driver's licence</strong>.\n\nYour name, photo, date of birth, licence class — all printed right there, signed and stamped by the government (the issuer). The agent doesn't call anyone. They verify the stamp is genuine and read the data directly.\n\nThe licence has an <strong>expiry date</strong>. If it's expired, it's rejected. But if you lose your licence before it expires, there's no way to cancel it — the government doesn't maintain a "revoked licences" list that agents check.`,
+    map: [[`Government issuing licence`,'Auth server signing the JWT'],[`Name, DOB on the card`,'Payload: {user, role, exp}'],[`Official government stamp`,'HMAC / RS256 signature'],[`Agent checking the stamp`,'Server: crypto.verify(token, SECRET)'],[`Expiry date on the card`,'exp claim in JWT payload'],[`No revocation list`,'JWTs valid until expiry — cannot cancel']],
+    tradeoff: `Brilliant for scaling — any agent in any country can verify your licence without calling the government. The downside: if it's stolen, it works until expiry. The "fix" (blocklist) brings back the phone call — and defeats the point.`,
+    tradeoffBg: '#EEEDFE', tradeoffColor: '#3C3489'
+  },
+  {
+    icon: 'ti-notes', iconBg: '#E6F1FB', iconColor: '#0C447C',
+    tag: 'Browser storage', tagBg: '#E6F1FB', tagColor: '#0C447C',
+    title: 'localStorage', scene: 'ti-notebook', sceneLabel: 'The notebook on your desk',
+    animId: 'localstorage',
+    analogy: `You keep a <strong>notebook on your desk</strong>. You write things in it — your preferences, your drafts, your reminders. It's always there when you come back. It survives overnight. It survives restarts.\n\nBut here's the catch: <strong>anyone who walks into your room can open it and read everything.</strong> If a stranger sneaks in (XSS attack), they can copy your whole notebook.\n\nThe notebook also never gets sent to the post office (server) automatically. If you want the post office to know something, you have to manually tear out a page and mail it.`,
+    map: [['Your desk','Browser origin (domain)'],['Notebook persists overnight','localStorage survives tab/browser close'],['Anyone in the room reads it','Any JS on the page can read it — XSS risk'],['Never mailed automatically','Never sent to server automatically'],['Can write anything','String key-value, up to ~5MB']],
+    tradeoff: `Great for UI state (theme, language, drafts) that should persist between sessions. Terrible for auth tokens — one XSS vulnerability and the attacker copies the whole notebook. Use HttpOnly cookies for tokens instead.`,
+    tradeoffBg: '#E6F1FB', tradeoffColor: '#0C447C'
+  },
+  {
+    icon: 'ti-key', iconBg: '#FAECE7', iconColor: '#712B13',
+    tag: 'Delegated auth', tagBg: '#FAECE7', tagColor: '#712B13',
+    title: 'OAuth 2.0', scene: 'ti-home', sceneLabel: 'The apartment valet key',
+    animId: 'oauth',
+    analogy: `You're moving house and need a removalist to access your apartment. You don't give them your master key — that's everything: front door, letterbox, storage, garage.\n\nInstead, you ask the building manager (the OAuth server) to issue a <strong>valet key</strong>. It only opens the front door, only between 9am and 5pm, and expires at the end of the day.\n\nThe removalist (the app) uses the valet key. They never know your master key (your real password). You can call the building manager to cancel the valet key at any time — without changing your own key.`,
+    map: [['Your master key','Your actual password (never shared)'],['Building manager','OAuth authorization server (Google, GitHub)'],['Valet key','Access token with limited scope'],['9am–5pm only','Token expiry'],['Front door only','OAuth scopes (read:email, repo)'],['Revoking the valet key','User revokes app access in account settings']],
+    tradeoff: `You never share your password with third-party apps. Each app gets only the access it needs (principle of least privilege). You can revoke individual apps without changing your password. The Authorization Code flow with PKCE is the recommended pattern.`,
+    tradeoffBg: '#FAECE7', tradeoffColor: '#712B13'
+  },
+  {
+    icon: 'ti-server', iconBg: '#EAF3DE', iconColor: '#27500A',
+    tag: 'Server-side caching', tagBg: '#EAF3DE', tagColor: '#27500A',
+    title: 'Web cache (CDN)', scene: 'ti-building-store', sceneLabel: 'The local convenience store',
+    animId: 'webcache',
+    analogy: `You want a specific brand of milk. The factory (origin server) is 200km away. But there's a <strong>convenience store on your street</strong> that stocks popular items from that factory.\n\nYou buy the milk from the local store — fast, nearby. The store restocks from the factory periodically. The label on the milk says "best before 7 days" — that's the cache TTL.\n\nIf the factory recalls the milk (cache invalidation), the store has to pull it off shelves. Until then, customers might still get old stock.`,
+    map: [['Factory 200km away','Origin web server'],['Convenience store','CDN edge node (Cloudflare, Fastly)'],['Stock on the shelf','Cached HTTP response'],['"Best before" date','Cache-Control: max-age=604800'],['Store restocking','Cache miss → fetch from origin'],['Milk recall','Cache invalidation / purge']],
+    tradeoff: `CDN caching dramatically reduces load on your origin and speeds up responses globally. The risk: stale content. Cache-Control headers (max-age, s-maxage, stale-while-revalidate) let you tune the balance. Never cache private or user-specific responses on shared CDNs.`,
+    tradeoffBg: '#EAF3DE', tradeoffColor: '#27500A'
+  },
+  {
+    icon: 'ti-device-laptop', iconBg: '#FBEAF0', iconColor: '#72243E',
+    tag: 'Client-side caching', tagBg: '#FBEAF0', tagColor: '#72243E',
+    title: 'Browser cache', scene: 'ti-photo', sceneLabel: 'Photos saved on your phone',
+    animId: 'browser-cache',
+    analogy: `Your friend sends you a photo. You view it. Next time you want to see it, you don't ask your friend to send it again — it's <strong>already saved in your phone's gallery</strong>.\n\nYour phone checks: "Do I have this photo? Is it recent enough?" If yes — instant display. If the photo was updated (your friend cropped it), your phone might show the old version until it checks again.\n\nYou can force a refresh (pull-to-refresh / Ctrl+Shift+R) to demand the latest version, ignoring the cache entirely.`,
+    map: [['Your friend sending the photo','Server sending HTTP response'],['Photo saved in gallery','Browser caching the resource locally'],['"Is it recent enough?"','ETag / Last-Modified / max-age check'],['Showing saved photo instantly','Cache hit — no network request'],['Old version of the photo','Stale cache entry'],['Pull-to-refresh','Hard reload (Ctrl+Shift+R) — bypasses cache']],
+    tradeoff: `Browser cache makes repeat visits lightning fast — CSS, JS, images load from disk, not the network. The challenge: when you deploy a new version, users might see old files. Solution: cache-busting via filename hashing (app.a3f9c2.js) so the new file is a "new photo" the browser has never seen.`,
+    tradeoffBg: '#FBEAF0', tradeoffColor: '#72243E'
+  }
+];
+
+function toggle(idx) {
+  const cards = document.querySelectorAll('.card');
+  const card = cards[idx];
+  const open = card.classList.toggle('open');
+  card.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+function goToAnim(id, e) {
+  e.preventDefault();
+  e.stopPropagation();
+  if (window.parent !== window) {
+    window.parent.postMessage({ type: 'goto-analogy', id: id }, '*');
+  } else {
+    const base = window.location.pathname.includes('/materials/') ? '../analogies.html' : 'analogies.html';
+    window.location.href = base + '#' + id;
+  }
+}
+
+const container = document.getElementById('cards');
+concepts.forEach((c, i) => {
+  const body_map = c.map.map(([l,v]) => `<div class="map-item"><span class="map-label">${l}</span><span class="map-val">= ${v}</span></div>`).join('');
+  const analogy_html = c.analogy.replace(/\n\n/g,'</p><p style="margin-top:8px">');
+  container.innerHTML += `
+  <div class="card" onclick="toggle(${i})" aria-expanded="false" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggle(${i})}">
+    <div class="card-head">
+      <div class="icon-wrap" style="background:${c.iconBg}"><i class="ti ${c.icon}" style="color:${c.iconColor}" aria-hidden="true"></i></div>
+      <div>
+        <div class="card-title">${c.title}</div>
+        <span class="card-tag" style="background:${c.tagBg};color:${c.tagColor}">${c.tag}</span>
+      </div>
+      <i class="ti ti-chevron-down chevron" aria-hidden="true"></i>
+    </div>
+    <div class="card-body">
+      <div class="analogy-scene"><i class="ti ${c.scene}" aria-hidden="true"></i>${c.sceneLabel}</div>
+      <div class="analogy-text"><p>${analogy_html}</p></div>
+      <div style="font-size:11px;font-weight:500;color:var(--color-text-secondary);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em">concept map</div>
+      <div class="map-row">${body_map}</div>
+      <div class="tradeoff" style="background:${c.tradeoffBg};color:${c.tradeoffColor}">${c.tradeoff}</div>
+      <a class="anim-btn" href="javascript:void(0)" onclick="goToAnim('${c.animId}', event)"><i class="ti ti-player-play" aria-hidden="true"></i> Watch animation</a>
+    </div>
+  </div>`;
+});
+
+(function(){
+  function report(){
+    var root=document.querySelector('.analogy-overview')||document.body;
+    var h=Math.max(document.documentElement.scrollHeight,document.body.scrollHeight,root.scrollHeight);
+    if(window.parent!==window)window.parent.postMessage({type:'anim-frame-height',height:h},'*');
+  }
+  window.addEventListener('load',report);
+  if(typeof ResizeObserver!=='undefined')new ResizeObserver(report).observe(document.querySelector('.analogy-overview')||document.body);
+})();
+</script>
+</body>
+</html>

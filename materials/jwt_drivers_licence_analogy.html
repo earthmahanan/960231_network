@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JWT — Driver's licence analogy</title>
+<style>
+:root{color-scheme:light;
+  --color-background-primary:#ffffff;--color-background-secondary:#f4f3ee;
+  --color-text-primary:#1d1d1c;--color-text-secondary:#5f5e5a;--color-text-tertiary:#888780;
+  --color-border-primary:rgba(0,0,0,0.25);--color-border-secondary:rgba(0,0,0,0.18);--color-border-tertiary:rgba(0,0,0,0.13);
+  --border-radius-lg:8px;--border-radius-md:6px;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+}
+
+body{background:transparent;font-family:var(--font)}
+.analogy-anim{max-width:720px;margin:0 auto;padding:.75rem 0}
+</style>
+</head>
+<body>
+<div class="analogy-anim">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.stage{background:#E8EFF8;border-radius:var(--border-radius-lg);overflow:hidden}
+.caption-box{background:var(--color-background-primary);padding:10px 16px 0;border-top:0.5px solid var(--color-border-tertiary)}
+.caption{font-size:13px;color:var(--color-text-secondary);line-height:1.6;min-height:52px;transition:opacity .25s}
+.caption strong{color:var(--color-text-primary);font-weight:500}
+.step-track{display:flex;gap:0;margin:10px 16px 0;border-radius:var(--border-radius-md);overflow:hidden;border:0.5px solid var(--color-border-tertiary)}
+.step-pill{flex:1;padding:5px 3px;font-size:9.5px;font-weight:500;text-align:center;color:var(--color-text-secondary);background:var(--color-background-secondary);cursor:pointer;border:none;border-right:0.5px solid var(--color-border-tertiary);transition:all .18s;line-height:1.3}
+.step-pill:last-child{border-right:none}
+.step-pill.active{background:#EEEDFE;color:#3C3489}
+.step-pill.done{background:#E1F5EE;color:#085041}
+.ctrl{display:flex;gap:6px;padding:10px 16px 14px;align-items:center;flex-wrap:wrap;background:var(--color-background-primary)}
+.btn{font-size:11px;padding:5px 12px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:transparent;cursor:pointer;color:var(--color-text-primary);transition:background .15s}
+.btn:hover{background:var(--color-background-secondary)}
+.btn:disabled{opacity:.35;cursor:default}
+.btn.accent{border-color:#534AB7;color:#3C3489}
+.btn.go{border-color:#0F6E56;color:#0F6E56}
+.spd{display:flex;align-items:center;gap:5px;margin-left:auto;font-size:11px;color:var(--color-text-secondary)}
+</style>
+
+<h2 class="sr-only">Animated driver's licence analogy for JWT: a government office issues a signed licence with all data on it, a rental agent verifies the stamp without calling anyone, an expired licence is rejected, and a stolen licence still works until expiry because there is no revocation list.</h2>
+
+<div class="stage">
+<svg id="scene" width="100%" viewBox="0 0 680 370" role="img">
+<title>JWT driver's licence analogy</title>
+<desc>A scene showing a government office on the left issuing a signed licence, a person in the middle holding it, and a car rental desk on the right verifying it without calling anyone. Separate scenes show expiry rejection and stolen licence replay attack.</desc>
+
+<!-- Sky background -->
+<rect x="0" y="0" width="680" height="370" fill="#E8EFF8"/>
+<!-- Ground -->
+<rect x="0" y="280" width="680" height="90" fill="#C8D4E0"/>
+<rect x="0" y="278" width="680" height="6" fill="#A8B8C8"/>
+<!-- Road -->
+<rect x="0" y="290" width="680" height="30" fill="#8898A8"/>
+<line x1="0" y1="305" x2="680" y2="305" stroke="#FFD44A" stroke-width="2" stroke-dasharray="30 20"/>
+
+<!-- ===== GOV OFFICE (left) ===== -->
+<rect x="10" y="80" width="170" height="190" rx="6" fill="#C8D4E0" stroke="#A8B8C8" stroke-width="0.5"/>
+<rect x="10" y="80" width="170" height="28" rx="4" fill="#3C3489"/>
+<text x="95" y="97" text-anchor="middle" font-size="11" font-weight="500" fill="white" dominant-baseline="central">GOVERNMENT OFFICE</text>
+<text x="95" y="111" text-anchor="middle" font-size="9" fill="#CECBF6" dominant-baseline="central">JWT Issuer / Auth Server</text>
+<!-- Windows -->
+<rect x="24" y="120" width="50" height="40" rx="3" fill="#B8C8D8" stroke="#98A8B8" stroke-width="0.5"/>
+<rect x="82" y="120" width="50" height="40" rx="3" fill="#B8C8D8" stroke="#98A8B8" stroke-width="0.5"/>
+<rect x="140" y="120" width="32" height="40" rx="3" fill="#B8C8D8" stroke="#98A8B8" stroke-width="0.5"/>
+<!-- Door -->
+<rect x="60" y="210" width="50" height="60" rx="3" fill="#A88050" stroke="#8B6030" stroke-width="0.5"/>
+<circle cx="105" cy="243" r="3" fill="#C8A830"/>
+<!-- Gov flag -->
+<line x1="155" y1="40" x2="155" y2="80" stroke="#888780" stroke-width="1.5"/>
+<rect x="155" y="40" width="24" height="16" rx="2" fill="#3C3489"/>
+<!-- Official seal inside office -->
+<g id="gov-seal" opacity="0.6">
+  <circle cx="95" cy="170" r="18" fill="#3C3489" stroke="#26215C" stroke-width="0.5"/>
+  <circle cx="95" cy="170" r="12" fill="none" stroke="#AFA9EC" stroke-width="1"/>
+  <text x="95" y="174" text-anchor="middle" font-size="9" fill="#EEEDFE" dominant-baseline="central" font-weight="500">SEAL</text>
+</g>
+
+<!-- ===== CAR RENTAL DESK (right) ===== -->
+<rect x="500" y="80" width="170" height="190" rx="6" fill="#D4E8C8" stroke="#B4C8A8" stroke-width="0.5"/>
+<rect x="500" y="80" width="170" height="28" rx="4" fill="#3B6D11"/>
+<text x="585" y="97" text-anchor="middle" font-size="11" font-weight="500" fill="white" dominant-baseline="central">CAR RENTAL</text>
+<text x="585" y="111" text-anchor="middle" font-size="9" fill="#C0DD97" dominant-baseline="central">Resource Server / API</text>
+<!-- Counter -->
+<rect x="510" y="195" width="150" height="50" rx="4" fill="#8B5E3C" stroke="#6B4228" stroke-width="0.5"/>
+<rect x="510" y="192" width="150" height="10" rx="2" fill="#C8A870" stroke="#A88050" stroke-width="0.5"/>
+<!-- Car keys on counter -->
+<g id="car-keys" opacity="0.5">
+  <ellipse cx="585" cy="218" rx="12" ry="6" fill="#C8A830" stroke="#A88010" stroke-width="0.5"/>
+  <rect x="582" y="212" width="6" height="12" rx="1" fill="#888780"/>
+  <rect x="578" y="218" width="14" height="3" rx="1" fill="#888780"/>
+</g>
+<!-- Sign on rental -->
+<rect x="520" y="120" width="130" height="30" rx="4" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
+<text x="585" y="133" text-anchor="middle" font-size="9" fill="#27500A" dominant-baseline="central">No government call needed</text>
+<text x="585" y="145" text-anchor="middle" font-size="9" fill="#3B6D11" dominant-baseline="central">We verify the stamp ourselves</text>
+
+<!-- ===== PERSON / JWT HOLDER ===== -->
+<g id="person">
+  <circle cx="340" cy="210" r="18" fill="#F5D5A8" stroke="#D4A870" stroke-width="0.5"/>
+  <rect x="322" y="228" width="36" height="40" rx="5" fill="#4A5AB8" stroke="#2A3A98" stroke-width="0.5"/>
+  <polygon points="340,228 330,238 340,235" fill="#2A3A98"/>
+  <polygon points="340,228 350,238 340,235" fill="#2A3A98"/>
+  <circle cx="333" cy="208" r="2.5" fill="#5C3A1E"/>
+  <circle cx="347" cy="208" r="2.5" fill="#5C3A1E"/>
+  <path id="person-mouth" d="M334 217 Q340 221 346 217" stroke="#5C3A1E" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+  <rect x="306" y="230" width="16" height="8" rx="4" fill="#4A5AB8"/>
+  <rect x="358" y="230" width="16" height="8" rx="4" fill="#4A5AB8"/>
+</g>
+<text id="person-lbl" x="340" y="280" text-anchor="middle" font-size="11" font-weight="500" fill="#444441">Alice</text>
+
+<!-- ===== LICENCE CARD ===== -->
+<g id="licence" opacity="0">
+  <rect x="262" y="248" width="156" height="96" rx="6" fill="#1A3A6C" stroke="#0C2454" stroke-width="1"/>
+  <!-- Licence header -->
+  <rect x="262" y="248" width="156" height="18" rx="4" fill="#0C1E4C"/>
+  <text x="340" y="258" text-anchor="middle" font-size="9" fill="#B8C8E8" dominant-baseline="central" font-weight="500">DRIVER'S LICENCE  ·  JWT</text>
+  <!-- Photo placeholder -->
+  <rect x="270" y="270" width="28" height="34" rx="3" fill="#2A4A8C" stroke="#3A5A9C" stroke-width="0.5"/>
+  <circle cx="284" cy="280" r="6" fill="#F5D5A8"/>
+  <rect x="276" y="286" width="16" height="14" rx="3" fill="#4A5AB8"/>
+  <!-- Data fields -->
+  <text x="306" y="274" font-size="8" fill="#7090C0" dominant-baseline="central">name:</text>
+  <text x="330" y="274" font-size="8" fill="#E8F0FF" dominant-baseline="central" font-weight="500">Alice Chen</text>
+  <text x="306" y="286" font-size="8" fill="#7090C0" dominant-baseline="central">role:</text>
+  <text x="330" y="286" font-size="8" fill="#E8F0FF" dominant-baseline="central" font-weight="500">driver</text>
+  <text x="306" y="298" font-size="8" fill="#7090C0" dominant-baseline="central">exp:</text>
+  <text id="exp-txt" x="330" y="298" font-size="8" fill="#6EC87A" dominant-baseline="central" font-weight="500">2026-12-31</text>
+  <text x="306" y="310" font-size="8" fill="#7090C0" dominant-baseline="central">iss:</text>
+  <text x="330" y="310" font-size="8" fill="#E8F0FF" dominant-baseline="central">gov.auth</text>
+  <!-- Signature strip -->
+  <rect x="270" y="322" width="140" height="14" rx="2" fill="#0C1E4C"/>
+  <text x="290" y="329" font-size="7" fill="#7090C0" dominant-baseline="central">sig:</text>
+  <text x="305" y="329" font-size="7" fill="#6EC87A" dominant-baseline="central" font-weight="500">HMAC.HS256.verified✓</text>
+</g>
+
+<!-- ===== GOV OFFICIAL ===== -->
+<g id="official">
+  <circle cx="95" cy="210" r="14" fill="#F5D5A8" stroke="#D4A870" stroke-width="0.5"/>
+  <rect x="81" y="224" width="28" height="34" rx="4" fill="#3C3489" stroke="#26215C" stroke-width="0.5"/>
+  <circle cx="89" cy="209" r="2" fill="#5C3A1E"/>
+  <circle cx="101" cy="209" r="2" fill="#5C3A1E"/>
+  <path d="M90 216 Q95 219 100 216" stroke="#5C3A1E" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <!-- Glasses -->
+  <rect x="86" y="207" width="8" height="5" rx="2" fill="none" stroke="#888780" stroke-width="0.8"/>
+  <rect x="96" y="207" width="8" height="5" rx="2" fill="none" stroke="#888780" stroke-width="0.8"/>
+  <line x1="94" y1="209" x2="96" y2="209" stroke="#888780" stroke-width="0.8"/>
+</g>
+<text x="95" y="270" text-anchor="middle" font-size="10" fill="#444441" font-weight="500">Gov official</text>
+
+<!-- ===== RENTAL AGENT ===== -->
+<g id="agent">
+  <circle cx="585" cy="210" r="14" fill="#F5D5A8" stroke="#D4A870" stroke-width="0.5"/>
+  <rect x="571" y="224" width="28" height="34" rx="4" fill="#3B6D11" stroke="#27500A" stroke-width="0.5"/>
+  <circle cx="579" cy="209" r="2" fill="#5C3A1E"/>
+  <circle cx="591" cy="209" r="2" fill="#5C3A1E"/>
+  <path id="agent-mouth" d="M580 216 Q585 219 590 216" stroke="#5C3A1E" stroke-width="1" fill="none" stroke-linecap="round"/>
+</g>
+<text x="585" y="270" text-anchor="middle" font-size="10" fill="#444441" font-weight="500">Rental agent</text>
+
+<!-- ===== ARROWS ===== -->
+<!-- Gov to Person -->
+<g id="arr-issue" opacity="0">
+  <line x1="180" y1="258" x2="260" y2="258" stroke="#534AB7" stroke-width="1.5" stroke-dasharray="90" stroke-dashoffset="90" marker-end="url(#arR)" id="arr-issue-line"/>
+</g>
+<!-- Person to Rental -->
+<g id="arr-present" opacity="0">
+  <line x1="420" y1="258" x2="500" y2="258" stroke="#378ADD" stroke-width="1.5" stroke-dasharray="90" stroke-dashoffset="90" marker-end="url(#arR)" id="arr-present-line"/>
+</g>
+<!-- No phone call cross -->
+<g id="no-call" opacity="0">
+  <line x1="585" y1="155" x2="585" y2="200" stroke="#B4B2A9" stroke-width="1" stroke-dasharray="4 3"/>
+  <circle cx="585" cy="148" r="14" fill="#FCEBEB" stroke="#F09595" stroke-width="0.5"/>
+  <line x1="578" y1="141" x2="592" y2="155" stroke="#E24B4A" stroke-width="2" stroke-linecap="round"/>
+  <line x1="592" y1="141" x2="578" y2="155" stroke="#E24B4A" stroke-width="2" stroke-linecap="round"/>
+  <text x="585" y="168" text-anchor="middle" font-size="8" fill="#791F1F" dominant-baseline="central">no DB call</text>
+</g>
+<!-- Verify stamp tick -->
+<g id="verify-tick" opacity="0">
+  <circle cx="510" cy="258" r="14" fill="#1D9E75" stroke="#0F6E56" stroke-width="0.5"/>
+  <path d="M504 258 L508 263 L516 252" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+
+<!-- ===== SPEECH BUBBLES ===== -->
+<g id="bub-apply" opacity="0">
+  <rect x="2" y="168" width="84" height="34" rx="8" fill="white" stroke="#B4B2A9" stroke-width="0.5"/>
+  <polygon points="38,202 48,214 58,202" fill="white" stroke="#B4B2A9" stroke-width="0.5"/>
+  <polygon points="39,201 57,201 48,212" fill="white"/>
+  <text x="44" y="181" text-anchor="middle" font-size="10" fill="#444441" dominant-baseline="central">I'd like a</text>
+  <text x="44" y="195" text-anchor="middle" font-size="10" fill="#444441" dominant-baseline="central">JWT please!</text>
+</g>
+
+<g id="bub-sign" opacity="0">
+  <rect x="112" y="168" width="100" height="34" rx="8" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+  <polygon points="146,202 156,213 166,202" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+  <polygon points="147,201 165,201 156,211" fill="#EEEDFE"/>
+  <text x="162" y="181" text-anchor="middle" font-size="10" fill="#3C3489" dominant-baseline="central">Signed with</text>
+  <text x="162" y="195" text-anchor="middle" font-size="10" fill="#3C3489" dominant-baseline="central">SECRET_KEY ✓</text>
+</g>
+
+<g id="bub-show" opacity="0">
+  <rect x="240" y="168" width="100" height="34" rx="8" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
+  <polygon points="286,202 296,213 306,202" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
+  <polygon points="287,201 305,201 296,211" fill="#E6F1FB"/>
+  <text x="290" y="181" text-anchor="middle" font-size="10" fill="#0C447C" dominant-baseline="central">Here is my</text>
+  <text x="290" y="195" text-anchor="middle" font-size="10" fill="#0C447C" dominant-baseline="central">JWT token</text>
+</g>
+
+<g id="bub-verify" opacity="0">
+  <rect x="398" y="158" width="112" height="44" rx="8" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
+  <polygon points="434,202 444,213 454,202" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
+  <polygon points="435,201 453,201 444,211" fill="#EAF3DE"/>
+  <text x="454" y="171" text-anchor="middle" font-size="10" fill="#27500A" dominant-baseline="central">Signature valid!</text>
+  <text x="454" y="183" text-anchor="middle" font-size="10" fill="#27500A" dominant-baseline="central">No call needed.</text>
+  <text x="454" y="195" text-anchor="middle" font-size="10" fill="#3B6D11" dominant-baseline="central">Here are the keys!</text>
+</g>
+
+<!-- ===== EXPIRED SCENE ===== -->
+<g id="expired-scene" opacity="0">
+  <rect x="166" y="88" width="348" height="80" rx="8" fill="#FCEBEB" stroke="#F09595" stroke-width="0.5"/>
+  <text x="340" y="110" text-anchor="middle" font-size="13" font-weight="500" fill="#791F1F" dominant-baseline="central">Licence expired!</text>
+  <text x="340" y="130" text-anchor="middle" font-size="11" fill="#A32D2D" dominant-baseline="central">exp: 2024-01-01 — past today's date</text>
+  <text x="340" y="148" text-anchor="middle" font-size="11" fill="#A32D2D" dominant-baseline="central">Agent rejects it. JWT exp claim enforced.</text>
+  <!-- Red X stamp on licence -->
+  <rect x="282" y="248" width="116" height="96" rx="6" fill="none" stroke="#E24B4A" stroke-width="3"/>
+  <line x1="282" y1="248" x2="398" y2="344" stroke="#E24B4A" stroke-width="3" opacity="0.6"/>
+  <line x1="398" y1="248" x2="282" y2="344" stroke="#E24B4A" stroke-width="3" opacity="0.6"/>
+</g>
+
+<!-- ===== STOLEN / REPLAY SCENE ===== -->
+<g id="thief-scene" opacity="0">
+  <!-- Thief character -->
+  <circle cx="440" cy="218" r="14" fill="#D4B898" stroke="#B4986A" stroke-width="0.5"/>
+  <rect x="426" y="232" width="28" height="30" rx="4" fill="#2C2C2A" stroke="#1C1C18" stroke-width="0.5"/>
+  <circle cx="434" cy="217" r="2" fill="#5C3A1E"/>
+  <circle cx="446" cy="217" r="2" fill="#5C3A1E"/>
+  <path d="M435 224 Q440 222 445 224" stroke="#5C3A1E" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <text x="440" y="275" text-anchor="middle" font-size="10" fill="#791F1F" font-weight="500">Thief</text>
+  <!-- Thief holding licence -->
+  <g id="thief-licence">
+    <rect x="418" y="248" width="90" height="56" rx="4" fill="#1A3A6C" stroke="#E24B4A" stroke-width="1.5"/>
+    <text x="463" y="264" text-anchor="middle" font-size="8" fill="#B8C8E8" dominant-baseline="central">DRIVER'S LICENCE</text>
+    <text x="463" y="278" text-anchor="middle" font-size="8" fill="#7090C0" dominant-baseline="central">name: Alice Chen</text>
+    <text x="463" y="290" text-anchor="middle" font-size="8" fill="#6EC87A" dominant-baseline="central">sig: HS256.valid✓</text>
+    <text x="463" y="302" text-anchor="middle" font-size="8" fill="#6EC87A" dominant-baseline="central">exp: 2026-12-31 ✓</text>
+  </g>
+  <!-- Arrow thief to rental -->
+  <line x1="508" y1="262" x2="498" y2="262" stroke="#E24B4A" stroke-width="1.5" stroke-dasharray="6 3" marker-end="url(#arR)"/>
+  <!-- Warning box -->
+  <rect x="166" y="88" width="348" height="90" rx="8" fill="#FCEBEB" stroke="#F09595" stroke-width="0.5"/>
+  <text x="340" y="108" text-anchor="middle" font-size="13" font-weight="500" fill="#791F1F" dominant-baseline="central">Stolen JWT — replay attack!</text>
+  <text x="340" y="128" text-anchor="middle" font-size="11" fill="#A32D2D" dominant-baseline="central">Signature is still valid. Expiry not reached.</text>
+  <text x="340" y="148" text-anchor="middle" font-size="11" fill="#A32D2D" dominant-baseline="central">Agent has no revocation list to check.</text>
+  <text x="340" y="166" text-anchor="middle" font-size="10" fill="#712B13" dominant-baseline="central">Fix: short exp (15min) + refresh tokens, or blocklist.</text>
+</g>
+
+<!-- JWT label bar -->
+<g id="jwt-label" opacity="0">
+  <rect x="190" y="38" width="300" height="22" rx="11" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+  <text id="jwt-txt" x="340" y="49" text-anchor="middle" font-size="10" fill="#3C3489" dominant-baseline="central" font-weight="500">eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiYWxpY2UifQ.sig</text>
+</g>
+
+<defs>
+  <marker id="arR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+</svg>
+
+<div class="caption-box">
+  <div class="caption" id="cap">Click <strong>Play</strong> or step through the JWT analogy.</div>
+</div>
+<div class="step-track">
+  <button class="step-pill active"  onclick="goStep(0)">1. Apply for JWT</button>
+  <button class="step-pill" onclick="goStep(1)">2. Govt signs it</button>
+  <button class="step-pill" onclick="goStep(2)">3. Licence issued</button>
+  <button class="step-pill" onclick="goStep(3)">4. Show at rental</button>
+  <button class="step-pill" onclick="goStep(4)">5. Agent verifies</button>
+  <button class="step-pill" onclick="goStep(5)">6. Licence expired</button>
+  <button class="step-pill" onclick="goStep(6)">7. Stolen — replay</button>
+</div>
+<div class="ctrl">
+  <button class="btn accent" id="bPlay" onclick="playAll()">Play</button>
+  <button class="btn go"    id="bStep" onclick="stepFwd()">Next step →</button>
+  <button class="btn"       id="bReset" onclick="doReset()" disabled>Reset</button>
+  <div class="spd">
+    <span>Speed</span>
+    <input type="range" min="0.5" max="2" step="0.5" value="1" id="spd" style="width:60px" oninput="el('spdv').textContent=this.value+'×'">
+    <span id="spdv">1×</span>
+  </div>
+</div>
+</div>
+
+<script>
+function el(id){return document.getElementById(id)}
+function show(id){const e=el(id);if(e)e.setAttribute('opacity','1')}
+function hide(id){const e=el(id);if(e)e.setAttribute('opacity','0')}
+function setTxt(id,t){const e=el(id);if(e)e.textContent=t}
+function wait(ms,s){return new Promise(r=>setTimeout(r,ms/(s||1)))}
+function animDash(lineId,s,len){
+  return new Promise(r=>{
+    const e=el(lineId);if(!e){r();return}
+    const d=0.46/(s||1);
+    e.style.transition=`stroke-dashoffset ${d}s ease`;
+    e.setAttribute('stroke-dashoffset','0');
+    setTimeout(r,d*1000+50);
+  })
+}
+function resetDash(id,len){
+  const e=el(id);if(!e)return;
+  e.style.transition='none';
+  e.setAttribute('stroke-dashoffset',String(len));
+}
+
+const captions=[
+  `Alice walks into the government office and applies for a licence. In JWT terms, this is the client sending <strong>POST /login</strong> to the auth server — "here are my credentials, issue me a token."`,
+  `The government official <strong>signs the licence</strong> using a secret stamp. This is <strong>HMAC-SHA256</strong> — the server signs the payload with <code>SECRET_KEY</code>. The signature proves the document is genuine and untampered.`,
+  `Alice receives her driver's licence. <strong>All data is printed right on the card</strong> — name, role, expiry, issuer. This is the JWT payload: self-contained, readable by anyone who holds it, but only the government can forge the signature.`,
+  `Alice walks into the car rental. She hands over her licence. The agent doesn't pick up the phone. This is the resource server receiving <strong>Authorization: Bearer eyJ…</strong> and about to verify it locally.`,
+  `The agent <strong>checks the stamp is genuine</strong> using their own copy of the government's public key. <code>crypto.verify(token, SECRET_KEY)</code> — pure math, no network call, no database lookup. Instant verification. Keys are handed over.`,
+  `Alice presents an <strong>expired licence</strong>. The agent checks the <code>exp</code> claim — it's in the past. <strong>Rejected.</strong> JWT expiry is enforced client-side without any server state. This is why short expiry (15 min) is important.`,
+  `A thief stole Alice's JWT. They walk up to the counter. The signature is still valid. Expiry not yet reached. <strong>Agent says: welcome, Alice.</strong> No revocation list exists to check. This is the fundamental JWT trade-off — cannot cancel what you cannot track.`,
+];
+
+let curStep=-1,playing=false;
+function sp(){return parseFloat(el('spd').value)||1;}
+function setCaption(i){
+  const c=el('cap');c.style.opacity='0';
+  setTimeout(()=>{c.innerHTML=captions[i];c.style.opacity='1';},200);
+}
+function updatePills(a){
+  document.querySelectorAll('.step-pill').forEach((p,i)=>{
+    p.classList.remove('active','done');
+    if(i===a)p.classList.add('active');
+    else if(i<a)p.classList.add('done');
+  });
+}
+
+const steps=[
+  async(s)=>{
+    show('bub-apply');
+    show('jwt-label');
+    setTxt('jwt-txt','POST /auth/login — {user, pass}');
+    await wait(700,s);
+    hide('bub-apply');
+  },
+  async(s)=>{
+    show('bub-sign');
+    setTxt('jwt-txt','Server: HMAC.sign(payload, SECRET_KEY)');
+    // Seal pulse
+    el('gov-seal').setAttribute('opacity','1');
+    await wait(300,s);
+    el('gov-seal').style.transition=`opacity 0.3s`;
+    el('gov-seal').setAttribute('opacity','0.4');
+    await wait(300,s);
+    el('gov-seal').setAttribute('opacity','1');
+    await wait(400,s);
+    hide('bub-sign');
+  },
+  async(s)=>{
+    show('arr-issue');
+    await animDash('arr-issue-line',s,90);
+    await wait(100,s);
+    show('licence');
+    setTxt('jwt-txt','eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiYWxpY2UiLCJyb2xlIjoiZHJpdmVyIn0.sig');
+    await wait(500,s);
+  },
+  async(s)=>{
+    show('bub-show');
+    setTxt('jwt-txt','Authorization: Bearer eyJ…alice…sig');
+    show('arr-present');
+    await animDash('arr-present-line',s,90);
+    await wait(300,s);
+    hide('bub-show');
+  },
+  async(s)=>{
+    show('no-call');
+    setTxt('jwt-txt','crypto.verify(token, SECRET_KEY) — no DB lookup!');
+    await wait(500,s);
+    show('verify-tick');
+    show('bub-verify');
+    el('agent-mouth').setAttribute('d','M580 218 Q585 222 590 218');
+    await wait(700,s);
+    hide('bub-verify');
+  },
+  async(s)=>{
+    hide('no-call');hide('verify-tick');hide('arr-present');hide('licence');
+    hide('bub-show');
+    setTxt('jwt-txt','JWT exp claim: 2024-01-01 — EXPIRED → 401');
+    setTxt('exp-txt','2024-01-01 ✗');
+    show('licence');
+    show('expired-scene');
+    await wait(800,s);
+  },
+  async(s)=>{
+    hide('expired-scene');hide('licence');
+    setTxt('exp-txt','2026-12-31');
+    setTxt('jwt-txt','Attacker replays stolen token — signature still valid!');
+    hide('person');hide('person-lbl');
+    show('thief-scene');
+    await wait(800,s);
+  },
+];
+
+async function runStep(i){
+  playing=true;
+  el('bPlay').disabled=true;el('bStep').disabled=true;el('bReset').disabled=false;
+  updatePills(i);setCaption(i);
+  await steps[i](sp());
+  curStep=i;playing=false;
+  el('bPlay').disabled=false;
+  const done=curStep>=steps.length-1;
+  el('bStep').disabled=done;
+  el('bStep').textContent=done?'Done!':`Next step → (${curStep+2}/${steps.length})`;
+}
+
+async function stepFwd(){if(playing||curStep>=steps.length-1)return;await runStep(curStep+1);}
+async function goStep(i){if(playing||i<=curStep)return;for(let j=curStep+1;j<=i;j++){await runStep(j);if(j<i)await wait(180,sp());}}
+async function playAll(){
+  if(playing)return;doReset();await wait(80,1);
+  for(let i=0;i<steps.length;i++){await runStep(i);if(i<steps.length-1)await wait(500,sp());}
+}
+
+function doReset(){
+  if(playing)return;
+  curStep=-1;playing=false;
+  ['bub-apply','bub-sign','arr-issue','licence','bub-show','arr-present','no-call','verify-tick','bub-verify','expired-scene','thief-scene','jwt-label'].forEach(id=>hide(id));
+  resetDash('arr-issue-line',90);
+  resetDash('arr-present-line',90);
+  show('person');show('person-lbl');
+  setTxt('exp-txt','2026-12-31');
+  setTxt('jwt-txt','eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiYWxpY2UifQ.sig');
+  el('gov-seal').setAttribute('opacity','0.6');
+  el('agent-mouth').setAttribute('d','M580 216 Q585 219 590 216');
+  el('person-mouth').setAttribute('d','M334 217 Q340 221 346 217');
+  document.querySelectorAll('.step-pill').forEach((p,i)=>{p.classList.remove('active','done');if(i===0)p.classList.add('active');});
+  el('cap').innerHTML='Click <strong>Play</strong> or step through the JWT analogy.';
+  el('bPlay').disabled=false;el('bStep').disabled=false;
+  el('bStep').textContent='Next step →';el('bReset').disabled=true;
+}
+</script>
+</div>
+<script>
+(function(){
+  function report(){
+    var root=document.querySelector('.analogy-anim')||document.body;
+    var h=Math.max(document.documentElement.scrollHeight,document.body.scrollHeight,root.scrollHeight);
+    if(window.parent!==window)window.parent.postMessage({type:'anim-frame-height',height:h},'*');
+  }
+  window.addEventListener('load',report);
+  if(typeof ResizeObserver!=='undefined')new ResizeObserver(report).observe(document.querySelector('.analogy-anim')||document.body);
+})();
+</script>
+</body>
+</html>
