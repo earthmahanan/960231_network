@@ -523,8 +523,16 @@ function render(idx,animate){
     if(gl) gl.classList.add(s.type==='req'?'req-glow':'res-glow');
   }
 
-  // packet
-  if(animate&&s.from&&s.to) firePacket(s.from,s.to,s.msg,s.type);
+  // packet — fade out any existing packet, then fire the new one
+  const oldPackets = document.querySelectorAll('.packet');
+  oldPackets.forEach(p => {
+    p.style.opacity = '0';
+    setTimeout(() => p.remove(), 320);
+  });
+  if(animate&&s.from&&s.to){
+    // short delay so old packet fades before new one appears
+    setTimeout(() => firePacket(s.from,s.to,s.msg,s.type), oldPackets.length ? 280 : 0);
+  }
 
   // button state
   document.getElementById('btnStep').disabled=(idx>=12);
@@ -546,10 +554,7 @@ function firePacket(fromId,toId,label,type){
     p.style.left=tp.x+'%';
     p.style.top=tp.y+'%';
   }));
-  setTimeout(()=>{
-    p.style.opacity='0';
-    setTimeout(()=>p.remove(),320);
-  },1060);
+  // Packet stays visible — cleared by next render() call
 }
 
 // ── CONTROLS ──────────────────────────────────────────────
@@ -593,7 +598,7 @@ function tick(){
     cur++;
     render(cur,true);
     tick();
-  },2200);
+  },2600);
 }
 
 // ── MODE TOGGLE ───────────────────────────────────────────
