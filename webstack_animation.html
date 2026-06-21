@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Web Stack — Restaurant Analogy Animation</title>
+<style>
+:root{color-scheme:light;
+  --bg:#ffffff;--bg2:#f4f3ee;--bg3:#ecebe4;
+  --txt:#1d1d1c;--txt2:#5f5e5a;--txt3:#888780;
+  --bdr:rgba(0,0,0,0.13);--bdr2:rgba(0,0,0,0.25);
+  --radius:8px;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --req:#2563eb;--res:#059669;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:var(--font);color:var(--txt);font-size:14px;line-height:1.5}
+
+/* ── nav ── */
+nav{
+  position:sticky;top:0;z-index:100;
+  background:var(--bg);border-bottom:.5px solid var(--bdr);
+  padding:.65rem 1.5rem;
+  display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+}
+.nav-title{font-size:15px;font-weight:600;letter-spacing:-.01em}
+.nav-right{display:flex;align-items:center;gap:.5rem;margin-left:auto;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--txt3)}
+.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.legend-sep{width:.5px;height:14px;background:var(--bdr2);margin:0 .25rem}
+
+/* mode buttons — exact nav-link style */
+.mode-btns{display:flex;gap:4px}
+.mbtn{
+  font-size:12px;padding:4px 12px;border-radius:20px;
+  border:.5px solid var(--bdr2);background:transparent;
+  color:var(--txt2);cursor:pointer;font-family:var(--font);
+  transition:background .15s,color .15s;white-space:nowrap;
+}
+.mbtn:hover{background:var(--bg2);color:var(--txt)}
+.mbtn.active{background:var(--bg3);color:var(--txt);border-color:var(--bdr2)}
+
+/* ── page body ── */
+.page{max-width:960px;margin:0 auto;padding:2rem 1.5rem 3rem}
+
+/* ── section header (identical pattern to index.html) ── */
+.section-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.06em;
+  color:var(--txt3);text-transform:uppercase;margin-bottom:.35rem;
+}
+.section-title{font-size:18px;font-weight:500;letter-spacing:-.015em;margin-bottom:.25rem}
+.section-desc{font-size:12px;color:var(--txt2);max-width:600px;line-height:1.55;margin-bottom:1rem}
+
+/* ── scene ── */
+.scene-outer{
+  border:.5px solid var(--bdr);border-radius:var(--radius);
+  overflow:hidden;background:var(--bg2);
+  position:relative;
+}
+.scene-scaler{position:relative;width:100%}
+.scene-scaler::before{content:'';display:block;padding-top:51.1%}/* 460/900 */
+.scene-canvas{
+  position:absolute;inset:0;
+  background:var(--bg2);
+  border-radius:0;overflow:hidden;
+}
+
+/* ── SVG lines ── */
+.scene-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.conn-line{stroke:rgba(0,0,0,.1);stroke-width:1.5;stroke-dasharray:5,4;fill:none}
+.conn-glow{stroke:transparent;stroke-width:2.5;fill:none;stroke-linecap:round;transition:stroke .25s}
+.conn-glow.req-glow{stroke:var(--req);animation:gpulse 1.1s ease-in-out infinite}
+.conn-glow.res-glow{stroke:var(--res);animation:gpulse 1.1s ease-in-out infinite}
+@keyframes gpulse{0%,100%{stroke-opacity:.5}50%{stroke-opacity:1}}
+
+/* ── entity cards ── */
+.entities{position:absolute;inset:0;pointer-events:none}
+.entity{
+  position:absolute;transform:translate(-50%,-50%);
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  transition:transform .25s;
+}
+.ecard{
+  width:86px;height:76px;border-radius:var(--radius);
+  border:.5px solid var(--bdr2);background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;
+  box-shadow:0 1px 4px rgba(0,0,0,.07);
+  transition:border-color .25s,box-shadow .25s,transform .25s;
+  position:relative;
+}
+.eicon{font-size:1.55rem;line-height:1;display:block}
+.ename{font-size:8.5px;font-weight:600;text-align:center;letter-spacing:.03em;
+  text-transform:uppercase;line-height:1.2;padding:0 4px;color:var(--txt2)}
+.esub{font-size:7.5px;text-align:center;color:var(--txt3);display:none}
+.etech{
+  font-size:7.5px;font-weight:600;text-align:center;
+  color:var(--res);font-family:var(--mono);display:none;
+  padding:1px 5px;background:rgba(5,150,105,.07);
+  border-radius:3px;line-height:1.3;
+}
+
+/* lit (active) state */
+.entity.lit .ecard{
+  border-color:var(--ec);
+  box-shadow:0 0 0 2px var(--ec-alpha),0 2px 10px var(--ec-alpha);
+  transform:scale(1.07);
+}
+.entity.lit{transform:translate(-50%,-50%) /* stays centered */}
+
+/* tech mode reveals sub/tech labels */
+.tech-mode .ename{color:var(--txt)}
+.tech-mode .esub{display:block}
+.tech-mode .etech{display:block}
+.tech-mode .scene-canvas{background:var(--bg3)}
+
+/* ── packet ── */
+.packet{
+  position:absolute;z-index:200;pointer-events:none;
+  transform:translate(-50%,-50%);
+  display:flex;align-items:center;gap:4px;
+  padding:4px 10px;border-radius:20px;
+  font-size:10.5px;font-weight:700;white-space:nowrap;
+  font-family:var(--font);letter-spacing:.01em;
+  box-shadow:0 2px 10px rgba(0,0,0,.18);
+  transition:left .9s cubic-bezier(.4,0,.2,1),top .9s cubic-bezier(.4,0,.2,1),opacity .3s;
+}
+.packet.req-pkt{background:var(--req);color:#fff}
+.packet.res-pkt{background:var(--res);color:#fff}
+
+/* ── insight strip ── */
+.insight-wrap{min-height:36px;margin:.75rem 0 0}
+.insight-box{
+  border:.5px solid var(--bdr2);border-radius:var(--radius);
+  background:var(--bg2);
+  padding:.6rem .9rem;
+  font-size:12px;color:var(--txt2);line-height:1.55;
+  display:flex;gap:.5rem;align-items:flex-start;
+  animation:fadeup .3s ease;
+}
+.insight-box .iico{flex-shrink:0;font-size:1rem;margin-top:.05rem}
+@keyframes fadeup{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── narration row ── */
+.narr-row{
+  display:grid;grid-template-columns:1fr auto;
+  gap:.75rem;align-items:start;margin-top:.75rem;
+}
+.narr-box{
+  border:.5px solid var(--bdr);border-radius:var(--radius);
+  padding:.85rem 1rem;background:var(--bg);
+  min-height:88px;
+}
+.narr-eye{
+  font-family:var(--mono);font-size:10px;letter-spacing:.06em;
+  color:var(--txt3);text-transform:uppercase;margin-bottom:.3rem;
+}
+.narr-title{font-size:15px;font-weight:500;letter-spacing:-.01em;margin-bottom:.3rem}
+.narr-text{font-size:12px;color:var(--txt2);line-height:1.55}
+
+/* code box — dark code block is standard in any light theme */
+.code-box{
+  border:.5px solid var(--bdr);border-radius:var(--radius);
+  background:#0d1117;padding:.7rem .85rem;
+  min-width:230px;max-width:260px;display:none;
+}
+.code-box pre{
+  font-family:var(--mono);font-size:10px;line-height:1.75;
+  color:#e6edf3;white-space:pre-wrap;
+}
+.tech-mode .code-box{display:block}
+
+/* ── controls ── */
+.ctrl-row{
+  display:flex;align-items:center;gap:.75rem;
+  margin-top:.75rem;flex-wrap:wrap;
+}
+.ctrl-btns{display:flex;gap:4px}
+
+/* Exact nav-link style for reset/step + slight fill for play */
+.cbtn{
+  font-size:12px;padding:5px 14px;border-radius:20px;
+  border:.5px solid var(--bdr2);background:transparent;
+  color:var(--txt2);cursor:pointer;font-family:var(--font);
+  transition:background .15s,color .15s;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:4px;
+}
+.cbtn:hover:not(:disabled){background:var(--bg2);color:var(--txt)}
+.cbtn:disabled{opacity:.35;cursor:not-allowed}
+.cbtn.play{
+  background:var(--txt);color:var(--bg);
+  border-color:var(--txt);min-width:84px;justify-content:center;
+}
+.cbtn.play:hover:not(:disabled){background:var(--txt2);border-color:var(--txt2)}
+.cbtn.play.paused{background:var(--bg);color:var(--txt);border-color:var(--bdr2)}
+.cbtn.play.paused:hover:not(:disabled){background:var(--bg2)}
+
+.step-ctr{
+  font-family:var(--mono);font-size:11px;color:var(--txt3);
+  min-width:68px;
+}
+.step-ctr span{color:var(--txt);font-weight:600}
+
+.prog-wrap{flex:1;min-width:60px;height:2px;background:var(--bg3);border-radius:1px;overflow:hidden}
+.prog-fill{height:100%;background:var(--txt2);border-radius:1px;transition:width .4s ease}
+
+@media(max-width:600px){
+  .narr-row{grid-template-columns:1fr}
+  .code-box{max-width:100%;display:none!important}
+  .tech-mode .code-box{display:none!important}
+}
+</style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav>
+  <span class="nav-title">Web Stack — Restaurant Analogy</span>
+  <div class="nav-right">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--req)"></div>Request →</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--res)"></div>Response ←</div>
+    <div class="legend-sep"></div>
+    <div class="mode-btns">
+      <button class="mbtn active" id="btnRest" onclick="setMode('rest')">🍽️ Restaurant</button>
+      <button class="mbtn"        id="btnTech" onclick="setMode('tech')">💻 Tech View</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- ── SECTION HEADER ── -->
+  <div class="section-badge">Analogy 01</div>
+  <div class="section-title">The Full Stack — Step by Step</div>
+  <div class="section-desc">A restaurant where you order by number. The waiter, menu, card machine, chef, fridge, and cooker map exactly to a real web stack. Step through all 12 stages to see how a single request travels through the entire system.</div>
+
+  <!-- ── SCENE ── -->
+  <div class="scene-outer">
+    <div class="scene-scaler">
+      <div class="scene-canvas" id="sceneCanvas">
+
+        <svg class="scene-svg" viewBox="0 0 900 460" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+          <!-- Zone fills -->
+          <rect id="zTop" x="0" y="0"   width="900" height="288" fill="rgba(255,255,255,0)" />
+          <rect id="zBot" x="0" y="288" width="900" height="172" fill="rgba(0,0,0,0.025)" />
+
+          <!-- Zone divider -->
+          <line x1="16" y1="290" x2="884" y2="290"
+                stroke="rgba(0,0,0,0.1)" stroke-width="1" stroke-dasharray="6,5" id="zDivider"/>
+
+          <!-- Zone labels -->
+          <text id="zLblT" x="450" y="19" text-anchor="middle"
+                font-size="9" font-weight="600" letter-spacing="2"
+                fill="rgba(0,0,0,0.2)" font-family="ui-monospace,monospace">DINING ROOM · CLIENT SIDE</text>
+          <text id="zLblB" x="450" y="308" text-anchor="middle"
+                font-size="9" font-weight="600" letter-spacing="2"
+                fill="rgba(0,0,0,0.2)" font-family="ui-monospace,monospace">KITCHEN · BACKEND</text>
+
+          <!-- ── BASE CONNECTIONS (always visible) ── -->
+          <line class="conn-line" x1="124" y1="200" x2="310" y2="200"/><!-- client→waiter -->
+          <line class="conn-line" x1="403" y1="166" x2="556" y2="118"/><!-- waiter→menu  -->
+          <line class="conn-line" x1="406" y1="210" x2="556" y2="232"/><!-- waiter→card  -->
+          <line class="conn-line" x1="360" y1="243" x2="360" y2="352"/><!-- waiter→chef  -->
+          <line class="conn-line" x1="407" y1="395" x2="555" y2="395"/><!-- chef→fridge  -->
+          <line class="conn-line" x1="407" y1="401" x2="706" y2="401"/><!-- chef→cooker  -->
+
+          <!-- ── GLOW LINES (animated when active) ── -->
+          <line class="conn-glow" id="gl-client-waiter" x1="124" y1="200" x2="310" y2="200"/>
+          <line class="conn-glow" id="gl-waiter-menu"   x1="403" y1="166" x2="556" y2="118"/>
+          <line class="conn-glow" id="gl-waiter-card"   x1="406" y1="210" x2="556" y2="232"/>
+          <line class="conn-glow" id="gl-waiter-chef"   x1="360" y1="243" x2="360" y2="352"/>
+          <line class="conn-glow" id="gl-chef-fridge"   x1="407" y1="395" x2="555" y2="395"/>
+          <line class="conn-glow" id="gl-chef-cooker"   x1="407" y1="401" x2="706" y2="401"/>
+        </svg>
+
+        <!-- ── ENTITY CARDS ── -->
+        <div class="entities">
+
+          <div class="entity" id="e-client"  style="left:8%;top:43%;--ec:#2563eb;--ec-alpha:rgba(37,99,235,.2)">
+            <div class="ecard">
+              <span class="eicon">🧑</span>
+              <span class="ename">You</span>
+              <span class="esub">Client</span>
+              <span class="etech">💻 Browser</span>
+            </div>
+          </div>
+
+          <div class="entity" id="e-waiter"  style="left:40%;top:43%;--ec:#059669;--ec-alpha:rgba(5,150,105,.2)">
+            <div class="ecard">
+              <span class="eicon">🧑‍💼</span>
+              <span class="ename">Waiter</span>
+              <span class="esub">Server</span>
+              <span class="etech">⚙️ API Server</span>
+            </div>
+          </div>
+
+          <div class="entity" id="e-menu"    style="left:68%;top:24%;--ec:#7c3aed;--ec-alpha:rgba(124,58,237,.2)">
+            <div class="ecard">
+              <span class="eicon">📋</span>
+              <span class="ename">Menu</span>
+              <span class="esub">Validation</span>
+              <span class="etech">🗃️ Items DB</span>
+            </div>
+          </div>
+
+          <div class="entity" id="e-card"    style="left:68%;top:57%;--ec:#d97706;--ec-alpha:rgba(217,119,6,.2)">
+            <div class="ecard">
+              <span class="eicon">💳</span>
+              <span class="ename">Card Machine</span>
+              <span class="esub">Payment</span>
+              <span class="etech">💰 Payment API</span>
+            </div>
+          </div>
+
+          <div class="entity" id="e-chef"    style="left:40%;top:84%;--ec:#dc2626;--ec-alpha:rgba(220,38,38,.2)">
+            <div class="ecard">
+              <span class="eicon">👨‍🍳</span>
+              <span class="ename">Chef</span>
+              <span class="esub">Server</span>
+              <span class="etech">🔧 Order Service</span>
+            </div>
+          </div>
+
+          <div class="entity" id="e-fridge"  style="left:68%;top:84%;--ec:#0ea5e9;--ec-alpha:rgba(14,165,233,.2)">
+            <div class="ecard">
+              <span class="eicon">❄️</span>
+              <span class="ename">Fridge</span>
+              <span class="esub">Database</span>
+              <span class="etech">🗄️ Inventory DB</span>
+            </div>
+          </div>
+
+          <div class="entity" id="e-cooker"  style="left:87%;top:84%;--ec:#d97706;--ec-alpha:rgba(217,119,6,.2)">
+            <div class="ecard">
+              <span class="eicon">🍳</span>
+              <span class="ename">Cooker</span>
+              <span class="esub">Processor</span>
+              <span class="etech">🖨️ Processor</span>
+            </div>
+          </div>
+
+        </div><!-- /entities -->
+      </div><!-- /scene-canvas -->
+    </div>
+  </div><!-- /scene-outer -->
+
+  <!-- ── INSIGHT ── -->
+  <div class="insight-wrap">
+    <div class="insight-box" id="insightBox" style="display:none">
+      <span class="iico">💡</span>
+      <span id="insightText"></span>
+    </div>
+  </div>
+
+  <!-- ── NARRATION ── -->
+  <div class="narr-row" id="narrRow">
+    <div class="narr-box">
+      <div class="narr-eye"   id="narrEye">Introduction</div>
+      <div class="narr-title" id="narrTitle">Welcome to the Restaurant</div>
+      <div class="narr-text"  id="narrText">Press <strong>Step ▶</strong> or <strong>Play</strong> to begin. Each stage shows how a client request travels through the full stack — from your table to the kitchen and back.</div>
+    </div>
+    <div class="code-box" id="codeBox">
+      <pre id="codePre"></pre>
+    </div>
+  </div>
+
+  <!-- ── CONTROLS ── -->
+  <div class="ctrl-row">
+    <div class="ctrl-btns">
+      <button class="cbtn"       id="btnReset" onclick="doReset()">↺ Reset</button>
+      <button class="cbtn"       id="btnStep"  onclick="doStep()">Step ▶</button>
+      <button class="cbtn play"  id="btnPlay"  onclick="doPlay()">▶ Play</button>
+    </div>
+    <div class="step-ctr">Step <span id="stepNum">0</span> / 12</div>
+    <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+// ── DATA ──────────────────────────────────────────────────
+const STEPS=[
+  {
+    title:'The Restaurant is Open',eye:'Introduction',
+    text:'You\'re seated at a restaurant — you\'re the <strong>client</strong>. The waiter, menu, card machine, kitchen, fridge, and cooker make up the web stack in disguise. Watch one order travel all the way through.',
+    code:'// Each box = a server.\n// Servers handle and respond\n// to requests.',
+    from:null,to:null,type:null,msg:null,glow:null,active:[],insight:null,
+  },
+  {
+    title:'You Place Your Order',eye:'Step 1 of 12 · Client → Server',
+    text:'You order <strong>items 1, 19, and 31</strong> and hand over your credit card. The waiter — the server — receives your request. You don\'t know what happens next; you just wait for your food.',
+    code:'// Browser → API Server\nPOST /orders HTTP/1.1\n{\n  items: [1, 19, 31],\n  card: "4242 4242..."\n}',
+    from:'client',to:'waiter',type:'req',msg:'1, 19, 31 + 💳',
+    glow:'gl-client-waiter',active:['client','waiter'],insight:null,
+  },
+  {
+    title:'Waiter Checks the Menu',eye:'Step 2 of 12 · Server → Menu',
+    text:'The waiter can\'t accept any number — they <strong>consult the menu</strong> to verify items 1, 19, and 31 exist. The menu is backed by a list of dishes stored in a database.',
+    code:'// API Server → Items DB\nSELECT name, price\nFROM dishes\nWHERE id IN (1, 19, 31);',
+    from:'waiter',to:'menu',type:'req',msg:'Items 1, 19, 31 exist?',
+    glow:'gl-waiter-menu',active:['waiter','menu'],insight:null,
+  },
+  {
+    title:'Menu Confirms the Items',eye:'Step 3 of 12 · Menu → Server',
+    text:'The menu responds: <strong>"Yes — 1 is a Burger, 19 a Bap, 31 is Lettuce."</strong> The menu is a server too: it received a query and returned an answer.',
+    code:'// Items DB → API Server\n[\n  { id:1,  name:"Burger" },\n  { id:19, name:"Bap"    },\n  { id:31, name:"Lettuce"}\n]',
+    from:'menu',to:'waiter',type:'res',msg:'✅ Burger, Bap, Lettuce',
+    glow:'gl-waiter-menu',active:['menu','waiter'],insight:null,
+  },
+  {
+    title:'Waiter Checks Payment',eye:'Step 4 of 12 · Server → Payment',
+    text:'Before proceeding, the waiter takes your card to the <strong>card machine</strong>. They\'ve already totalled up the cost — you never had to calculate it yourself.',
+    code:'// API Server → Payment Gateway\nPOST /charge {\n  amount: 1250,\n  currency: "GBP",\n  card: "4242 4242..."\n}',
+    from:'waiter',to:'card',type:'req',msg:'💳 Cover £12.50?',
+    glow:'gl-waiter-card',active:['waiter','card'],insight:null,
+  },
+  {
+    title:'Payment Approved',eye:'Step 5 of 12 · Payment → Server',
+    text:'The card machine responds: <strong>"Authorised."</strong> Both checks are done — items exist and payment succeeded. The waiter can now proceed to the kitchen.',
+    code:'// Payment Gateway → API Server\n{\n  status: "success",\n  charge_id: "ch_abc123",\n  amount_paid: 1250\n}',
+    from:'card',to:'waiter',type:'res',msg:'✅ Authorised! £12.50',
+    glow:'gl-waiter-card',active:['card','waiter'],insight:null,
+  },
+  {
+    title:'Waiter Sends Order to the Kitchen',eye:'Step 6 of 12 · Server → Chef',
+    text:'Both checks passed. The waiter walks to the kitchen and hands the order to the <strong>chef</strong>. The chef never spoke to you, never saw your card, and never touched the menu.',
+    code:'// API Server → Order Service\nPOST /kitchen/orders {\n  items: [\n    "Burger","Bap","Lettuce"\n  ]\n}',
+    from:'waiter',to:'chef',type:'req',msg:'🍔 Burger, Bap, Lettuce',
+    glow:'gl-waiter-chef',active:['waiter','chef'],
+    insight:'<strong>Separation of Concerns</strong> — the chef never thinks about payments; the waiter never thinks about cooking. Each entity is responsible for a limited set of tasks and nothing more. This principle runs all the way through software engineering.',
+  },
+  {
+    title:'Chef Checks the Fridge',eye:'Step 7 of 12 · Chef → Database',
+    text:'The chef is a server too — they first check: <strong>do we have the ingredients?</strong> They open the fridge. A fridge (database) just stores things and returns them when asked.',
+    code:'// Order Service → Inventory DB\nSELECT qty FROM inventory\nWHERE ingredient IN\n  ("beef_patty","bap","lettuce");',
+    from:'chef',to:'fridge',type:'req',msg:'🥩 🍞 🥬 Ingredients?',
+    glow:'gl-chef-fridge',active:['chef','fridge'],insight:null,
+  },
+  {
+    title:'Fridge Returns Ingredients',eye:'Step 8 of 12 · Database → Chef',
+    text:'The fridge has everything. It returns the raw beef patty, a bap, and fresh lettuce. The <strong>fridge is the database</strong> — it stores objects and returns them on request.',
+    code:'// Inventory DB → Order Service\n{\n  beef_patty: { qty:1 },\n  bap:        { qty:1 },\n  lettuce:    { qty:1, fresh:true }\n}',
+    from:'fridge',to:'chef',type:'res',msg:'🥩 🍞 🥬 Here you go!',
+    glow:'gl-chef-fridge',active:['fridge','chef'],insight:null,
+  },
+  {
+    title:'Chef Sends to the Cooker',eye:'Step 9 of 12 · Chef → Cooker',
+    text:'The chef sends raw ingredients to the <strong>cooker</strong> — another server. The cooker takes raw inputs and transforms them into a finished output. The chef waits for the result.',
+    code:'// Order Service → Processor\nPOST /cook {\n  ingredients: {\n    beef_patty, bap, lettuce\n  },\n  method: "grill"\n}',
+    from:'chef',to:'cooker',type:'req',msg:'🥩 Cook this please!',
+    glow:'gl-chef-cooker',active:['chef','cooker'],insight:null,
+  },
+  {
+    title:'Cooker Returns the Dish',eye:'Step 10 of 12 · Cooker → Chef',
+    text:'The cooker sends back a <strong>completed, assembled burger meal</strong>. The chef now has the final product. The cooker\'s job is done — it returns to waiting for the next request.',
+    code:'// Processor → Order Service\n{\n  status: 200,\n  dish: "Assembled Burger",\n  cook_time_secs: 240\n}',
+    from:'cooker',to:'chef',type:'res',msg:'🍔 Dish complete!',
+    glow:'gl-chef-cooker',active:['cooker','chef'],insight:null,
+  },
+  {
+    title:'Chef Returns Dish to Waiter',eye:'Step 11 of 12 · Chef → Server',
+    text:'The chef rings the bell and hands the completed meal to the waiter. The chef never needs to know what happens to the dish next — <strong>isolation is the key</strong>.',
+    code:'// Order Service → API Server\n{\n  status: 200,\n  order_id: "ord_789",\n  dish: "Burger Meal",\n  ready: true\n}',
+    from:'chef',to:'waiter',type:'res',msg:'🍔 Order\'s up!',
+    glow:'gl-waiter-chef',active:['chef','waiter'],insight:null,
+  },
+  {
+    title:'You Get Your Food',eye:'Step 12 of 12 · Server → Client',
+    text:'The waiter returns and places your meal on the table. You made <em>one request</em>. You got <em>one response</em>. Eleven steps happened invisibly — each server handling its own responsibility in perfect isolation.',
+    code:'// API Server → Browser\nHTTP/1.1 200 OK\nContent-Type: application/json\n{\n  dish: "Burger Meal 🍔",\n  total_paid: "£12.50"\n}',
+    from:'waiter',to:'client',type:'res',msg:'🍔 Your order!',
+    glow:'gl-client-waiter',active:['waiter','client'],
+    insight:'<strong>This is the full stack.</strong> You = Browser. Waiter = API Server. Menu &amp; Card Machine = External services. Chef = Backend service. Fridge = Database. Cooker = Any processor or printer. <strong>Full-stack engineers</strong> can work on any of these layers.',
+  },
+];
+
+// ── STATE ─────────────────────────────────────────────────
+let cur=0, playing=false, playTimer=null;
+
+// Entity % positions — must match CSS left/top
+const POS={
+  client:{x:8,y:43},waiter:{x:40,y:43},
+  menu:{x:68,y:24},card:{x:68,y:57},
+  chef:{x:40,y:84},fridge:{x:68,y:84},cooker:{x:87,y:84},
+};
+
+// ── RENDER ────────────────────────────────────────────────
+function render(idx,animate){
+  const s=STEPS[idx];
+
+  // narration
+  document.getElementById('narrEye').textContent  = s.eye;
+  document.getElementById('narrTitle').textContent= s.title;
+  document.getElementById('narrText').innerHTML   = s.text;
+  document.getElementById('codePre').textContent  = s.code||'';
+
+  // insight
+  const ib=document.getElementById('insightBox');
+  if(s.insight){
+    document.getElementById('insightText').innerHTML=s.insight;
+    ib.style.display='flex';
+  } else { ib.style.display='none'; }
+
+  // progress
+  document.getElementById('stepNum').textContent = idx;
+  document.getElementById('progFill').style.width = (idx/12*100)+'%';
+
+  // clear highlights + glows
+  document.querySelectorAll('.entity').forEach(e=>e.classList.remove('lit'));
+  document.querySelectorAll('.conn-glow').forEach(l=>l.classList.remove('req-glow','res-glow'));
+
+  // activate entities
+  s.active.forEach(id=>{
+    const el=document.getElementById('e-'+id);
+    if(el) el.classList.add('lit');
+  });
+
+  // activate glow line
+  if(s.glow){
+    const gl=document.getElementById(s.glow);
+    if(gl) gl.classList.add(s.type==='req'?'req-glow':'res-glow');
+  }
+
+  // packet
+  if(animate&&s.from&&s.to) firePacket(s.from,s.to,s.msg,s.type);
+
+  // button state
+  document.getElementById('btnStep').disabled=(idx>=12);
+}
+
+// ── PACKET ────────────────────────────────────────────────
+function firePacket(fromId,toId,label,type){
+  const sc=document.getElementById('sceneCanvas');
+  const fp=POS[fromId], tp=POS[toId];
+  const p=document.createElement('div');
+  p.className='packet '+(type==='req'?'req-pkt':'res-pkt');
+  p.textContent=label;
+  p.style.left=fp.x+'%';
+  p.style.top=fp.y+'%';
+  p.style.opacity='0';
+  sc.appendChild(p);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    p.style.opacity='1';
+    p.style.left=tp.x+'%';
+    p.style.top=tp.y+'%';
+  }));
+  setTimeout(()=>{
+    p.style.opacity='0';
+    setTimeout(()=>p.remove(),320);
+  },1060);
+}
+
+// ── CONTROLS ──────────────────────────────────────────────
+function doStep(){
+  if(cur>=12) return;
+  cur++;
+  render(cur,true);
+}
+
+function doReset(){
+  stopPlay();
+  cur=0;
+  render(0,false);
+  document.querySelectorAll('.packet').forEach(p=>p.remove());
+  document.getElementById('btnStep').disabled=false;
+}
+
+function doPlay(){
+  if(playing){stopPlay();return;}
+  if(cur>=12) doReset();
+  playing=true;
+  const btn=document.getElementById('btnPlay');
+  btn.textContent='⏸ Pause';
+  btn.classList.add('paused');
+  tick();
+}
+
+function stopPlay(){
+  playing=false;
+  clearTimeout(playTimer);
+  const btn=document.getElementById('btnPlay');
+  btn.textContent='▶ Play';
+  btn.classList.remove('paused');
+}
+
+function tick(){
+  if(!playing) return;
+  if(cur>=12){stopPlay();return;}
+  playTimer=setTimeout(()=>{
+    if(!playing) return;
+    cur++;
+    render(cur,true);
+    tick();
+  },2200);
+}
+
+// ── MODE TOGGLE ───────────────────────────────────────────
+function setMode(m){
+  document.body.classList.toggle('tech-mode',m==='tech');
+  document.getElementById('btnRest').classList.toggle('active',m==='rest');
+  document.getElementById('btnTech').classList.toggle('active',m==='tech');
+}
+
+// ── KEYBOARD ──────────────────────────────────────────────
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();if(!playing)doStep();}
+  if(e.key==='ArrowLeft'&&cur>0&&!playing){cur=Math.max(0,cur-1);render(cur,false);}
+  if(e.key==='r'||e.key==='R') doReset();
+  if(e.key==='p'||e.key==='P') doPlay();
+});
+
+render(0,false);
+</script>
+</body>
+</html>
