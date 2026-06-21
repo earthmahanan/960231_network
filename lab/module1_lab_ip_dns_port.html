@@ -218,7 +218,7 @@ textarea.answered{border-color:var(--teal-bd);background:#fafffe}
   <div class="topbar">
     <div class="topbar-left">
       <h1>Module 1 — IP / DNS / Port</h1>
-      <p>Computer Networks Lab · Developer Track · est. 20 min</p>
+      <p>Computer Networks Lab · Developer Track</p>
     </div>
     <div class="topbar-right">
       <div class="strike-chip" id="strikeChip" style="display:none">⚠ Paste detected</div>
@@ -430,8 +430,8 @@ var EXERCISES = [
         heading:'Step 2 — NAT in action',
         intro:'Think about what you saw in the traceroute:',
         questions:[
-          { id:'4r1', text:'At which hop number did the IPs switch from private (192.168.x.x / 10.x.x.x) to public? What device caused that switch?', rows:2 },
-          { id:'4r2', text:'Draw the NAT translation in words: your laptop sends a packet with source IP _____ . The router rewrites the source to _____ before forwarding to google.com. Google replies to _____ . The router then delivers to _____ .', rows:3 },
+          //{ id:'4r1', text:'At which hop number did the IPs switch from private (192.168.x.x / 10.x.x.x) to public? What device caused that switch?', rows:2 },
+          //{ id:'4r2', text:'Draw the NAT translation in words: your laptop sends a packet with source IP _____ . The router rewrites the source to _____ before forwarding to google.com. Google replies to _____ . The router then delivers to _____ .', rows:3 },
           { id:'4r3', text:'A junior developer on your team runs a webhook receiver on localhost:4000. Stripe cannot POST to it. Explain exactly why, and describe two ways to fix it.', rows:4 },
         ]
       },
@@ -457,7 +457,7 @@ var EXERCISES = [
         intro:'Run ping against each target below. Send exactly 4 packets. Record what you get:',
         type:'os-cmd',
         cmds:[
-          { os:'macOS / Linux', tag:'mac', cmd:'ping -c 4 127.0.0.1\npingpingpingping -c 4 YOUR_GATEWAY_IP\nping -c 4 8.8.8.8\nping -c 4 google.com' },
+          { os:'macOS / Linux', tag:'mac', cmd:'ping -c 4 127.0.0.1\nping -c 4 YOUR_GATEWAY_IP\nping -c 4 8.8.8.8\nping -c 4 google.com' },
           { os:'Windows', tag:'win', cmd:'ping -n 4 127.0.0.1\nping -n 4 YOUR_GATEWAY_IP\nping -n 4 8.8.8.8\nping -n 4 google.com' }
         ],
         note:'Replace YOUR_GATEWAY_IP with the default gateway from Exercise 1 (e.g. 192.168.1.1).'
@@ -521,11 +521,11 @@ var EXERCISES = [
         questions:[
           { id:'5r1', text:'What was the RTT difference between pinging 127.0.0.1 (localhost) vs pinging 8.8.8.8? Why is localhost so much faster?', rows:2 },
           { id:'5r2', text:'When you pinged the non-existent IP (192.168.1.254), what happened? What does Request timeout or Destination host unreachable tell you about the network path?', rows:3 },
-          { id:'5r3', text:'ping uses ICMP at the Network layer. It does NOT use TCP or UDP. What does this mean for firewalls? Give a reason a server might not respond to ping even though it is online and serving HTTP traffic.', rows:4 },
+          //{ id:'5r3', text:'ping uses ICMP at the Network layer. It does NOT use TCP or UDP. What does this mean for firewalls? Give a reason a server might not respond to ping even though it is online and serving HTTP traffic.', rows:4 },
           { id:'5r4', text:'In Task 4 — the global race — which destination had the highest RTT? Using what you know about data traveling through fibre cables and routers across oceans, explain why physical distance adds latency even at the speed of light.', rows:3 },
-          { id:'5r5', text:'Some domains in Task 4 returned Request timeout even though their websites load fine in a browser. Why does this happen? What is the difference between ICMP ping and HTTP traffic in terms of how firewalls treat them?', rows:4 },
-          { id:'5r6', text:'A developer says I cannot ping the production server so it must be down. Give two specific reasons why this conclusion could be completely wrong.', rows:3 },
-          { id:'5r7', text:'Did larger packet sizes increase your RTT to 8.8.8.8? What network concept explains this — and what is the MTU (Maximum Transmission Unit)?', rows:3 },
+          //{ id:'5r5', text:'Some domains in Task 4 returned Request timeout even though their websites load fine in a browser. Why does this happen? What is the difference between ICMP ping and HTTP traffic in terms of how firewalls treat them?', rows:4 },
+          //{ id:'5r6', text:'A developer says I cannot ping the production server so it must be down. Give two specific reasons why this conclusion could be completely wrong.', rows:3 },
+          { id:'5r7', text:'Did larger packet sizes increase your RTT to 8.8.8.8?', rows:3 },
         ]
       }
     ]
@@ -542,7 +542,7 @@ var EXERCISES = [
         questions:[
           { id:'ch1', text:'Describe the complete journey from when you press Enter on "github.com" in your browser to when the page starts loading. Include: DNS lookup, IP routing, NAT translation, and port number — in the correct order.', rows:8 },
           { id:'ch2', text:'IPv4 addresses ran out in 2011 yet most of the world still uses IPv4 in 2025. Explain how NAT and private IP ranges allowed this to happen. What problem does this create for peer-to-peer applications like video calls?', rows:5 },
-          { id:'ch3', text:'A developer deploys their API to a cloud server and can reach it via public IP. But a second developer on a different laptop on the same office network cannot. They are both on 192.168.1.x. Diagnose at least two different possible causes.', rows:5 },
+          //{ id:'ch3', text:'A developer deploys their API to a cloud server and can reach it via public IP. But a second developer on a different laptop on the same office network cannot. They are both on 192.168.1.x. Diagnose at least two different possible causes.', rows:5 },
           { id:'ch4', text:'You are the lead developer of a multiplayer game. Players behind NAT cannot directly connect to each other. Propose a technical solution and explain how it uses the concepts of public IP, port, and NAT that you learned today.', rows:6 },
         ]
       }
@@ -829,7 +829,7 @@ function buildPortQuiz(i){
     h+='<div class="port-quiz-item">'+s+'</div>';
   });
   h+='</div></div>';
-  h+='<div class="info-box gray" style="margin-top:.5rem"><h4>Answers revealed after you finish the lab</h4><p>22=C &nbsp; 80=D &nbsp; 443=B &nbsp; 3000=E &nbsp; 3306=F &nbsp; 5432=A &nbsp; 6379=H &nbsp; 27017=G</p></div>';
+  //h+='<div class="info-box gray" style="margin-top:.5rem"><h4>Answers revealed after you finish the lab</h4><p>22=C &nbsp; 80=D &nbsp; 443=B &nbsp; 3000=E &nbsp; 3306=F &nbsp; 5432=A &nbsp; 6379=H &nbsp; 27017=G</p></div>';
   return h;
 }
 
