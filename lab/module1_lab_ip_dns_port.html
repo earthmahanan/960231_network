@@ -108,7 +108,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .question-block{margin-bottom:1.25rem}
 .question-text{font-size:14px;font-weight:600;color:var(--txt);margin-bottom:.5rem;line-height:1.5}
 .question-text .qnum{color:var(--navy);margin-right:4px}
-textarea{width:100%;border:1.5px solid var(--bdr);border-radius:8px;padding:10px 12px;font-size:13.5px;font-family:var(--sans);color:var(--txt);background:var(--bg);resize:vertical;transition:border .15s;line-height:1.6}
+textarea{width:100%;border:1.5px solid var(--bdr);border-radius:8px;padding:10px 12px;font-size:13.5px;font-family:var(--sans);color:var(--txt);background:var(--bg);resize:vertical;transition:border .15s;line-height:1.6;min-height:72px;box-sizing:border-box;overflow:hidden}
 textarea:focus{outline:none;border-color:var(--navy);background:#fff}
 textarea.answered{border-color:var(--teal-bd);background:#fafffe}
 
@@ -203,7 +203,7 @@ textarea.answered{border-color:var(--teal-bd);background:#fafffe}
 
 <nav class="sidebar" id="sidebar">
   <div class="sidebar-logo">
-    🌐 IP / DNS / Port
+    IP / DNS / Port
     <span class="mod-badge">Mod 1</span>
   </div>
   <div class="sidebar-title">Exercises</div>
@@ -217,7 +217,7 @@ textarea.answered{border-color:var(--teal-bd);background:#fafffe}
 <main class="main">
   <div class="topbar">
     <div class="topbar-left">
-      <h1>🌐 Module 1 — IP / DNS / Port</h1>
+      <h1>Module 1 — IP / DNS / Port</h1>
       <p>Computer Networks Lab · Developer Track · est. 20 min</p>
     </div>
     <div class="topbar-right">
@@ -248,7 +248,7 @@ textarea.answered{border-color:var(--teal-bd);background:#fafffe}
     <h2>Lab complete!</h2>
     <p>All questions answered. Download your responses and submit the JSON file to your course portal.</p>
     <div class="completion-actions">
-      <button class="btn-success" onclick="downloadJSON()">⬇ Download answers (.json)</button>
+      <!-- <button class="btn-success" onclick="downloadJSON()">⬇ Download answers (.json)</button> -->
       <button class="btn-primary" onclick="window.print()">🖨 Save as PDF</button>
       <button class="btn-ghost" onclick="goTo(0)">↺ Review from start</button>
     </div>
@@ -940,7 +940,12 @@ function goTo(idx){
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
   document.getElementById('completionCard').classList.remove('visible');
   var card=document.getElementById('card-'+idx);
-  if(card){card.classList.add('visible');window.scrollTo(0,0);}
+  if(card){
+    card.classList.add('visible');
+    window.scrollTo(0,0);
+    // resize every textarea in the newly-visible card so rows attr sets the height
+    card.querySelectorAll('textarea').forEach(function(ta){ autoResize(ta); });
+  }
   var nav=document.getElementById('nav-'+idx);
   if(nav)nav.classList.add('active');
   currentEx=idx;
@@ -958,7 +963,15 @@ function finish(){
 // ═══════════════════════════════════════════════
 function saveField(id,val){answers[id]=val;}
 
-function autoResize(el){el.style.height='auto';el.style.height=el.scrollHeight+'px';}
+function autoResize(el){
+  var rows = parseInt(el.getAttribute('rows') || 3);
+  var lineH = parseFloat(getComputedStyle(el).lineHeight) || 22;
+  var padT  = parseFloat(getComputedStyle(el).paddingTop)    || 10;
+  var padB  = parseFloat(getComputedStyle(el).paddingBottom) || 10;
+  var minH  = rows * lineH + padT + padB;
+  el.style.height = 'auto';
+  el.style.height = Math.max(el.scrollHeight, minH) + 'px';
+}
 
 function getAllFields(){
   var f={};
