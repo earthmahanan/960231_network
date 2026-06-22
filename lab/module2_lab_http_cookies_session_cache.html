@@ -713,14 +713,12 @@ function failureTable(){
   var scenarios=['408 Timeout','500','502','503','504'];
   var h='<div class="table-wrap"><table class="lab-table"><thead><tr>'+
     '<th>Scenario</th><th>Stage it fails at</th>'+
-    '<th>Who owns the bug?<br><small style="font-weight:400">(network / client / server / upstream)</small></th>'+
-    '<th>Retry succeed without changes?<br><small style="font-weight:400">(Y/N + why)</small></th>'+
+    '<th>Who owns the bug?<br><small style="font-weight:400">(client / server / upstream)</small></th>'+
     '</tr></thead><tbody>';
   scenarios.forEach(function(s,i){
     h+='<tr><td class="row-label">'+s+'</td>'+
        '<td><input type="text" placeholder="e.g. DNS resolution" oninput="onT(\'fail'+i+'s\')" id="fail'+i+'s"></td>'+
-       '<td><input type="text" placeholder="e.g. network" oninput="onT(\'fail'+i+'o\')" id="fail'+i+'o"></td>'+
-       '<td><input type="text" placeholder="Y/N \u2014 explain\u2026" oninput="onT(\'fail'+i+'r\')" id="fail'+i+'r"></td></tr>';
+       '<td><input type="text" placeholder="e.g. network" oninput="onT(\'fail'+i+'o\')" id="fail'+i+'o"></td></tr>';
   });
   return h+'</tbody></table></div>';}
 
