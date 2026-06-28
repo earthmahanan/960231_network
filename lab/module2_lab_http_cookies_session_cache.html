@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Module 2 Lab — HTTP, Cookies, Sessions &amp; Cache</title>
+<title>Module 2 Lab — HTTP, HTTP, Cookies, Sessions &amp; Cache</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -198,7 +198,7 @@ textarea.answered{border-color:var(--teal-bd);background:#fafffe}
 </div>
 <div class="shell">
 <nav class="sidebar" id="sidebar">
- <div class="sidebar-logo">HTTP, Cookies &amp; Cache <span class="mod-badge">Mod 2</span></div>
+ <div class="sidebar-logo">Cookies &amp; Cache <span class="mod-badge">Mod 2</span></div>
  <div class="sidebar-title">Exercises</div>
  <div id="navItems"></div>
  <div class="progress-bar-wrap">
@@ -335,8 +335,8 @@ sections:[
 // =========================================================
 // EX 3 — SESSIONS (~10 min)
 // =========================================================
-{id:'ex3',tag:'Exercise 3 \u00b7 ~10 min',tagColor:'#3C3489',tagBg:'#EEEDFE',
-title:'Sessions \u2014 The Server Remembers You',
+{id:'ex3',tag:'Exercise 3 \u00b7 ~20 min',tagColor:'#3C3489',tagBg:'#EEEDFE',
+title:'Sessions & localStorage',
 desc:'Trace the session handshake step-by-step and find the session cookie in DevTools.',
 setup:'Keep your browser open and log in to any website (GitHub, university portal, etc.).',
 sections:[
@@ -349,13 +349,18 @@ sections:[
  type:'os-cmd',cmds:[{os:'What to look for',tag:'mac',cmd:'Name: sessionid / PHPSESSID / connect.sid\nValue: a long random string\nHttpOnly: Secure: '}],
  note:'The value is a random locker number \u2014 the real data lives on the server.'},
  {heading:'Step 2 \u2014 Session details table',intro:'Fill in what you found:',type:'session-details-table'},
- {heading:'Step 3 \u2014 First-party vs Third-party cookies',type:'info',color:'amber',icon:'',
- title:'Not all cookies are from sites you deliberately visit',
- body:'When nytimes.com embeds an ad from <strong>AdX.com</strong>, AdX can also set a cookie. Since you did not navigate to AdX.com yourself, this is a <strong>third-party cookie</strong>. AdX can track you across every site showing their ads. Modern browsers are phasing these out.'},
- {heading:'The sock ad mystery',type:'third-party-scenario'},
+ // {heading:'Step 3 \u2014 First-party vs Third-party cookies',type:'info',color:'amber',icon:'',
+ // title:'Not all cookies are from sites you deliberately visit',
+ // body:'When nytimes.com embeds an ad from <strong>AdX.com</strong>, AdX can also set a cookie. Since you did not navigate to AdX.com yourself, this is a <strong>third-party cookie</strong>. AdX can track you across every site showing their ads. Modern browsers are phasing these out.'},
+ //{heading:'The sock ad mystery',type:'third-party-scenario'},
+ {heading:'Step 3 — localStorage Activity — The Browser Memory',type:'localstorage-lab'},
  {heading:'Reflection',questions:[
  {id:'2r1',text:'Q1. In your own words, trace the full session flow: what does the server send on successful login? What does the browser send on the next request? What does the server do with it?',rows:4},
  {id:'2r2',text:'Q2. An attacker steals a sessionID cookie via XSS. What can they do? What is this attack called? How does server-side session expiry limit the damage?',rows:3},
+ {id:'2r3',text:'Q3. Part A — A3. You closed the tab, reopened the same website from Part A, and ran localStorage.getItem("name"). Was the value still there? What does this tell you about localStorage lifetime compared to sessionStorage?',rows:3},
+ {id:'2r4',text:'Q4. Part B — Bug Fix. Explain why the junior developer\'s code failed. What did console.log(loaded.items) return after your fix?',rows:4},
+ {id:'2r5',text:'Q5. Part C — Decision. One row in the decision table is a "trick question" that security experts debate. Which cookie/storage type is it? What is the debate about?',rows:3},
+ {id:'2r6',text:'Q6. localStorage vs Server Session — A user\'s shopping cart is stored in localStorage. They switch to a different browser/device. Is the cart still there? If you used a Server Session instead, would it be? Explain the trade-off.',rows:4},
  ]}
 ]},
 
@@ -382,12 +387,12 @@ sections:[
  {heading:'Cache headers observation table',
  intro:'Click any CSS/JS/image resource \u2192 Response Headers. Record what you find:',
  type:'cache-observe-table'},
- {heading:'Step 2 \u2014 Decode a Cache-Control header',type:'cache-decode'},
- {heading:'Step 3 \u2014 How Conditional GET works',type:'conditional-get'},
+ // {heading:'Step 2 \u2014 Decode a Cache-Control header',type:'cache-decode'},
+ //{heading:'Step 3 \u2014 How Conditional GET works',type:'conditional-get'},
  {heading:'Cache-Control directive quiz',intro:'Match each directive to its meaning:',type:'cache-quiz'},
  {heading:'Reflection',questions:[
  {id:'3r1',text:'Q1. You deployed a bug fix to main.js but users still see the old version. Cache-Control: max-age=86400 is set. What is happening? Give two strategies to force users to get the new file.',rows:4},
- {id:'3r2',text:'Q2. A bank account balance page is cached by a CDN. Why is this dangerous? What Cache-Control value prevents it?',rows:3},
+ //{id:'3r2',text:'Q2. A bank account balance page is cached by a CDN. Why is this dangerous? What Cache-Control value prevents it?',rows:3},
  ]}
 ]},
 
@@ -456,6 +461,7 @@ function buildSection(s){
  else if(t==='cookie-attr-quiz') h+=cookieAttrQuiz();
  else if(t==='spot-the-diff') h+=spotTheDiff();
  else if(t==='samesite-lab') h+=samesiteLab();
+ else if(t==='localstorage-lab') h+=localStorageLab();
  else if(t==='session-flow') h+=sessionFlow();
  else if(t==='session-details-table')h+=sessionDetailsTable();
  else if(t==='third-party-scenario') h+=thirdPartyScenario();
@@ -535,7 +541,7 @@ function cookieObserveTable(){
  var cols=['Cookie name','Value (first 5-10 chars)','Domain','Expires / Max-Age','HttpOnly?','Secure?'],h='<div class="table-wrap"><table class="lab-table"><thead><tr>';
  cols.forEach(function(c){h+='<th>'+c+'</th>';});
  h+='</tr></thead><tbody><tr class="example-row"><td>_gh_sess</td><td>AbCdEfGhIjKlMnOpQrSt</td><td>github.com</td><td>Session end</td><td></td><td></td></tr>';
- for(var r=1;r<=3;r++){h+='<tr>';for(var c=0;c<6;c++){h+='<td><input type="text" placeholder="&#x2014;" oninput="onT(\'cot'+r+c+'\')" id="cot'+r+c+'"></td>';}h+='</tr>';}
+ for(var r=1;r<=3;r++){h+='<tr>';for(var c=0;c<6;c++){h+='<td><input type="text" placeholder="&#x2014;" oninput="onT(\'cot'+r+c+'\')" id="cot'+r+c+'""></td>';}h+='</tr>';}
  return h+'</tbody></table></div>';
 }
 
@@ -645,8 +651,8 @@ function samesiteLab(){
  tbl += '<tr>';
  tbl += '<td><code>' + r[0] + '</code></td>';
  tbl += '<td style="font-size:12px;color:#5f5e5a">' + r[1] + '</td>';
- tbl += '<td><input type="text" placeholder="Strict / Lax / None" oninput="onT(\'sst' + i + '\')" id="sst' + i + '" style="width:130px"></td>';
- tbl += '<td><input type="text" placeholder="Your reason..." oninput="onT(\'ssr' + i + '\')" id="ssr' + i + '"></td>';
+ tbl += '<td><input type="text" placeholder="Strict / Lax / None" oninput="onT(\'sst' + i + '\')" id="sst' + i + '" style="width:130px""></td>';
+ tbl += '<td><input type="text" placeholder="Your reason..." oninput="onT(\'ssr' + i + '\')" id="ssr' + i + '""></td>';
  tbl += '</tr>';
  });
  tbl += '</tbody></table></div>';
@@ -661,6 +667,130 @@ function samesiteLab(){
 
  return csrf + cards + chromNote + devtask + tbl +
  '<p style="font-size:13.5px;font-weight:600;color:var(--nav);margin:1rem 0 .4rem"> Quick Quiz &mdash; pick the right SameSite value:</p>' + quiz;
+}
+
+
+function localStorageLab(){
+
+  // ── Comparison mini-table ─────────────────────────────
+  var compTable =
+    '<p style="font-size:13.5px;font-weight:600;color:var(--nav);margin:0 0 .5rem">Where does data live? Quick reminder:</p>' +
+    '<div class="table-wrap" style="margin-bottom:1rem"><table class="lab-table"><thead><tr>' +
+    '<th></th><th>localStorage</th><th>sessionStorage</th><th>Cookie</th><th>Server Session</th>' +
+    '</tr></thead><tbody>' +
+    '<tr><td class="row-label">Lifetime</td><td>Forever</td><td>Tab only</td><td>max-age</td><td>Server invalidates</td></tr>' +
+    '<tr><td class="row-label">Size</td><td>5-10 MB</td><td>5-10 MB</td><td>4 KB</td><td>Unlimited</td></tr>' +
+    '<tr><td class="row-label">JS readable</td><td>Yes</td><td>Yes</td><td>No (HttpOnly)</td><td>No (ID only)</td></tr>' +
+    '<tr><td class="row-label">Sent to server</td><td>Never</td><td>Never</td><td>Always</td><td>ID via cookie</td></tr>' +
+    '<tr><td class="row-label">XSS risk</td><td style="color:#791F1F;font-weight:600">High</td><td style="color:#791F1F;font-weight:600">High</td><td>Low*</td><td>Low*</td></tr>' +
+    '</tbody></table></div>';
+
+  // ── Part A — See It Live ──────────────────────────────
+  var partA =
+    '<div class="info-box blue" style="margin-bottom:.75rem"><h4>Part A — See It Live</h4>' +
+    '<p>Open the browser Console (F12 → Console) on any site. Type each command below one at a time and observe the output.</p></div>' +
+    '<div class="cmd-block" style="margin-bottom:.75rem">' +
+    '<span class="os-tag mac">Console</span><br>' +
+    '<span class="cmt">// 1. Store three items</span><br>' +
+    '<span class="cmd">localStorage.setItem("name", "Alice")</span><br>' +
+    '<span class="cmd">localStorage.setItem("score", "42")</span><br>' +
+    '<span class="cmd">localStorage.setItem("theme", "dark")</span><br><br>' +
+    '<span class="cmt">// 2. Read one back</span><br>' +
+    '<span class="cmd">localStorage.getItem("name")</span><br><br>' +
+    '<span class="cmt">// 3. See everything stored</span><br>' +
+    '<span class="cmd">console.log(localStorage)</span><br><br>' +
+    '<span class="cmt">// 4. Remove one</span><br>' +
+    '<span class="cmd">localStorage.removeItem("score")</span><br>' +
+    '<span class="cmd">localStorage.getItem("score")</span><br><br>' +
+    '<span class="cmt">// 5. Wipe everything</span><br>' +
+    '<span class="cmd">localStorage.clear()</span>' +
+    '</div>';
+
+  var a1 = '<div class="table-wrap" style="margin-bottom:.5rem"><table class="lab-table"><thead><tr><th>Step</th><th>Command</th><th>What did you see? (write your output)</th></tr></thead><tbody>' +
+    '<tr><td>1</td><td><code>setItem x3</code></td><td><input type="text" placeholder="No output — undefined" oninput="onT(\'lsa1\')" id="lsa1""></td></tr>' +
+    '<tr><td>2</td><td><code>getItem("name")</code></td><td><input type="text" placeholder="e.g. Alice" oninput="onT(\'lsa2\')" id="lsa2""></td></tr>' +
+    '<tr><td>3</td><td><code>console.log(localStorage)</code></td><td><input type="text" placeholder="e.g. Storage {name: Alice, score: 42...}" oninput="onT(\'lsa3\')" id="lsa3""></td></tr>' +
+    '<tr><td>4</td><td><code>getItem("score") after remove</code></td><td><input type="text" placeholder="e.g. null" oninput="onT(\'lsa4\')" id="lsa4""></td></tr>' +
+    '</tbody></table></div>';
+
+  var a2 = '<div class="info-box amber" style="margin:.75rem 0"><h4>A2. Lifetime test</h4>' +
+    '<p>After step 5 (clear), close the tab completely. Reopen the same site. Open Console and type:</p>' +
+    '<div class="cmd-block" style="margin:.4rem 0"><span class="cmd">localStorage.getItem("name")</span></div>' +
+    '<p style="margin:.4rem 0 0">Wait — before you run it, pick what you <strong>expect</strong> to see:</p></div>' +
+    [
+      {id:'lsq1', q:'After closing the tab and reopening, localStorage.getItem("name") returns:', opts:['null — it was cleared with clear()', '"Alice" — localStorage survives tab close', '"Alice" — but only for 30 min', 'undefined — the key never existed'], ans:'null — it was cleared with clear()'},
+    ].map(quizBlock).join('') +
+    '<div class="table-wrap" style="margin-top:.5rem"><table class="lab-table"><thead><tr><th>Scenario</th><th>localStorage survives?</th><th>sessionStorage survives?</th></tr></thead><tbody>' +
+    '<tr><td>Close and reopen the tab</td>' +
+    '<td><input type="text" placeholder="Yes / No" oninput="onT(\'lsb1\')" id="lsb1" style="width:80px""></td>' +
+    '<td><input type="text" placeholder="Yes / No" oninput="onT(\'lsb2\')" id="lsb2" style="width:80px""></td></tr>' +
+    '<tr><td>Close and reopen the browser</td>' +
+    '<td><input type="text" placeholder="Yes / No" oninput="onT(\'lsb3\')" id="lsb3" style="width:80px""></td>' +
+    '<td><input type="text" placeholder="Yes / No" oninput="onT(\'lsb4\')" id="lsb4" style="width:80px""></td></tr>' +
+    '<tr><td>Open same site in a new tab</td>' +
+    '<td><input type="text" placeholder="Yes / No" oninput="onT(\'lsb5\')" id="lsb5" style="width:80px""></td>' +
+    '<td><input type="text" placeholder="Yes / No" oninput="onT(\'lsb6\')" id="lsb6" style="width:80px""></td></tr>' +
+    '</tbody></table></div>';
+
+  // ── Part B — Spot the Bug ─────────────────────────────
+  var partB =
+    '<div class="info-box red" style="margin:1rem 0 .75rem"><h4>Part B — Spot the Bug</h4>' +
+    '<p>A junior developer writes this code to save a shopping cart. Run it in the Console and observe what goes wrong.</p></div>' +
+    '<div class="cmd-block" style="margin-bottom:.75rem">' +
+    '<span class="os-tag mac">Broken code</span><br>' +
+    '<span class="cmt">// Save cart</span><br>' +
+    '<span class="cmd">const cart = { items: ["laptop", "mouse"], total: 4500 }</span><br>' +
+    '<span class="cmd">localStorage.setItem("cart", cart)</span><br><br>' +
+    '<span class="cmt">// Load cart later</span><br>' +
+    '<span class="cmd">const loaded = localStorage.getItem("cart")</span><br>' +
+    '<span class="cmd">console.log(loaded.items)   // why is this undefined???</span>' +
+    '</div>' +
+    '<div class="table-wrap" style="margin-bottom:.75rem"><table class="lab-table"><thead><tr><th>Question</th><th>Your answer</th></tr></thead><tbody>' +
+    '<tr><td class="row-label">What does localStorage.getItem("cart") actually return?</td><td><input type="text" placeholder="e.g. [object Object]" oninput="onT(\'lsc1\')" id="lsc1""></td></tr>' +
+    '<tr><td class="row-label">Why does loaded.items return undefined?</td><td><input type="text" placeholder="localStorage only stores strings..." oninput="onT(\'lsc2\')" id="lsc2""></td></tr>' +
+    '</tbody></table></div>' +
+    '<div class="info-box teal" style="margin-bottom:.5rem"><h4>Fix it</h4><p>Rewrite the code using <code>JSON.stringify()</code> when saving and <code>JSON.parse()</code> when loading. Run it in the Console.</p></div>' +
+    '<div class="cmd-block">' +
+    '<span class="os-tag mac">Fixed version — fill in the blanks</span><br>' +
+    '<span class="cmt">// Save</span><br>' +
+    '<span class="cmd">localStorage.setItem("cart", ' +
+    '<input type="text" id="lsfix1" oninput="onT(this.id)" placeholder="JSON.stringify" style="font-family:var(--mono);font-size:13px;width:170px;border:1.5px solid #5DCAA5;border-radius:4px;padding:2px 8px;background:#253545;color:#EF9F27;display:inline-block;vertical-align:middle"">' +
+    '(cart))</span><br><br>' +
+    '<span class="cmt">// Load</span><br>' +
+    '<span class="cmd">const loaded = ' +
+    '<input type="text" id="lsfix2" oninput="onT(this.id)" placeholder="JSON.parse" style="font-family:var(--mono);font-size:13px;width:170px;border:1.5px solid #5DCAA5;border-radius:4px;padding:2px 8px;background:#253545;color:#EF9F27;display:inline-block;vertical-align:middle"">' +
+    '(localStorage.getItem("cart"))</span><br>' +
+    '<span class="cmd">console.log(loaded.items) </span>' +
+    '</div>';
+
+  // ── Part C — Decision Table ───────────────────────────
+  var partC =
+    '<div class="info-box purple" style="margin:1rem 0 .6rem"><h4>Part C — localStorage vs Cookie Decision</h4>' +
+    '<p>For each scenario, decide where to store the data. Consider: Does the server need it? Is it sensitive? How large is it?</p></div>' +
+    '<div class="table-wrap"><table class="lab-table"><thead><tr>' +
+    '<th>Data</th><th>localStorage or Cookie?</th><th>Your reason</th>' +
+    '</tr></thead><tbody>' +
+    '<tr class="example-row"><td>User theme preference (client-only)</td><td>localStorage</td><td>Server does not need it; JS reads it directly; 4 KB cookie limit not an issue but no benefit sending it every request</td></tr>';
+
+  var decRows = [
+    ['Login session token', ''],
+    ['Shopping cart (no account)', ''],
+    ['Language preference (server renders page)', ''],
+    ['JWT auth token', ''],
+    ['Last product the user viewed (analytics only)', ''],
+  ];
+  decRows.forEach(function(r, i){
+    partC += '<tr>' +
+      '<td>' + r[0] + '</td>' +
+      '<td><input type="text" placeholder="localStorage / Cookie / Server Session" oninput="onT(\'lcd' + i + '\')" id="lcd' + i + '" style="width:170px""></td>' +
+      '<td><input type="text" placeholder="Your reason..." oninput="onT(\'lcr' + i + '\')" id="lcr' + i + '""></td>' +
+      '</tr>';
+  });
+  partC += '</tbody></table></div>' +
+    '<div class="info-box amber" style="margin-top:.75rem"><h4>The Trick Question</h4>' +
+    '<p>One row above is heavily debated in the security community. Which one? Hint: it involves authentication. Write your answer in Q5 of the Reflection below.</p></div>';
+
+  return compTable + partA + a1 + a2 + partB + partC;
 }
 
 // ---- Session builders ----
@@ -720,9 +850,9 @@ function cacheObserveTable(){
 function cacheDecode(){return '<div class="info-box blue"><h4> Decode this real-world Cache-Control header</h4><p>A server returns this for a versioned image asset:</p></div>'+
  '<div class="cmd-block"><span class="os-tag mac">Response Header</span><br><span class="cmd">Cache-Control: public, max-age=31536000, immutable</span><br><span class="cmt"># What does each part mean?</span></div>'+
  '<div class="table-wrap"><table class="lab-table"><thead><tr><th>Directive</th><th>What it means (your own words)</th></tr></thead><tbody>'+
- '<tr><td class="row-label"><code>public</code></td><td><input type="text" placeholder="Who is allowed to cache this?" oninput="onT(\'ccd1\')" id="ccd1"></td></tr>'+
- '<tr><td class="row-label"><code>max-age=31536000</code></td><td><input type="text" placeholder="How long is it valid? Calculate the days." oninput="onT(\'ccd2\')" id="ccd2"></td></tr>'+
- '<tr><td class="row-label"><code>immutable</code></td><td><input type="text" placeholder="What does the server promise about this content?" oninput="onT(\'ccd3\')" id="ccd3"></td></tr>'+
+ '<tr><td class="row-label"><code>public</code></td><td><input type="text" placeholder="Who is allowed to cache this?" oninput="onT(\'ccd1\')" id="ccd1""></td></tr>'+
+ '<tr><td class="row-label"><code>max-age=31536000</code></td><td><input type="text" placeholder="How long is it valid? Calculate the days." oninput="onT(\'ccd2\')" id="ccd2""></td></tr>'+
+ '<tr><td class="row-label"><code>immutable</code></td><td><input type="text" placeholder="What does the server promise about this content?" oninput="onT(\'ccd3\')" id="ccd3""></td></tr>'+
  '</tbody></table></div>'+
  '<div class="info-box gray"><h4> Why use all three together?</h4><p>Used for <strong>versioned assets</strong> like <code>app.v3f9a2.css</code>. The content hash in the filename means the content truly never changes &#x2014; so cache it everywhere, for a full year, and skip revalidation entirely.</p></div>';}
 
@@ -755,9 +885,9 @@ function orderStagesTable(){
  ];
  var h='<div class="table-wrap"><table class="lab-table"><thead><tr><th style="width:60px">Order (1\u20136)</th><th>Stage</th><th>What happens here (one sentence)</th></tr></thead><tbody>';
  stages.forEach(function(s,i){
- h+='<tr><td><input type="text" placeholder="1\u20136" style="width:50px;text-align:center" oninput="onT(\'os'+i+'n\')" id="os'+i+'n"></td>'+
+ h+='<tr><td><input type="text" placeholder="1\u20136" style="width:50px;text-align:center" oninput="onT(\'os'+i+'n\')" id="os'+i+'n""></td>'+
  '<td class="row-label">'+s+'</td>'+
- '<td><input type="text" placeholder="Describe in one sentence\u2026" oninput="onT(\'os'+i+'d\')" id="os'+i+'d"></td></tr>';
+ '<td><input type="text" placeholder="Describe in one sentence\u2026" oninput="onT(\'os'+i+'d\')" id="os'+i+'d""></td></tr>';
  });
  return h+'</tbody></table></div>';
 }
@@ -829,8 +959,8 @@ function diagnoseTable(){
  var h='<div class="table-wrap"><table class="lab-table"><thead><tr><th>Scenario</th><th style="width:80px">Code</th><th>Why (one sentence)</th></tr></thead><tbody>';
  scenarios.forEach(function(sc,i){
  h+='<tr><td class="row-label" style="white-space:normal;min-width:200px;font-weight:400;color:var(--txt)">'+sc+'</td>'+
- '<td><input type="text" placeholder="e.g. 404" style="width:70px;text-align:center" oninput="onT(\'diag'+i+'c\')" id="diag'+i+'c"></td>'+
- '<td><input type="text" placeholder="Explain\u2026" oninput="onT(\'diag'+i+'w\')" id="diag'+i+'w"></td></tr>';
+ '<td><input type="text" placeholder="e.g. 404" style="width:70px;text-align:center" oninput="onT(\'diag'+i+'c\')" id="diag'+i+'c""></td>'+
+ '<td><input type="text" placeholder="Explain\u2026" oninput="onT(\'diag'+i+'w\')" id="diag'+i+'w""></td></tr>';
  });
  return h+'</tbody></table></div>';}
 
@@ -842,8 +972,8 @@ function failureTable(){
  '</tr></thead><tbody>';
  scenarios.forEach(function(s,i){
  h+='<tr><td class="row-label">'+s+'</td>'+
- '<td><input type="text" placeholder="e.g. DNS resolution" oninput="onT(\'fail'+i+'s\')" id="fail'+i+'s"></td>'+
- '<td><input type="text" placeholder="e.g. network" oninput="onT(\'fail'+i+'o\')" id="fail'+i+'o"></td></tr>';
+ '<td><input type="text" placeholder="e.g. DNS resolution" oninput="onT(\'fail'+i+'s\')" id="fail'+i+'s""></td>'+
+ '<td><input type="text" placeholder="e.g. network" oninput="onT(\'fail'+i+'o\')" id="fail'+i+'o""></td></tr>';
  });
  return h+'</tbody></table></div>';}
 
@@ -870,7 +1000,7 @@ function udpScenariosTable(){
  var h='<div class="table-wrap"><table class="lab-table"><thead><tr><th>Scenario</th><th>What you observed \u2014 and why is UDP a good or bad fit here?</th></tr></thead><tbody>';
  sc.forEach(function(s,i){
  h+='<tr><td class="row-label">'+s+'</td>'+
- '<td><input type="text" placeholder="Describe\u2026" oninput="onT(\'udp'+i+'\')" id="udp'+i+'"></td></tr>';
+ '<td><input type="text" placeholder="Describe\u2026" oninput="onT(\'udp'+i+'\')" id="udp'+i+'""></td></tr>';
  });
  return h+'</tbody></table></div>';}
 
@@ -889,7 +1019,7 @@ function protocolPickerTable(){
  apps.forEach(function(a,i){
  h+='<tr><td class="row-label" style="white-space:normal;font-weight:400;color:var(--txt)">'+a+'</td>'+
  '<td><select onchange="onT(\'pp'+i+'p\')" id="pp'+i+'p" style="font-size:12px"><option value="">&#x2014;</option><option>TCP</option><option>UDP</option><option>Either</option></select></td>'+
- '<td><input type="text" placeholder="Justify in one line\u2026" oninput="onT(\'pp'+i+'w\')" id="pp'+i+'w"></td></tr>';
+ '<td><input type="text" placeholder="Justify in one line\u2026" oninput="onT(\'pp'+i+'w\')" id="pp'+i+'w""></td></tr>';
  });
  return h+'</tbody></table></div>';}
 
@@ -925,7 +1055,7 @@ function grandTable(){
  events.forEach(function(ev,i){
  h+='<tr><td class="row-label" style="white-space:normal;min-width:150px">'+ev+'</td>'+
  '<td style="min-width:160px"><select onchange="onT(\'ga'+i+'m\')" id="ga'+i+'m">'+opts+'</select></td>'+
- '<td><input type="text" placeholder="Explain\u2026" oninput="onT(\'ga'+i+'e\')" id="ga'+i+'e"></td></tr>';
+ '<td><input type="text" placeholder="Explain\u2026" oninput="onT(\'ga'+i+'e\')" id="ga'+i+'e""></td></tr>';
  });
  return h+'</tbody></table></div>';
 }
@@ -995,16 +1125,27 @@ function updateProgress(){
 // PASTE DETECTION
 // =========================================================
 function handlePaste(e,qid){
- e.preventDefault();pasteStrikes++;
- var el=document.getElementById('qa-'+qid);if(el) el.value='';
- logIntegrity(' Paste blocked (strike '+pasteStrikes+'/'+MAX_STRIKES+')');
+ e.preventDefault();
+ // find element: try qa- prefix (textarea), then plain id (input)
+ var el=document.getElementById('qa-'+qid)||document.getElementById(qid)||e.target;
+ if(el) el.value='';
+ triggerStrike();
+}
+function triggerStrike(){
+ pasteStrikes++;
+ logIntegrity('Paste blocked (strike '+pasteStrikes+'/'+MAX_STRIKES+')');
  var row=document.getElementById('apStrikeRow');row.innerHTML='';
  for(var i=0;i<MAX_STRIKES;i++){var d=document.createElement('div');d.className='ap-sdot'+(i<pasteStrikes?' hit':'');row.appendChild(d);}
- document.getElementById('apSubMsg').textContent=pasteStrikes>=MAX_STRIKES?'Maximum strikes reached.':'Strike '+pasteStrikes+' of '+MAX_STRIKES+'.';
+ var msg=document.getElementById('apMsg');
+ if(msg) msg.textContent=pasteStrikes>=MAX_STRIKES
+   ?'You have reached the maximum number of paste attempts. This will be recorded.'
+   :'Pasting is not allowed. Please type your answer in your own words.';
+ document.getElementById('apSubMsg').textContent=pasteStrikes>=MAX_STRIKES?'Maximum strikes reached. This incident has been logged.':'Strike '+pasteStrikes+' of '+MAX_STRIKES+'.';
  var chip=document.getElementById('strikeChip');
- chip.style.display='inline-flex';chip.textContent=' '+pasteStrikes+' paste strike'+(pasteStrikes>1?'s':'');
+ chip.style.display='inline-flex';chip.textContent=pasteStrikes+' paste strike'+(pasteStrikes>1?'s':'');
  chip.className='strike-chip'+(pasteStrikes>=MAX_STRIKES?' danger':'');
  document.getElementById('apOverlay').classList.add('show');
+ saveDraft();
 }
 function dismissWarning(){document.getElementById('apOverlay').classList.remove('show');}
 function logIntegrity(msg){
@@ -1068,6 +1209,19 @@ function restoreDraft(){
 }
 window.addEventListener('DOMContentLoaded',function(){
  renderAll();restoreDraft();
+ // Global paste guard — catches paste on ANY input/textarea not already handled
+ document.addEventListener('paste',function(e){
+  var t=e.target;
+  var tag=t.tagName;
+  if(tag==='TEXTAREA'||tag==='INPUT'){
+   // Skip student info fields (name, id, class, date)
+   var skip=['f-name','f-id','f-class','f-date'];
+   if(skip.indexOf(t.id)!==-1) return;
+   e.preventDefault();
+   t.value='';
+   triggerStrike();
+  }
+ });
  document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
  logIntegrity('Lab ready. Good luck!');;
  setInterval(function(){try{localStorage.setItem('cn2-lab2-draft',JSON.stringify(collectAll()));}catch(e){}},30000);
