@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DBMS Lab — Relational Model</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f2ea;
+  --card:#fffdfa;
+  --maroon:#6E1423;
+  --maroon-light:#8C1D2E;
+  --gold:#B8860B;
+  --gold-bg:#FBF1D8;
+  --gold-bd:#E3B23C;
+  --sage:#3F5B45;
+  --sage-bg:#E7EFE8;
+  --sage-bd:#8FB79A;
+  --plum:#4A2545;
+  --plum-bg:#F1E7EF;
+  --plum-bd:#B78FAE;
+  --amber:#7A4A0E;
+  --amber-bg:#FBEEDD;
+  --amber-bd:#E3A24C;
+  --red:#7A1F1F;
+  --red-bg:#FBEBEA;
+  --red-bd:#D98E8E;
+  --blue-bg:#EAF0F6;
+  --blue-bd:#9BB6D1;
+  --txt:#2a211c;
+  --txt2:#6b5d51;
+  --txt3:#9c8f83;
+  --bdr:#e3d7c4;
+  --bdr2:#cdbc9f;
+  --radius:10px;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+
+html,body{min-height:100%;background:var(--bg);font-family:var(--sans);color:var(--txt);font-size:15px;line-height:1.6}
+
+.shell{display:flex;min-height:100vh}
+.sidebar{width:260px;flex-shrink:0;background:var(--maroon);position:sticky;top:0;height:100vh;overflow-y:auto;padding:1.5rem 0}
+.main{flex:1;max-width:860px;padding:2rem 2.5rem 4rem;min-width:0}
+@media(max-width:768px){.sidebar{display:none}.main{padding:1.25rem 1rem 3rem}}
+
+.sidebar-logo{font-size:18px;font-weight:700;color:#fff;padding:0 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:8px;line-height:1.3}
+.sidebar-logo .mod-badge{font-size:11px;font-weight:600;background:rgba(227,178,60,.22);color:#E3B23C;border-radius:4px;padding:2px 7px;letter-spacing:.05em}
+.sidebar-title{font-size:11px;font-weight:600;color:rgba(255,255,255,.45);letter-spacing:.08em;text-transform:uppercase;padding:0 1.25rem;margin-bottom:.75rem}
+.nav-item{display:flex;align-items:center;gap:10px;padding:.55rem 1.25rem;cursor:pointer;transition:background .15s;font-size:13px;color:rgba(255,255,255,.75);border-left:3px solid transparent}
+.nav-item:hover{background:rgba(255,255,255,.08)}
+.nav-item.active{background:rgba(255,255,255,.12);color:#fff;border-left-color:#E3B23C}
+.nav-item.done{color:rgba(255,255,255,.85)}
+.nav-dot{width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;transition:all .2s}
+.nav-dot.done{background:#E3B23C;border-color:#E3B23C;color:#3d2a06}
+.nav-dot.active{border-color:#fff;color:#fff}
+.progress-bar-wrap{padding:1rem 1.25rem .5rem;margin-top:.5rem}
+.progress-bar-label{font-size:11px;color:rgba(255,255,255,.5);margin-bottom:6px;display:flex;justify-content:space-between}
+.progress-bar{height:4px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:#E3B23C;border-radius:2px;transition:width .4s ease}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.75rem;flex-wrap:wrap;gap:12px}
+.topbar-left h1{font-size:22px;font-weight:700;color:var(--maroon);margin-bottom:2px}
+.topbar-left p{font-size:13px;color:var(--txt2)}
+.topbar-right{display:flex;gap:8px;align-items:center}
+button{font-family:var(--sans);cursor:pointer;border:none;border-radius:8px;font-size:13px;font-weight:500;padding:8px 16px;transition:all .15s}
+button:disabled{opacity:.4;cursor:not-allowed}
+.btn-ghost{background:transparent;border:1.5px solid var(--bdr2);color:var(--txt2)}
+.btn-ghost:hover:not(:disabled){background:var(--card);border-color:var(--maroon);color:var(--maroon)}
+.btn-primary{background:var(--maroon);color:#fff}
+.btn-primary:hover:not(:disabled){background:var(--maroon-light)}
+.btn-success{background:#3F5B45;color:#fff}
+.btn-success:hover:not(:disabled){background:#344c39}
+
+.student-banner{background:var(--card);border:1.5px solid var(--bdr);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1.75rem;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.student-banner h3{font-size:12px;font-weight:600;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.75rem}
+.student-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:520px){.student-grid{grid-template-columns:1fr}}
+.field-group{display:flex;flex-direction:column;gap:4px}
+.field-group label{font-size:12px;font-weight:600;color:var(--txt2)}
+.field-group input{border:1.5px solid var(--bdr);border-radius:6px;padding:7px 10px;font-size:14px;font-family:var(--sans);color:var(--txt);background:var(--bg);transition:border .15s}
+.field-group input:focus{outline:none;border-color:var(--maroon);background:#fff}
+
+.exercise-card{background:var(--card);border:1.5px solid var(--bdr);border-radius:var(--radius);margin-bottom:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden;display:none}
+.exercise-card.visible{display:block}
+.exercise-header{padding:1.25rem 1.5rem 1rem;border-bottom:1.5px solid var(--bdr)}
+.exercise-tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;display:inline-block;padding:2px 8px;border-radius:4px;margin-bottom:6px}
+.exercise-title{font-size:19px;font-weight:700;color:var(--maroon);margin-bottom:3px}
+.exercise-desc{font-size:13px;color:var(--txt2)}
+.exercise-body{padding:1.25rem 1.5rem}
+.exercise-progress{display:flex;align-items:center;gap:8px;margin-top:.75rem}
+.ex-prog-bar{flex:1;height:5px;background:var(--bg);border-radius:3px;overflow:hidden}
+.ex-prog-fill{height:100%;background:var(--gold-bd);border-radius:3px;transition:width .3s}
+.ex-prog-label{font-size:11px;color:var(--txt3);white-space:nowrap}
+
+.info-box{border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem;border:.5px solid}
+.info-box h4{font-size:13px;font-weight:700;margin-bottom:.4rem}
+.info-box p,.info-box ul{font-size:13.5px;line-height:1.7}
+.info-box ul{padding-left:1.25rem}
+.info-box.gold{background:var(--gold-bg);border-color:var(--gold-bd)}.info-box.gold h4{color:var(--gold)}
+.info-box.plum{background:var(--plum-bg);border-color:var(--plum-bd)}.info-box.plum h4{color:var(--plum)}
+.info-box.amber{background:var(--amber-bg);border-color:var(--amber-bd)}.info-box.amber h4{color:var(--amber)}
+.info-box.red{background:var(--red-bg);border-color:var(--red-bd)}.info-box.red h4{color:var(--red)}
+.info-box.blue{background:var(--blue-bg);border-color:var(--blue-bd)}.info-box.blue h4{color:#2A4A6B}
+.info-box.sage{background:var(--sage-bg);border-color:var(--sage-bd)}.info-box.sage h4{color:var(--sage)}
+.info-box.gray{background:#f2ede2;border-color:var(--bdr)}.info-box.gray h4{color:var(--txt2)}
+
+.section-heading{font-size:15px;font-weight:700;color:var(--maroon);margin:1.5rem 0 .75rem;padding-bottom:.4rem;border-bottom:2px solid var(--gold-bg)}
+.step-label{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--maroon);background:var(--gold-bg);border-radius:4px;padding:3px 10px;margin-bottom:.6rem}
+
+.question-block{margin-bottom:1.25rem}
+.question-text{font-size:14px;font-weight:600;color:var(--txt);margin-bottom:.5rem;line-height:1.5}
+.question-text .qnum{color:var(--maroon);margin-right:4px}
+textarea{width:100%;border:1.5px solid var(--bdr);border-radius:8px;padding:10px 12px;font-size:13.5px;font-family:var(--sans);color:var(--txt);background:var(--bg);resize:vertical;transition:border .15s;line-height:1.6;min-height:72px;box-sizing:border-box;overflow:hidden}
+textarea:focus{outline:none;border-color:var(--maroon);background:#fff}
+textarea.answered{border-color:var(--gold-bd);background:#fffdf6}
+
+.table-wrap{overflow-x:auto;margin-bottom:1rem;border-radius:8px;border:1.5px solid var(--bdr)}
+.lab-table{width:100%;border-collapse:collapse;font-size:13px}
+.lab-table th{background:var(--maroon);color:#fff;padding:8px 10px;text-align:left;font-weight:600;font-size:12px}
+.lab-table td{border-bottom:1px solid var(--bdr);padding:5px 7px;vertical-align:top}
+.lab-table tr:last-child td{border-bottom:none}
+.lab-table tr:nth-child(even) td{background:#fbf6ec}
+.lab-table td input[type=text],.lab-table td select{width:100%;border:1px solid var(--bdr);border-radius:4px;padding:5px 7px;font-size:12.5px;font-family:var(--sans);background:#fff;color:var(--txt)}
+.lab-table td input[type=text]:focus,.lab-table td select:focus{outline:none;border-color:var(--maroon)}
+.lab-table .row-label{font-weight:600;color:var(--maroon);background:#f2ede2 !important;white-space:nowrap;font-size:12.5px}
+.lab-table .example-row td{background:var(--gold-bg) !important;color:var(--amber);font-style:italic;font-size:12px}
+.lab-table .ref-cell{font-size:12.5px;color:var(--txt2)}
+
+.cmd-block{background:#2b1614;border-radius:8px;padding:.75rem 1rem;margin:.5rem 0 .9rem;font-family:var(--mono);font-size:13px;color:#e8dccb;line-height:1.8}
+.cmd-block .os-tag{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.3rem}
+.cmd-block .os-tag.sql{color:#E3B23C}
+.cmd-block .os-tag.note{color:#8FB79A}
+.cmd-block .cmd{color:#fff}
+.cmd-block .cmt{color:#a9998a}
+
+.badge-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1rem}
+.prop-chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--plum);background:var(--plum-bg);border:1.5px solid var(--plum-bd);border-radius:20px;padding:5px 12px}
+
+.nav-btns{display:flex;justify-content:space-between;align-items:center;margin-top:1.75rem;padding-top:1.25rem;border-top:1.5px solid var(--bdr)}
+.nav-btns-right{display:flex;gap:8px}
+
+.completion-card{background:var(--card);border:2px solid var(--gold-bd);border-radius:var(--radius);padding:2rem;text-align:center;box-shadow:0 4px 16px rgba(184,134,11,.14);display:none}
+.completion-card.visible{display:block}
+.completion-card .check{font-size:52px;margin-bottom:.75rem}
+.completion-card h2{font-size:24px;font-weight:700;color:var(--maroon);margin-bottom:.5rem}
+.completion-card p{font-size:15px;color:var(--txt2);margin-bottom:1.5rem}
+.completion-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+.toast{position:fixed;bottom:1.25rem;right:1.25rem;background:var(--maroon);color:#fff;font-size:13px;padding:9px 16px;border-radius:8px;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;z-index:100}
+.toast.show{opacity:1;transform:translateY(0)}
+
+.ilog{font-family:var(--mono);font-size:11px;background:#f2ede2;border:1px solid var(--bdr);border-radius:6px;padding:.5rem .75rem;max-height:80px;overflow-y:auto;color:var(--txt2);margin-top:.5rem}
+.il-e{padding:1px 0;border-bottom:.5px solid var(--bdr)}
+.il-e:last-child{border-bottom:none}
+.il-w{color:#A32D2D;font-weight:500}
+.strike-chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#7A4A0E;background:#FBEEDD;border:1.5px solid #E3A24C;border-radius:20px;padding:4px 12px}
+.strike-chip.danger{color:#7A1F1F;background:#FBEBEA;border-color:#D98E8E}
+
+.ap-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.ap-overlay.show{opacity:1;pointer-events:all}
+.ap-modal{background:#fff;border-radius:14px;padding:2rem 2.25rem;max-width:440px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25);transform:scale(.93);transition:transform .2s}
+.ap-overlay.show .ap-modal{transform:scale(1)}
+.ap-modal .ap-icon{font-size:44px;margin-bottom:.75rem}
+.ap-modal h2{font-size:19px;font-weight:700;color:#7A1F1F;margin-bottom:.5rem}
+.ap-modal p{font-size:13.5px;color:#6b5d51;margin-bottom:1.25rem;line-height:1.6}
+.ap-modal .strikes-row{display:flex;justify-content:center;gap:8px;margin-bottom:1.25rem}
+.ap-sdot{width:16px;height:16px;border-radius:50%;border:2px solid #E3A24C;background:#fff;transition:background .3s}
+.ap-sdot.hit{background:#A32D2D;border-color:#A32D2D}
+.ap-modal .ap-dismiss{background:#6E1423;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;padding:10px 28px;cursor:pointer;transition:background .15s;margin-top:.25rem}
+.ap-modal .ap-dismiss:hover{background:#8C1D2E}
+.ap-sub{font-size:12.5px;color:#A32D2D;margin-bottom:1rem;min-height:18px}
+
+@media print{
+  .sidebar,.topbar-right,.nav-btns,.toast,.ap-overlay{display:none !important}
+  .main{padding:0;max-width:100%}
+  .exercise-card{display:block !important;break-inside:avoid;box-shadow:none;border:1px solid #ccc;margin-bottom:1rem}
+  .completion-card{display:none !important}
+  textarea{border:1px solid #ccc;min-height:50px}
+  body{font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<div class="ap-overlay" id="apOverlay">
+  <div class="ap-modal">
+    <div class="ap-icon">⚠️</div>
+    <h2>Paste detected</h2>
+    <p id="apMsg">Copy-pasting is not allowed in this lab. Please type your answer in your own words — this helps demonstrate your understanding. The pasted text has been discarded.</p>
+    <div class="strikes-row" id="apStrikeRow"></div>
+    <p id="apSubMsg" class="ap-sub"></p>
+    <button class="ap-dismiss" onclick="dismissWarning()">I understand — I will type my answer</button>
+  </div>
+</div>
+
+<div class="shell">
+
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    Relational Model
+    <span class="mod-badge">DBMS · 960231</span>
+  </div>
+  <div class="sidebar-title">Exercises</div>
+  <div id="navItems"></div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-label"><span>Overall progress</span><span id="progPct">0%</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+  </div>
+</nav>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>DBMS Lab — Database Introduction &amp; the Relational Model</h1>
+      <p>960231 Database Management System · Developer Track</p>
+    </div>
+    <div class="topbar-right">
+      <div class="strike-chip" id="strikeChip" style="display:none">⚠ Paste detected</div>
+      <button class="btn-ghost" onclick="saveDraft()">💾 Save draft</button>
+      <button class="btn-ghost" onclick="window.print()">🖨 Print / PDF</button>
+    </div>
+  </div>
+
+  <div class="student-banner">
+    <h3>Student information</h3>
+    <div class="student-grid">
+      <div class="field-group"><label for="f-name">Full name</label><input type="text" id="f-name" placeholder="Your name" oninput="updateProgress()"></div>
+      <div class="field-group"><label for="f-id">Student ID</label><input type="text" id="f-id" placeholder="e.g. s1234567" oninput="updateProgress()"></div>
+      <div class="field-group"><label for="f-class">Class / section</label><input type="text" id="f-class" placeholder="e.g. COMP201-A" oninput="updateProgress()"></div>
+      <div class="field-group"><label for="f-date">Date</label><input type="date" id="f-date" oninput="updateProgress()"></div>
+    </div>
+    <div style="margin-top:.9rem">
+      <div style="font-size:11px;font-weight:600;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Academic integrity log</div>
+      <div class="ilog" id="ilog"><div class="il-e">Lab opened — integrity monitoring active.</div></div>
+    </div>
+  </div>
+
+  <div id="exerciseContainer"></div>
+
+  <div class="completion-card" id="completionCard">
+    <div class="check">✅</div>
+    <h2>Lab complete!</h2>
+    <p>All questions answered. Download your responses and submit the JSON file to your course portal.</p>
+    <div class="completion-actions">
+      <!-- <button class="btn-success" onclick="downloadJSON()">⬇ Download answers (.json)</button> -->
+      <button class="btn-primary" onclick="window.print()">🖨 Save as PDF</button>
+      <button class="btn-ghost" onclick="goTo(0)">↺ Review from start</button>
+    </div>
+  </div>
+</main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════
+var SEVEN_PROPS = [
+  'Each relational table has a unique name',
+  'Each tuple (row) is unique',
+  'Each attribute (column) has a unique name',
+  'The order of tuples is insignificant',
+  'The order of attributes is insignificant',
+  'Each cell contains exactly one atomic value',
+  'The values of an attribute are all from the same domain'
+];
+
+var EXERCISES = [
+  {
+    id:'ex1', tag:'Exercise 1', tagColor:'#2A4A6B', tagBg:'#EAF0F6',
+    title:'Spot the Bug — The 7 Properties of Relations',
+    desc:'An intern imported a spreadsheet straight into a table called Employee_Data. It "works" — until it doesn\'t. Find every property of a relation it violates.',
+    setup:'This is a code-review exercise, except the "code" is a table. Read the data below like you would review a pull request: assume nothing, question everything.',
+    sections:[
+      {
+        heading:'The 7 Properties of Relations (your checklist)',
+        type:'props-checklist'
+      },
+      {
+        heading:'Exhibit A — table Employee_Data (as the intern created it)',
+        intro:'This is exactly what landed in the database. Study it before answering.',
+        type:'employee-data-table'
+      },
+      {
+        heading:'Diagnose the violations',
+        intro:'Identify which of the 7 properties are broken and explain why, citing the actual row/column that proves it — just like you\'d annotate a bug report.',
+        questions:[
+          { id:'1v1', text:'Violation 1 — which property is broken, and where in the table do you see it?', rows:3 },
+          { id:'1v2', text:'Violation 2 — which property is broken, and where in the table do you see it?', rows:3 },
+          { id:'1v3', text:'Violation 3 — which property is broken, and where in the table do you see it?', rows:3 },
+          { id:'1v4', text:'Violation 4 — which property is broken, and where in the table do you see it?', rows:3 },
+        ]
+      },
+      {
+        heading:'Step 2 — Propose the fix',
+        intro:'You\'re now the senior dev reviewing the intern\'s PR. Sketch how you\'d restructure Employee_Data so it satisfies all 7 properties (you can describe new column(s), or that phone numbers need their own table, etc.).',
+        questions:[
+          { id:'1fix', text:'Describe your fix in plain English (or a quick sketch of the corrected table structure).', rows:5 },
+        ]
+      }
+    ]
+  },
+
+  {
+    id:'ex2', tag:'Exercise 2', tagColor:'#3F5B45', tagBg:'#E7EFE8',
+    title:'Refactor the Spreadsheet — Minimum Duplication',
+    desc:'Take the raw HR export below and redesign it into relations with minimum duplication — the same instinct you\'d use to refactor a bloated data model in an app.',
+    setup:'Reference file: filebased_sample.xlsx (as distributed in class). The raw data is reproduced below so you can work directly in this lab.',
+    sections:[
+      {
+        heading:'Raw data — flat file export',
+        intro:'Notice how much repeats. Every repeated value is a future bug waiting to happen (update one row, forget the other three — welcome to data anomalies).',
+        type:'raw-employee-table'
+      },
+      {
+        heading:'Step 1 — Spot the repetition',
+        questions:[
+          { id:'2r1', text:'List at least three columns whose values repeat across multiple rows for the same person. Why does this repetition exist (hint: think about what one employee can have many of)?', rows:3 },
+          { id:'2r2', text:'If Jennifer Wallace got a raise, how many rows would you have to update in this flat file to keep the data consistent? What could go wrong if you missed one?', rows:3 },
+        ]
+      },
+      {
+        heading:'Step 2 — Design your relations',
+        intro:'Propose a set of separate tables (relations) that remove the duplication. For each table, list its name and its columns, and mark the primary key.',
+        type:'design-table'
+      },
+      {
+        heading:'Step 3 — Justify the split',
+        questions:[
+          { id:'2r3', text:'Explain how your design links Employee, Department, and Project together (what keys travel between tables as foreign keys?).', rows:4 },
+          { id:'2r4', text:'What is the minimum number of rows now needed to update if Jennifer Wallace gets a raise? Why is this an improvement?', rows:2 },
+        ]
+      }
+    ]
+  },
+
+  {
+    id:'ex3', tag:'Exercise 3', tagColor:'#B8860B', tagBg:'#FBF1D8',
+    title:'Key Detective — Candidate, Primary & Foreign Keys',
+    desc:'Every table has one column (or combo) that can uniquely ID a row. Your job: find it, without being told.',
+    setup:'Use the original Employee/Project data from Exercise 1 as your evidence.',
+    sections:[
+      {
+        heading:'Investigate the candidates',
+        intro:'Look back at the Firstname/Lastname/NID/Project table from Exercise 1.',
+        questions:[
+          { id:'3k1', text:'Is (Firstname, Lastname) a valid candidate key for identifying an employee? Give a specific reason from the data (or explain why it could fail in general even if it looks fine here).', rows:3 },
+          { id:'3k2', text:'Is NID (National ID) a good candidate key? What real-world property makes an NID a strong choice for a primary key?', rows:2 },
+          { id:'3k3', text:'In your redesigned tables from Exercise 2, which column did you pick as the PRIMARY KEY for the Employee table, and which columns are FOREIGN KEYS pointing to other tables?', rows:3 },
+        ]
+      },
+      {
+        heading:'Quick-fire key quiz',
+        intro:'For each scenario, decide: Primary Key (PK), Foreign Key (FK), Candidate Key (CK, but not chosen as PK), or None of these.',
+        type:'key-quiz'
+      }
+    ]
+  }
+];
+
+// key quiz data
+var KEY_QUIZ = [
+  { scenario:'Employee.NID, used to look up a single employee in the Employee table', answer:'' },
+  { scenario:'Employee.DeptID, stored on the Employee table, pointing back to Department.DeptID', answer:'' },
+  { scenario:'Project.ProjectName, when two different departments happen to run projects with the same name', answer:'' },
+  { scenario:'Order.OrderDate, describing when an order was placed', answer:'' },
+  { scenario:'Student.StudentID, which is unique and never reused even after a student graduates', answer:'' },
+];
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+var currentEx = 0;
+var answers = {};
+var AP = {
+  strikes:0, log:[], currentField:'',
+  record:function(type,detail){
+    var e={ts:new Date().toISOString(),type:type,field:AP.currentField,detail:detail||''};
+    AP.log.push(e); AP.renderILog(e);
+  },
+  renderILog:function(entry){
+    var log=document.getElementById('ilog'); if(!log)return;
+    var d=document.createElement('div');
+    d.className='il-e'+(entry.type!=='info'?' il-w':'');
+    var t=entry.ts.slice(11,19);
+    d.textContent='['+t+'] '+(entry.field?'('+entry.field+') ':'')+entry.detail;
+    log.appendChild(d); log.scrollTop=log.scrollHeight;
+  },
+  onPaste:function(e,fid){
+    AP.strikes++; AP.record('paste','Paste attempt #'+AP.strikes+' in "'+fid+'"');
+    e.preventDefault(); AP.buildDots(); AP.updateChip();
+    document.getElementById('apMsg').textContent='Copy-pasting is not allowed. Please type your answer — this demonstrates your understanding. The pasted content was discarded.';
+    document.getElementById('apSubMsg').textContent='This incident is recorded in your submission.';
+    document.getElementById('apOverlay').classList.add('show');
+  },
+  updateChip:function(){
+    var c=document.getElementById('strikeChip'); if(!c)return;
+    c.style.display='inline-flex'; c.classList.add('danger');
+  },
+  wire:function(el){
+    if(!el||el._apWired)return; el._apWired=true;
+    var fid=el.id||el.name||'unknown';
+    el.addEventListener('focus',function(){AP.currentField=fid;});
+    el.addEventListener('blur',function(){AP.currentField='';});
+    el.addEventListener('paste',function(e){AP.onPaste(e,fid);});
+    el.addEventListener('keydown',function(e){
+      if((e.ctrlKey||e.metaKey)&&e.key==='v'){AP.onPaste(e,fid);}
+      if((e.ctrlKey||e.metaKey)&&e.key==='a'){
+        if(!['f-name','f-id','f-class','f-date'].includes(fid)){e.preventDefault();}
+      }
+    });
+    el.addEventListener('drop',function(e){
+      if(e.dataTransfer.types.includes('text/plain')){e.preventDefault();AP.strikes++;AP.updateChip();}
+    });
+  },
+  wireAll:function(){
+    document.querySelectorAll('textarea,input[type=text]').forEach(function(el){
+      if(['f-name','f-id','f-class','f-date'].includes(el.id))return;
+      AP.wire(el);
+    });
+  },
+  buildDots:function(){
+    var row=document.getElementById('apStrikeRow'); if(!row)return;
+    row.innerHTML=''; var total=Math.max(AP.strikes,3);
+    for(var i=0;i<total;i++){var d=document.createElement('div');d.className='ap-sdot'+(i<AP.strikes?' hit':'');row.appendChild(d);}
+  }
+};
+
+function dismissWarning(){document.getElementById('apOverlay').classList.remove('show');}
+
+// ═══════════════════════════════════════════════
+// BUILD
+// ═══════════════════════════════════════════════
+function init(){
+  buildNav(); buildExercises(); loadDraft(); goTo(0);
+  document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
+  setInterval(saveDraft,90000);
+}
+
+function buildNav(){
+  var nav=document.getElementById('navItems');
+  EXERCISES.forEach(function(ex,i){
+    var item=document.createElement('div');
+    item.className='nav-item'; item.id='nav-'+i;
+    item.innerHTML='<div class="nav-dot" id="navdot-'+i+'">'+(i+1)+'</div><span>'+ex.title+'</span>';
+    item.onclick=function(){goTo(i);};
+    nav.appendChild(item);
+  });
+}
+
+function buildExercises(){
+  var container=document.getElementById('exerciseContainer');
+  EXERCISES.forEach(function(ex,i){
+    var card=document.createElement('div');
+    card.className='exercise-card'; card.id='card-'+i;
+    card.innerHTML=buildExHTML(ex,i);
+    container.appendChild(card);
+    card.querySelectorAll('textarea,input,select').forEach(function(el){
+      el.addEventListener('input',function(){updateProgress();autoResize(el);});
+      el.addEventListener('change',function(){updateProgress();});
+    });
+  });
+}
+
+function buildExHTML(ex,exIdx){
+  var h='';
+  h+='<div class="exercise-header">';
+  h+='<div class="exercise-tag" style="color:'+ex.tagColor+';background:'+ex.tagBg+'">'+ex.tag+'</div>';
+  h+='<div class="exercise-title">'+ex.title+'</div>';
+  h+='<div class="exercise-desc">'+ex.desc+'</div>';
+  h+='<div class="exercise-progress"><div class="ex-prog-bar"><div class="ex-prog-fill" id="exprog-'+exIdx+'" style="width:0%"></div></div><div class="ex-prog-label" id="exprog-lbl-'+exIdx+'">0% answered</div></div>';
+  h+='</div><div class="exercise-body">';
+  h+='<div class="info-box blue"><h4>Setup</h4><p>'+ex.setup+'</p></div>';
+
+  ex.sections.forEach(function(sec){
+    h+='<div class="section-heading">'+sec.heading+'</div>';
+    if(sec.intro) h+='<p style="font-size:13.5px;margin-bottom:.75rem;color:var(--txt2)">'+sec.intro+'</p>';
+
+    if(sec.type==='props-checklist')       h+=buildPropsChecklist();
+    else if(sec.type==='employee-data-table') h+=buildEmployeeDataTable();
+    else if(sec.type==='raw-employee-table')  h+=buildRawEmployeeTable();
+    else if(sec.type==='design-table')        h+=buildDesignTable(exIdx);
+    else if(sec.type==='key-quiz')             h+=buildKeyQuiz(exIdx);
+
+    if(sec.questions){
+      sec.questions.forEach(function(q){
+        h+='<div class="question-block">';
+        h+='<div class="question-text"><span class="qnum">Q:</span>'+q.text+'</div>';
+        h+='<textarea id="ans-'+q.id+'" rows="'+(q.rows||3)+'" placeholder="Your answer…" oninput="saveField(\''+q.id+'\',this.value);autoResize(this)" onchange="saveField(\''+q.id+'\',this.value)"></textarea>';
+        h+='</div>';
+      });
+    }
+  });
+
+  h+='<div class="nav-btns">';
+  if(exIdx>0) h+='<button class="btn-ghost" onclick="goTo('+(exIdx-1)+')">← Previous</button>';
+  else h+='<div></div>';
+  h+='<div class="nav-btns-right">';
+  if(exIdx<EXERCISES.length-1) h+='<button class="btn-primary" onclick="goTo('+(exIdx+1)+')">Next exercise →</button>';
+  else h+='<button class="btn-success" onclick="finish()">✓ Finish &amp; download</button>';
+  h+='</div></div>';
+  h+='</div>';
+  return h;
+}
+
+function buildPropsChecklist(){
+  var h='<div class="badge-row">';
+  SEVEN_PROPS.forEach(function(p,i){
+    h+='<span class="prop-chip">'+(i+1)+'. '+p+'</span>';
+  });
+  h+='</div>';
+  return h;
+}
+
+function buildEmployeeDataTable(){
+  var rows=[
+    ['101','John','Smith','30000.00','081-234-5678, 089-111-2233','1','1'],
+    ['102','Franklin','Wong','"Forty Thousand"','082-333-4455','1','1'],
+    ['103','Alicia','Zelaya','29000.00','083-444-5566','2','2'],
+    ['101','John','Smith','30000.00','081-234-5678, 089-111-2233','1','1'],
+  ];
+  var h='<div class="table-wrap"><table class="lab-table">';
+  h+='<thead><tr><th>EmpID</th><th>Firstname</th><th>Lastname</th><th>Salary</th><th>Phone_Numbers</th><th>DeptID</th><th>DeptID</th></tr></thead><tbody>';
+  rows.forEach(function(r){
+    h+='<tr>';
+    r.forEach(function(cell){
+      h+='<td class="ref-cell">'+cell+'</td>';
+    });
+    h+='</tr>';
+  });
+  h+='</tbody></table></div>';
+  //h+='<div class="info-box amber"><h4>Note</h4><p>Yes, DeptID really does appear twice in the header — that\'s not a rendering bug. Keep reading the columns carefully, not just the rows.</p></div>';
+  return h;
+}
+
+function buildRawEmployeeTable(){
+  var rows=[
+    ['John','Smith','1234567890123','1965-01-09','Mahidol Rd, Mueang, Chiang Mai','Male','30000','Administrator','Chiang Mai','Product X'],
+    ['Franklin','Wong','3333333445555','1955-12-08','Khlong Tan, Khlong Toei, Bangkok','Male','40000','Sale','Bangkok','Alpha'],
+    ['Franklin','Wong','3333333445555','1955-12-08','Khlong Tan, Khlong Toei, Bangkok','Male','40000','Sale','Bangkok','Beta'],
+    ['Franklin','Wong','3333333445555','1955-12-08','Khlong Tan, Khlong Toei, Bangkok','Male','40000','Research','Bangkok','Charlie'],
+    ['Alicia','Zelaya','9998877777777','1968-01-19','Silom, Bang Rak, Bangkok','Female','25000','Research','Bangkok','Charlie'],
+    ['Alicia','Zelaya','9998877777777','1968-01-19','Silom, Bang Rak, Bangkok','Female','25000','Administrator','Chiang Mai','Product X'],
+    ['Jennifer','Wallace','9876543211234','1941-06-20','Mueang, Chiang Mai','Female','43000','Administrator','Chiang Mai','Product X'],
+    ['Jennifer','Wallace','9876543211234','1941-06-20','Mueang, Chiang Mai','Female','43000','Administrator','Chiang Mai','Product Y'],
+    ['Jennifer','Wallace','9876543211234','1941-06-20','Mueang, Chiang Mai','Female','43000','Administrator','Chiang Mai','Product Z'],
+    ['Ramesh','English','6668844444444','1972-07-31','Bang Rak, Bangkok','Male','25000','Administrator','Bangkok','Product A'],
+    ['Ahmad','Jabbar','9879879879879','1969-03-29','Makkasan, Ratchathewi, Bangkok','Male','25000','Research','Bangkok','Charlie'],
+  ];
+  var h='<div class="table-wrap"><table class="lab-table" style="font-size:12px">';
+  h+='<thead><tr><th>Firstname</th><th>Lastname</th><th>NID</th><th>Birthdate</th><th>Address</th><th>Sex</th><th>Salary</th><th>Department</th><th>DLocation</th><th>Project</th></tr></thead><tbody>';
+  rows.forEach(function(r){
+    h+='<tr>';
+    r.forEach(function(cell){ h+='<td class="ref-cell">'+cell+'</td>'; });
+    h+='</tr>';
+  });
+  h+='</tbody></table></div>';
+  return h;
+}
+
+function buildDesignTable(i){
+  var h='<div class="table-wrap"><table class="lab-table">';
+  h+='<thead><tr><th style="width:20%">Table name</th><th>Columns (mark the PK with *)</th><th style="width:22%">Links to (FK)</th></tr></thead><tbody>';
+  for(var j=0;j<4;j++){
+    var id='design-'+i+'-'+j;
+    h+='<tr>';
+    h+='<td><input type="text" id="'+id+'-name" placeholder="e.g. Employee" oninput="saveField(\''+id+'-name\',this.value);updateProgress()"></td>';
+    h+='<td><input type="text" id="'+id+'-cols" placeholder="e.g. *NID, Firstname, Lastname, Salary, DeptID" oninput="saveField(\''+id+'-cols\',this.value);updateProgress()"></td>';
+    h+='<td><input type="text" id="'+id+'-fk" placeholder="e.g. DeptID → Department" oninput="saveField(\''+id+'-fk\',this.value);updateProgress()"></td>';
+    h+='</tr>';
+  }
+  h+='</tbody></table></div>';
+  return h;
+}
+
+function buildKeyQuiz(i){
+  var h='<div class="table-wrap"><table class="lab-table">';
+  h+='<thead><tr><th>Scenario</th><th style="width:20%">Your answer (PK / FK / CK / None)</th></tr></thead><tbody>';
+  KEY_QUIZ.forEach(function(k,j){
+    var id='kq-'+i+'-'+j;
+    h+='<tr><td class="ref-cell">'+k.scenario+'</td>';
+    h+='<td><select id="'+id+'" onchange="saveField(\''+id+'\',this.value);updateProgress()"><option value="">—</option><option>PK</option><option>FK</option><option>CK</option><option>None</option></select></td>';
+    h+='</tr>';
+  });
+  h+='</tbody></table></div>';
+  return h;
+}
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+function goTo(idx){
+  document.querySelectorAll('.exercise-card').forEach(function(c){c.classList.remove('visible');});
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
+  document.getElementById('completionCard').classList.remove('visible');
+  var card=document.getElementById('card-'+idx);
+  if(card){
+    card.classList.add('visible');
+    window.scrollTo(0,0);
+    card.querySelectorAll('textarea').forEach(function(ta){ autoResize(ta); });
+  }
+  var nav=document.getElementById('nav-'+idx);
+  if(nav)nav.classList.add('active');
+  currentEx=idx;
+}
+
+function finish(){
+  document.querySelectorAll('.exercise-card').forEach(function(c){c.classList.remove('visible');});
+  document.getElementById('completionCard').classList.add('visible');
+  document.getElementById('completionCard').scrollIntoView({behavior:'smooth'});
+  saveDraft();
+}
+
+// ═══════════════════════════════════════════════
+// ANSWERS & PROGRESS
+// ═══════════════════════════════════════════════
+function saveField(id,val){answers[id]=val;}
+
+function autoResize(el){
+  var rows = parseInt(el.getAttribute('rows') || 3);
+  var lineH = parseFloat(getComputedStyle(el).lineHeight) || 22;
+  var padT  = parseFloat(getComputedStyle(el).paddingTop)    || 10;
+  var padB  = parseFloat(getComputedStyle(el).paddingBottom) || 10;
+  var minH  = rows * lineH + padT + padB;
+  el.style.height = 'auto';
+  el.style.height = Math.max(el.scrollHeight, minH) + 'px';
+}
+
+function getAllFields(){
+  var f={};
+  document.querySelectorAll('textarea,input[type=text],select').forEach(function(el){
+    if(el.id&&!['f-name','f-id','f-class','f-date'].includes(el.id))f[el.id]=el;
+  });
+  return f;
+}
+
+function countAnswered(fields){
+  var total=0,done=0;
+  Object.keys(fields).forEach(function(id){
+    var el=fields[id]; total++;
+    var val=(el.value||'').trim();
+    if(val&&val!=='')done++;
+  });
+  return{total:total,done:done};
+}
+
+function updateProgress(){
+  var fields=getAllFields();
+  var counts=countAnswered(fields);
+  var pct=counts.total>0?Math.round(counts.done/counts.total*100):0;
+  document.getElementById('progFill').style.width=pct+'%';
+  document.getElementById('progPct').textContent=pct+'%';
+  EXERCISES.forEach(function(ex,i){
+    var exFields={};
+    var card=document.getElementById('card-'+i);
+    Object.keys(fields).forEach(function(id){
+      if(card&&card.contains(fields[id]))exFields[id]=fields[id];
+    });
+    var ec=countAnswered(exFields);
+    var epct=ec.total>0?Math.round(ec.done/ec.total*100):0;
+    var fill=document.getElementById('exprog-'+i);
+    var lbl=document.getElementById('exprog-lbl-'+i);
+    if(fill)fill.style.width=epct+'%';
+    if(lbl)lbl.textContent=epct+'% answered';
+    var dot=document.getElementById('navdot-'+i);
+    if(dot){
+      if(epct===100){dot.classList.add('done');dot.textContent='✓';}
+      else{dot.classList.remove('done');dot.textContent=i+1;}
+    }
+    var navItem=document.getElementById('nav-'+i);
+    if(navItem)navItem.classList.toggle('done',epct===100);
+  });
+  document.querySelectorAll('textarea').forEach(function(el){
+    el.classList.toggle('answered',(el.value||'').trim().length>0);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// SAVE / LOAD / DOWNLOAD
+// ═══════════════════════════════════════════════
+function gatherAll(){
+  var data={
+    lab:'dbms-relational-model',
+    meta:{
+      name:document.getElementById('f-name').value,
+      studentId:document.getElementById('f-id').value,
+      classSection:document.getElementById('f-class').value,
+      date:document.getElementById('f-date').value,
+      savedAt:new Date().toISOString()
+    },
+    answers:{},
+    integrityLog:{pasteAttempts:AP.strikes,events:AP.log}
+  };
+  var fields=getAllFields();
+  Object.keys(fields).forEach(function(id){data.answers[id]=fields[id].value;});
+  return data;
+}
+
+function saveDraft(){
+  try{
+    localStorage.setItem('dbms_lab_draft',JSON.stringify(gatherAll()));
+    showToast('Draft saved ✓');
+  }catch(e){showToast('Could not save');}
+}
+
+function loadDraft(){
+  try{
+    var raw=localStorage.getItem('dbms_lab_draft');
+    if(!raw)return;
+    var data=JSON.parse(raw);
+    if(data.meta){
+      if(data.meta.name)document.getElementById('f-name').value=data.meta.name;
+      if(data.meta.studentId)document.getElementById('f-id').value=data.meta.studentId;
+      if(data.meta.classSection)document.getElementById('f-class').value=data.meta.classSection;
+      if(data.meta.date)document.getElementById('f-date').value=data.meta.date;
+    }
+    if(data.answers){
+      Object.keys(data.answers).forEach(function(id){
+        var el=document.getElementById(id);
+        if(!el)return;
+        el.value=data.answers[id];
+        if(el.tagName==='TEXTAREA')autoResize(el);
+      });
+    }
+    updateProgress();
+  }catch(e){}
+}
+
+function downloadJSON(){
+  var data=gatherAll();
+  var name=(data.meta.name||'student').replace(/\s+/g,'-').toLowerCase();
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url; a.download='dbms-lab-'+name+'.json'; a.click();
+  URL.revokeObjectURL(url); showToast('Downloaded ✓');
+}
+
+function showToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},2200);
+}
+
+// ═══════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded',function(){
+  init(); AP.buildDots(); AP.wireAll();
+  var observer=new MutationObserver(function(){AP.wireAll();});
+  observer.observe(document.getElementById('exerciseContainer'),{childList:true,subtree:true});
+  AP.record('info','Lab initialised — integrity monitoring active');
+});
+document.addEventListener('keydown',function(e){
+  if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();saveDraft();}
+});
+document.addEventListener('visibilitychange',function(){
+  AP.record('info',document.hidden?'Tab hidden':'Tab visible again');
+});
+document.addEventListener('contextmenu',function(e){
+  var el=e.target;
+  if(el&&(el.tagName==='TEXTAREA'||el.tagName==='INPUT')){
+    if(!['f-name','f-id','f-class','f-date'].includes(el.id)){e.preventDefault();}
+  }
+});
+</script>
+</body>
+</html>
