@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DBMS Lab — ER Model: Entities, Attributes & Relationships</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F7F1E8;
+  --card:#FFFEFB;
+  --burgundy:#6E1423;
+  --burgundy-light:#8C1D2E;
+  --burgundy-dark:#4A0E18;
+  --gold:#C9962C;
+  --gold-light:#E8C46A;
+  --gold-bg:#FBF2DC;
+  --gold-bd:#D9AE4E;
+  --teal:#0F6E56;
+  --teal-bg:#E1F5EE;
+  --teal-bd:#5DCAA5;
+  --red:#791F1F;
+  --red-bg:#FCEBEB;
+  --red-bd:#F09595;
+  --blue-bg:#F3E9D8;
+  --blue-bd:#D9AE4E;
+  --txt:#2b211c;
+  --txt2:#6b5d52;
+  --txt3:#9a8c7f;
+  --bdr:#e3d5bf;
+  --bdr2:#cbb894;
+  --radius:10px;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+
+html,body{min-height:100%;background:var(--bg);font-family:var(--sans);color:var(--txt);font-size:15px;line-height:1.6}
+
+.shell{display:flex;min-height:100vh}
+.sidebar{width:260px;flex-shrink:0;background:var(--burgundy);position:sticky;top:0;height:100vh;overflow-y:auto;padding:1.5rem 0}
+.main{flex:1;max-width:860px;padding:2rem 2.5rem 4rem;min-width:0}
+@media(max-width:768px){.sidebar{display:none}.main{padding:1.25rem 1rem 3rem}}
+
+.sidebar-logo{font-size:18px;font-weight:700;color:#fff;padding:0 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:8px;line-height:1.3}
+.sidebar-logo .mod-badge{font-size:11px;font-weight:600;background:rgba(201,150,44,.28);color:var(--gold-light);border-radius:4px;padding:2px 7px;letter-spacing:.05em}
+.sidebar-title{font-size:11px;font-weight:600;color:rgba(255,255,255,.5);letter-spacing:.08em;text-transform:uppercase;padding:0 1.25rem;margin-bottom:.75rem}
+.nav-item{display:flex;align-items:center;gap:10px;padding:.6rem 1.25rem;cursor:pointer;transition:background .15s;font-size:13px;color:rgba(255,255,255,.8);border-left:3px solid transparent}
+.nav-item:hover{background:rgba(255,255,255,.08)}
+.nav-item.active{background:rgba(255,255,255,.12);color:#fff;border-left-color:var(--gold-light)}
+.nav-item.done{color:rgba(255,255,255,.9)}
+.nav-dot{width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;transition:all .2s}
+.nav-dot.done{background:var(--gold-light);border-color:var(--gold-light);color:var(--burgundy-dark)}
+.nav-dot.active{border-color:#fff;color:#fff}
+.progress-bar-wrap{padding:1rem 1.25rem .5rem;margin-top:.5rem}
+.progress-bar-label{font-size:11px;color:rgba(255,255,255,.55);margin-bottom:6px;display:flex;justify-content:space-between}
+.progress-bar{height:4px;background:rgba(255,255,255,.18);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:var(--gold-light);border-radius:2px;transition:width .4s ease}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.75rem;flex-wrap:wrap;gap:12px}
+.topbar-left h1{font-size:22px;font-weight:700;color:var(--burgundy);margin-bottom:2px}
+.topbar-left p{font-size:13px;color:var(--txt2)}
+.topbar-right{display:flex;gap:8px;align-items:center}
+button{font-family:var(--sans);cursor:pointer;border:none;border-radius:8px;font-size:13px;font-weight:500;padding:8px 16px;transition:all .15s}
+button:disabled{opacity:.4;cursor:not-allowed}
+.btn-ghost{background:transparent;border:1.5px solid var(--bdr2);color:var(--txt2)}
+.btn-ghost:hover:not(:disabled){background:var(--card);border-color:var(--burgundy);color:var(--burgundy)}
+.btn-primary{background:var(--burgundy);color:#fff}
+.btn-primary:hover:not(:disabled){background:var(--burgundy-light)}
+.btn-success{background:var(--gold);color:#3b2a08}
+.btn-success:hover:not(:disabled){background:var(--gold-light)}
+
+.student-banner{background:var(--card);border:1.5px solid var(--bdr);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1.75rem;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.student-banner h3{font-size:12px;font-weight:600;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.75rem}
+.student-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:520px){.student-grid{grid-template-columns:1fr}}
+.field-group{display:flex;flex-direction:column;gap:4px}
+.field-group label{font-size:12px;font-weight:600;color:var(--txt2)}
+.field-group input{border:1.5px solid var(--bdr);border-radius:6px;padding:7px 10px;font-size:14px;font-family:var(--sans);color:var(--txt);background:var(--bg);transition:border .15s}
+.field-group input:focus{outline:none;border-color:var(--burgundy);background:#fff}
+
+.exercise-card{background:var(--card);border:1.5px solid var(--bdr);border-radius:var(--radius);margin-bottom:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden;display:none}
+.exercise-card.visible{display:block}
+.exercise-header{padding:1.25rem 1.5rem 1rem;border-bottom:1.5px solid var(--bdr)}
+.exercise-tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;display:inline-block;padding:2px 8px;border-radius:4px;margin-bottom:6px}
+.exercise-title{font-size:19px;font-weight:700;color:var(--burgundy);margin-bottom:3px}
+.exercise-desc{font-size:13px;color:var(--txt2)}
+.exercise-body{padding:1.25rem 1.5rem}
+.exercise-progress{display:flex;align-items:center;gap:8px;margin-top:.75rem}
+.ex-prog-bar{flex:1;height:5px;background:var(--bg);border-radius:3px;overflow:hidden}
+.ex-prog-fill{height:100%;background:var(--gold-bd);border-radius:3px;transition:width .3s}
+.ex-prog-label{font-size:11px;color:var(--txt3);white-space:nowrap}
+
+.info-box{border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem;border:.5px solid}
+.info-box h4{font-size:13px;font-weight:700;margin-bottom:.4rem}
+.info-box p,.info-box ul{font-size:13.5px;line-height:1.7}
+.info-box ul{padding-left:1.25rem}
+.info-box.gold{background:var(--gold-bg);border-color:var(--gold-bd)}.info-box.gold h4{color:#8a6410}
+.info-box.teal{background:var(--teal-bg);border-color:var(--teal-bd)}.info-box.teal h4{color:var(--teal)}
+.info-box.red{background:var(--red-bg);border-color:var(--red-bd)}.info-box.red h4{color:var(--red)}
+.info-box.gray{background:#f4f0e6;border-color:var(--bdr)}.info-box.gray h4{color:var(--txt2)}
+
+.section-heading{font-size:15px;font-weight:700;color:var(--burgundy);margin:1.5rem 0 .75rem;padding-bottom:.4rem;border-bottom:2px solid var(--gold-bg)}
+.step-label{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--burgundy);background:var(--gold-bg);border-radius:4px;padding:3px 10px;margin-bottom:.6rem}
+
+.question-block{margin-bottom:1.25rem}
+.question-text{font-size:14px;font-weight:600;color:var(--txt);margin-bottom:.5rem;line-height:1.5}
+.question-text .qnum{color:var(--burgundy);margin-right:4px}
+textarea{width:100%;border:1.5px solid var(--bdr);border-radius:8px;padding:10px 12px;font-size:13.5px;font-family:var(--sans);color:var(--txt);background:var(--bg);resize:vertical;transition:border .15s;line-height:1.6;min-height:72px;box-sizing:border-box;overflow:hidden}
+textarea:focus{outline:none;border-color:var(--burgundy);background:#fff}
+textarea.answered{border-color:var(--gold-bd);background:#fffdf6}
+
+.table-wrap{overflow-x:auto;margin-bottom:1rem;border-radius:8px;border:1.5px solid var(--bdr)}
+.lab-table{width:100%;border-collapse:collapse;font-size:13px}
+.lab-table th{background:var(--burgundy);color:#fff;padding:8px 10px;text-align:left;font-weight:600;font-size:12px}
+.lab-table td{border-bottom:1px solid var(--bdr);padding:4px 6px;vertical-align:top}
+.lab-table tr:last-child td{border-bottom:none}
+.lab-table tr:nth-child(even) td{background:#faf6ec}
+.lab-table td input[type=text],.lab-table td select{width:100%;border:1px solid var(--bdr);border-radius:4px;padding:5px 7px;font-size:12.5px;font-family:var(--sans);background:#fff;color:var(--txt)}
+.lab-table td input[type=text]:focus,.lab-table td select:focus{outline:none;border-color:var(--burgundy)}
+.lab-table .row-label{font-weight:600;color:var(--burgundy);background:#f2ead9 !important;white-space:nowrap;font-size:12.5px}
+.lab-table .example-row td{background:var(--teal-bg) !important;color:var(--teal);font-style:italic;font-size:12px}
+
+.form-image-wrap{text-align:center;margin-bottom:1rem;background:#fff;border:1.5px solid var(--bdr);border-radius:8px;padding:1rem}
+.form-image-wrap img{max-width:100%;height:auto;border-radius:4px;border:1px solid var(--bdr)}
+.form-image-wrap .cap{font-size:12px;color:var(--txt2);margin-top:.5rem;font-weight:600}
+
+.scenario-box{background:var(--gold-bg);border:1px solid var(--gold-bd);border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem;font-size:13.5px;line-height:1.75;color:#3b2a08}
+.scenario-box strong{color:var(--burgundy)}
+
+.fun-fact{display:flex;gap:10px;align-items:flex-start;background:#EFE4F0;border:.5px solid #C9A8CC;border-radius:8px;padding:.85rem 1rem;margin-bottom:1.25rem}
+.fun-fact .ff-icon{font-size:22px;line-height:1}
+.fun-fact .ff-text{font-size:13px;color:#6E2A6E;line-height:1.6}
+.fun-fact .ff-text strong{color:#6E2A6E}
+
+.cmd-block{background:#2b1418;border-radius:8px;padding:.75rem 1rem;margin:.5rem 0 .9rem;font-family:var(--mono);font-size:13px;color:#e8d8b8;line-height:1.8}
+.cmd-block .cmd{color:#fff}
+
+.nav-btns{display:flex;justify-content:space-between;align-items:center;margin-top:1.75rem;padding-top:1.25rem;border-top:1.5px solid var(--bdr)}
+.nav-btns-right{display:flex;gap:8px}
+
+.completion-card{background:var(--card);border:2px solid var(--gold-bd);border-radius:var(--radius);padding:2rem;text-align:center;box-shadow:0 4px 16px rgba(110,20,35,.12);display:none}
+.completion-card.visible{display:block}
+.completion-card .check{font-size:52px;margin-bottom:.75rem}
+.completion-card h2{font-size:24px;font-weight:700;color:var(--burgundy);margin-bottom:.5rem}
+.completion-card p{font-size:15px;color:var(--txt2);margin-bottom:1.5rem}
+.completion-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+.toast{position:fixed;bottom:1.25rem;right:1.25rem;background:var(--burgundy);color:#fff;font-size:13px;padding:9px 16px;border-radius:8px;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;z-index:100}
+.toast.show{opacity:1;transform:translateY(0)}
+
+.ilog{font-family:var(--mono);font-size:11px;background:#f4f0e6;border:1px solid var(--bdr);border-radius:6px;padding:.5rem .75rem;max-height:80px;overflow-y:auto;color:var(--txt2);margin-top:.5rem}
+.il-e{padding:1px 0;border-bottom:.5px solid var(--bdr)}
+.il-e:last-child{border-bottom:none}
+.il-w{color:#A32D2D;font-weight:500}
+.strike-chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#633806;background:#FAEEDA;border:1.5px solid #EF9F27;border-radius:20px;padding:4px 12px}
+.strike-chip.danger{color:#791F1F;background:#FCEBEB;border-color:#F09595}
+
+/* ═══ DRAG & DROP ER BUILDER ═══ */
+.er-builder{border:1.5px solid var(--bdr);border-radius:10px;overflow:hidden;margin-bottom:1rem;background:#fff}
+.er-toolbar{display:flex;gap:8px;flex-wrap:wrap;padding:.85rem 1rem;background:var(--gold-bg);border-bottom:1.5px solid var(--bdr)}
+.er-tool{display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:18px;font-size:11.5px;font-weight:600;cursor:grab;user-select:none;border:1.5px solid;transition:transform .1s}
+.er-tool:active{cursor:grabbing;transform:scale(.96)}
+.er-tool.entity{background:#E6F1FB;border-color:#85B7EB;color:#0C447C}
+.er-tool.weak-entity{background:#E6F1FB;border-color:#0C447C;color:#0C447C}
+.er-tool.attribute{background:var(--teal-bg);border-color:var(--teal-bd);color:var(--teal)}
+.er-tool.pk-attribute{background:var(--teal-bg);border-color:var(--teal);color:var(--teal);text-decoration:underline}
+.er-tool.derived-attribute{background:var(--teal-bg);border-color:var(--teal-bd);color:var(--teal);border-style:dashed}
+.er-tool.multi-attribute{background:var(--teal-bg);border:3px double var(--teal-bd);color:var(--teal)}
+.er-tool.relationship{background:var(--gold-bg);border-color:var(--gold-bd);color:#8a6410}
+.er-tool-icon{font-size:14px}
+.er-canvas-wrap{position:relative}
+.er-canvas{position:relative;width:100%;height:760px;background:
+    linear-gradient(0deg,transparent 24px,rgba(0,0,0,.035) 25px),
+    linear-gradient(90deg,transparent 24px,rgba(0,0,0,.035) 25px);
+  background-size:25px 25px;background-color:#fdfbf6;overflow:auto;touch-action:none}
+.er-node{position:absolute;padding:6px 10px;border-radius:8px;font-size:11px;font-weight:600;cursor:grab;user-select:none;border:1.5px solid;box-shadow:0 2px 4px rgba(0,0,0,.08);white-space:nowrap;z-index:5}
+.er-node:active{cursor:grabbing;z-index:10}
+.er-node.entity-node{background:#E6F1FB;border-color:#85B7EB;color:#0C447C;border-radius:6px;min-width:60px;text-align:center}
+.er-node.weak-entity-node{background:#E6F1FB;border-color:#0C447C;color:#0C447C;border-radius:6px;min-width:60px;text-align:center;box-shadow:0 2px 4px rgba(0,0,0,.08), inset 0 0 0 2px #fff, inset 0 0 0 3px #0C447C}
+.er-node.attribute-node{background:var(--teal-bg);border-color:var(--teal-bd);color:var(--teal);border-radius:50%/50%;padding:9px 15px;min-width:56px;text-align:center}
+.er-node.pk-attribute-node{background:var(--teal-bg);border-color:var(--teal);color:var(--teal);border-radius:50%/50%;padding:9px 15px;min-width:56px;text-align:center}
+.er-node.pk-attribute-node input{text-decoration:underline}
+.er-node.derived-attribute-node{background:var(--teal-bg);border-color:var(--teal-bd);color:var(--teal);border-radius:50%/50%;padding:9px 15px;min-width:56px;text-align:center;border-style:dashed}
+.er-node.multi-attribute-node{background:transparent;border:none;box-shadow:none;padding:3px !important;min-width:0;width:auto;text-align:center;position:relative;display:inline-block}
+.er-node.multi-attribute-node::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;border:1.5px solid var(--teal-bd);border-radius:50%/50%;z-index:0}
+.er-node.multi-attribute-node .mlabel{position:relative;z-index:1;display:inline-block;background:var(--teal-bg);border:1.5px solid var(--teal-bd);border-radius:50%/50%;padding:9px 15px;color:var(--teal);white-space:nowrap}
+.er-node.relationship-node{background:transparent !important;border:none !important;border-radius:0 !important;box-shadow:none !important;padding:0;width:92px;height:60px;display:flex;align-items:center;justify-content:center;position:relative}
+.er-node.relationship-node::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:var(--gold-bg);border:1.5px solid var(--gold-bd);clip-path:polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);z-index:0;box-shadow:0 2px 4px rgba(0,0,0,.08)}
+.er-node.relationship-node .rlabel{position:relative;z-index:1;padding:0 16px;text-align:center;font-size:10.5px;line-height:1.15}
+.er-node .delbtn{position:absolute;top:-8px;right:-8px;width:16px;height:16px;background:var(--red);color:#fff;border-radius:50%;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .15s}
+.er-node:hover .delbtn{opacity:1}
+.er-node input{border:none;background:transparent;font-family:var(--sans);font-size:11px;font-weight:600;color:inherit;width:auto;min-width:36px;max-width:150px;text-align:center}
+.er-node input:focus{outline:none}
+.er-hint{position:absolute;top:10px;left:10px;font-size:11.5px;color:var(--txt3);background:rgba(255,255,255,.85);padding:4px 9px;border-radius:6px;pointer-events:none}
+.er-empty-msg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:13px;color:var(--txt3);text-align:center;pointer-events:none;max-width:280px}
+svg.er-lines{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1}
+.er-actions{display:flex;gap:8px;padding:.6rem 1rem;background:#faf6ec;border-top:1.5px solid var(--bdr);flex-wrap:wrap}
+.er-actions button{font-size:12px;padding:6px 12px}
+.er-connect-group{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.er-connect-label{font-size:11.5px;font-weight:600;color:var(--txt2);margin-right:2px}
+.er-conn-btn{font-size:11.5px !important;padding:5px 10px !important}
+.er-conn-btn.er-connect-active{background:var(--burgundy) !important;color:#fff !important;border-color:var(--burgundy) !important}
+.er-connect-mode{background:var(--burgundy) !important;color:#fff !important}
+
+.cardpicker-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;display:flex;align-items:center;justify-content:center}
+.cardpicker-modal{background:#fff;border-radius:12px;padding:1.5rem 1.75rem;max-width:340px;width:90%;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.cardpicker-modal h4{font-size:15px;font-weight:700;color:var(--burgundy);margin-bottom:1rem;text-align:center}
+.cardpicker-row{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:1.25rem}
+.cardpicker-sub{font-size:12.5px;color:var(--txt2);text-align:center;margin-bottom:1rem;line-height:1.5}
+.cardpicker-sub strong{color:var(--burgundy)}
+.cardpicker-side{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;min-width:0}
+.cardpicker-entname{font-size:11.5px;font-weight:600;color:var(--txt2);text-align:center;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cardpicker-side select{border:1.5px solid var(--bdr2);border-radius:6px;padding:6px 14px;font-size:15px;font-weight:700;color:var(--burgundy);background:var(--gold-bg);text-align:center}
+.cardpicker-total{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--txt2);cursor:pointer;user-select:none}
+.cardpicker-total input{cursor:pointer}
+.cardpicker-note{font-size:11px;color:var(--txt3);line-height:1.5;text-align:center;margin-bottom:1rem;padding:0 4px}
+.cardpicker-arrow{font-size:16px;color:var(--txt3);flex-shrink:0}
+.cardpicker-btns{display:flex;gap:8px;justify-content:center}
+.cardpicker-btns button{font-size:13px}
+
+.ap-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.ap-overlay.show{opacity:1;pointer-events:all}
+.ap-modal{background:#fff;border-radius:14px;padding:2rem 2.25rem;max-width:440px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25);transform:scale(.93);transition:transform .2s}
+.ap-overlay.show .ap-modal{transform:scale(1)}
+.ap-modal .ap-icon{font-size:44px;margin-bottom:.75rem}
+.ap-modal h2{font-size:19px;font-weight:700;color:#791F1F;margin-bottom:.5rem}
+.ap-modal p{font-size:13.5px;color:#5f5e5a;margin-bottom:1.25rem;line-height:1.6}
+.ap-modal .strikes-row{display:flex;justify-content:center;gap:8px;margin-bottom:1.25rem}
+.ap-sdot{width:16px;height:16px;border-radius:50%;border:2px solid #EF9F27;background:#fff;transition:background .3s}
+.ap-sdot.hit{background:#A32D2D;border-color:#A32D2D}
+.ap-modal .ap-dismiss{background:var(--burgundy);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;padding:10px 28px;cursor:pointer;transition:background .15s;margin-top:.25rem}
+.ap-modal .ap-dismiss:hover{background:var(--burgundy-light)}
+.ap-sub{font-size:12.5px;color:#A32D2D;margin-bottom:1rem;min-height:18px}
+
+@media print{
+  .sidebar,.topbar-right,.nav-btns,.toast,.er-toolbar,.er-actions{display:none !important}
+  .main{padding:0;max-width:100%}
+  .exercise-card{display:block !important;break-inside:avoid;box-shadow:none;border:1px solid #ccc;margin-bottom:1rem}
+  .completion-card{display:none !important}
+  textarea{border:1px solid #ccc;min-height:50px}
+  body{font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<div class="ap-overlay" id="apOverlay">
+  <div class="ap-modal">
+    <div class="ap-icon">&#9888;&#65039;</div>
+    <h2>Paste detected</h2>
+    <p id="apMsg">Copy-pasting is not allowed in this lab. Please type your answer in your own words — this helps demonstrate your understanding. The pasted text has been discarded.</p>
+    <div class="strikes-row" id="apStrikeRow"></div>
+    <p id="apSubMsg" class="ap-sub"></p>
+    <button class="ap-dismiss" onclick="dismissWarning()">I understand — I will type my answer</button>
+  </div>
+</div>
+
+<div class="shell">
+
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    Relational Model
+    <span class="mod-badge">DBMS &middot; 960231</span>
+  </div>
+  <div class="sidebar-title">Exercises</div>
+  <div id="navItems"></div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-label"><span>Overall progress</span><span id="progPct">0%</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+  </div>
+</nav>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>DBMS Lab &mdash; Database Introduction &amp; the Relational Model</h1>
+      <p>960231 Database Management System &middot; Developer Track</p>
+    </div>
+    <div class="topbar-right">
+      <div class="strike-chip" id="strikeChip" style="display:none">&#9888; Paste detected</div>
+      <button class="btn-ghost" onclick="saveDraft()">&#128190; Save draft</button>
+      <button class="btn-ghost" onclick="window.print()">&#128424; Print / PDF</button>
+    </div>
+  </div>
+
+  <div class="student-banner">
+    <h3>Student information</h3>
+    <div class="student-grid">
+      <div class="field-group"><label for="f-name">Full name</label><input type="text" id="f-name" placeholder="Your name" oninput="updateProgress()"></div>
+      <div class="field-group"><label for="f-id">Student ID</label><input type="text" id="f-id" placeholder="e.g. s1234567" oninput="updateProgress()"></div>
+      <div class="field-group"><label for="f-class">Class / section</label><input type="text" id="f-class" placeholder="e.g. COMP201-A" oninput="updateProgress()"></div>
+      <div class="field-group"><label for="f-date">Date</label><input type="date" id="f-date" oninput="updateProgress()"></div>
+    </div>
+    <div style="margin-top:.9rem">
+      <div style="font-size:11px;font-weight:600;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Academic integrity log</div>
+      <div class="ilog" id="ilog"><div class="il-e">Lab opened &mdash; integrity monitoring active.</div></div>
+    </div>
+  </div>
+
+  <div id="exerciseContainer"></div>
+
+  <div class="completion-card" id="completionCard">
+    <div class="check">&#9989;</div>
+    <h2>Lab complete!</h2>
+    <p>All questions answered. Download your responses and submit to your course portal.</p>
+    <div class="completion-actions">
+      <button class="btn-primary" onclick="window.print()">&#128424; Save as PDF</button>
+      <button class="btn-ghost" onclick="goTo(0)">&#8630; Review from start</button>
+    </div>
+  </div>
+</main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+
+var IMG_PROPERTY = 'Picture_0.png';
+var IMG_CLIENT = 'Picture_1.png';
+var IMG_LEASE = 'Picture_2.png';
+
+</script><script>
+// ═══════════════════════════════════════════════
+// DATA — from Lab02_ER (960231 DBMS Class Activity)
+// ═══════════════════════════════════════════════
+var EXERCISES = [
+  {
+    id:'ex1', tag:'Exercise 1', tagColor:'#0C447C', tagBg:'#E6F1FB',
+    title:'University Registration & Accommodation',
+    desc:'Determine the entities, attributes, and relationships hiding inside a plain-English business description.',
+    setup:'No terminal needed. Read the scenario carefully — every sentence is hiding an entity, an attribute, or a relationship. Your job is to find them.',
+    sections:[
+      {
+        heading:'The scenario',
+        type:'scenario',
+        html:'Assume you have been contracted by a university to develop a database system to keep track of <strong>student registration</strong> and <strong>accommodation records</strong>. The university courses are offered by <strong>faculties</strong>. Depending on the student\'s IQ, there are no limitations to how many courses a student can enroll in. The faculties are not responsible for student accommodation. The university owns a number of <strong>hostels</strong> and each student is given a shared room key after enrollment. Each <strong>room</strong> has <strong>furniture</strong> attached to it.'
+      },
+      {
+        heading:'Step 1 — Identify entities',
+        intro:'List every entity you found in the scenario above (e.g. Student, Faculty…).',
+        type:'entity-hunt-table',
+        rows:6
+      },
+      // {
+      //   heading:'Step 2 — Identify attributes',
+      //   intro:'For each entity, list at least 2–3 attributes and mark your primary key candidate.',
+      //   type:'attribute-table',
+      //   rows:10
+      // },
+      {
+        heading:'Step 2 — Build the ER diagram',
+        intro:'Drag entities, attributes, and relationships onto the canvas below. Connect them with lines to represent your model of the university registration &amp; accommodation system.',
+        type:'er-canvas',
+        canvasId:'ex1'
+      },
+      {
+        heading:'Step 3 — Reflection',
+        questions:[
+          { id:'1r1', text:'A course is offered by exactly one faculty, but a student can enroll in many courses across many faculties. What type of relationship is Student–Course? What type is Faculty–Course?', rows:3 },
+          { id:'1r2', text:'"Each student is given a shared room key" — does this mean Student and Room have a many-to-many relationship? Explain what "shared" tells you about cardinality.', rows:3 },
+          { id:'1r3', text:'Is "Furniture" its own entity, or could it be an attribute of Room? What would you lose if you modelled it as a single text field instead of an entity?', rows:3 },
+        ]
+      }
+    ]
+  },
+
+  {
+    id:'ex2', tag:'Exercise 2', tagColor:'#3C3489', tagBg:'#EEEDFE',
+    title:'The Movie Database',
+    desc:'A denser, multi-paragraph specification — actors, directors, production companies, and the tricky many-to-many relationships between them.',
+    setup:'Read all three paragraphs before you start drawing. The relationships between Movie, Actor, and Director are where most students lose marks — read carefully.',
+    sections:[
+      {
+        heading:'The scenario',
+        type:'scenario',
+        html:'<strong>Movies:</strong> Each movie is identified by title and year of release. Each movie has a length in minutes. Each has a production company, and each is classified under one or more genres (such as horror, action, drama, and so forth). Each movie has one or more directors and one or more actors appear in it. Each movie also has a plot outline. Finally, each movie has zero or more quotable quotes, each of which is spoken by a particular actor appearing in the movie.<br><br><strong>Actors:</strong> Actors are identified by name and date of birth and appear in one or more movies. Each actor has a role in the movie.<br><br><strong>Directors:</strong> Directors are also identified by name and date of birth and direct one or more movies. It is possible for a director to act in a movie (including one that he or she may also direct).<br><br><strong>Production companies:</strong> Production companies are identified by name and each has an address. A production company produces one or more movies.'
+      },
+      {
+        heading:'Step 1 — Identify entities',
+        intro:'List every entity you found (e.g. Movie, Actor, Director, Production Company, Genre…).',
+        type:'entity-hunt-table',
+        rows:6
+      },
+      // {
+      //   heading:'Step 2 — Identify attributes',
+      //   intro:'For each entity, list attributes and mark your primary key candidate. Watch out for composite keys (e.g. Movie is identified by title AND year together).',
+      //   type:'attribute-table',
+      //   rows:12
+      // },
+      {
+        heading:'Step 2 — Build the ER diagram',
+        intro:'Drag entities, attributes, and relationships onto the canvas to model the movie database. Pay special attention to the M:N relationships (Movie–Actor, Movie–Genre, Movie–Director).',
+        type:'er-canvas',
+        canvasId:'ex2'
+      },
+      {
+        heading:'Step 3 — Reflection',
+        questions:[
+          { id:'2r1', text:'"Each movie has zero or more quotable quotes, each spoken by a particular actor appearing in the movie" — is Quote its own entity, or a weak entity, or an attribute? Justify your choice.', rows:3 },
+          { id:'2r2', text:'"It is possible for a director to act in a movie (including one that he or she may also direct)." What does this tell you about the relationship between the Director and Actor entities — should they be merged, or kept separate with an overlap?', rows:4 },
+          { id:'2r3', text:'A movie is identified by title AND year of release together — neither alone is unique (there could be two movies called "The Circle" in different years). What is this type of primary key called, and how do you represent it in your ER diagram?', rows:3 },
+        ]
+      }
+    ]
+  },
+
+  {
+    id:'ex3', tag:'Exercise 3', tagColor:'#0F6E56', tagBg:'#E1F5EE',
+    title:'The Real-Estate Agency Forms',
+    desc:'Reverse-engineer entities, attributes, and relationships directly from paper forms used by a real sales department — Property, Client, and Lease.',
+    setup:'This is the closest to real-world requirements gathering: nobody hands developers a clean spec. Instead you get old paper forms and have to figure out the data model yourself.',
+    sections:[
+      {
+        heading:'Form A — Property for Rent Details',
+        type:'form-image',
+        img:'IMG_PROPERTY',
+        caption:'Property for Rent Details form'
+      },
+      {
+        heading:'Form B — Client Detail Form',
+        type:'form-image',
+        img:'IMG_CLIENT',
+        caption:'Client Detail form'
+      },
+      {
+        heading:'Form C — Lease Detail Form',
+        type:'form-image',
+        img:'IMG_LEASE',
+        caption:'Lease Detail form'
+      },
+      {
+        heading:'Step 1 — Identify entities from the forms',
+        intro:'Study all three forms above. List every entity you can identify (e.g. Property, Client, Owner, Lease…).',
+        type:'entity-hunt-table',
+        rows:6
+      },
+      // {
+      //   heading:'Step 2 — Identify attributes',
+      //   intro:'For each entity, pull the attributes directly from the form fields. Mark your primary key candidate for each.',
+      //   type:'attribute-table',
+      //   rows:14
+      // },
+      {
+        heading:'Step 2 — Build the ER diagram',
+        intro:'Drag entities, attributes, and relationships onto the canvas to connect Property, Client, Owner, and Lease into one coherent model.',
+        type:'er-canvas',
+        canvasId:'ex3'
+      },
+      {
+        heading:'Step 3 — Reflection',
+        questions:[
+          { id:'3r1', text:'The Lease Detail form connects a Client to a Property for a period of time. Should "Lease" be modelled as a relationship with attributes, or as its own full entity? What is the deciding factor?', rows:4 },
+          { id:'3r2', text:'The Property for Rent form lists an "Owner" — is Owner the same entity as Client, a specialization of a more general Person entity, or a completely separate entity? Explain your reasoning.', rows:3 },
+          { id:'3r3', text:'In a real agency, one Property can be leased to different Clients over time (one after another, not simultaneously). How does this affect the cardinality between Property and Lease, and between Client and Lease?', rows:3 },
+        ]
+      }
+    ]
+  }
+];
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+var currentEx = 0;
+var answers = {};
+var ER_STATE = {}; // per canvasId: {nodes:[{id,type,x,y,text}], edges:[{from,to}]}
+var AP = {
+  strikes:0, log:[], currentField:'',
+  record:function(type,detail){
+    var e={ts:new Date().toISOString(),type:type,field:AP.currentField,detail:detail||''};
+    AP.log.push(e); AP.renderILog(e);
+  },
+  renderILog:function(entry){
+    var log=document.getElementById('ilog'); if(!log)return;
+    var d=document.createElement('div');
+    d.className='il-e'+(entry.type!=='info'?' il-w':'');
+    var t=entry.ts.slice(11,19);
+    d.textContent='['+t+'] '+(entry.field?'('+entry.field+') ':'')+entry.detail;
+    log.appendChild(d); log.scrollTop=log.scrollHeight;
+  },
+  onPaste:function(e,fid){
+    AP.strikes++; AP.record('paste','Paste attempt #'+AP.strikes+' in "'+fid+'"');
+    e.preventDefault(); AP.buildDots(); AP.updateChip();
+    document.getElementById('apMsg').textContent='Copy-pasting is not allowed. Please type your answer — this demonstrates your understanding. The pasted content was discarded.';
+    document.getElementById('apSubMsg').textContent='This incident is recorded in your submission.';
+    document.getElementById('apOverlay').classList.add('show');
+  },
+  updateChip:function(){
+    var c=document.getElementById('strikeChip'); if(!c)return;
+    c.style.display='inline-flex'; c.classList.add('danger');
+  },
+  wire:function(el){
+    if(!el||el._apWired)return; el._apWired=true;
+    var fid=el.id||el.name||'unknown';
+    el.addEventListener('focus',function(){AP.currentField=fid;});
+    el.addEventListener('blur',function(){AP.currentField='';});
+    el.addEventListener('paste',function(e){AP.onPaste(e,fid);});
+    el.addEventListener('keydown',function(e){
+      if((e.ctrlKey||e.metaKey)&&e.key==='v'){AP.onPaste(e,fid);}
+      if((e.ctrlKey||e.metaKey)&&e.key==='a'){
+        if(!['f-name','f-id','f-class','f-date'].includes(fid)){e.preventDefault();}
+      }
+    });
+    el.addEventListener('drop',function(e){
+      if(e.dataTransfer.types.includes('text/plain')){e.preventDefault();AP.strikes++;AP.updateChip();}
+    });
+  },
+  wireAll:function(){
+    document.querySelectorAll('textarea,input[type=text]').forEach(function(el){
+      if(['f-name','f-id','f-class','f-date'].includes(el.id))return;
+      if(el.closest('.er-node'))return;
+      AP.wire(el);
+    });
+  },
+  buildDots:function(){
+    var row=document.getElementById('apStrikeRow'); if(!row)return;
+    row.innerHTML=''; var total=Math.max(AP.strikes,3);
+    for(var i=0;i<total;i++){var d=document.createElement('div');d.className='ap-sdot'+(i<AP.strikes?' hit':'');row.appendChild(d);}
+  }
+};
+
+function dismissWarning(){document.getElementById('apOverlay').classList.remove('show');}
+
+// ═══════════════════════════════════════════════
+// BUILD
+// ═══════════════════════════════════════════════
+function init(){
+  buildNav(); buildExercises(); loadDraft(); goTo(0);
+  document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
+  setInterval(saveDraft,90000);
+}
+
+function buildNav(){
+  var nav=document.getElementById('navItems');
+  EXERCISES.forEach(function(ex,i){
+    var item=document.createElement('div');
+    item.className='nav-item'; item.id='nav-'+i;
+    item.innerHTML='<div class="nav-dot" id="navdot-'+i+'">'+(i+1)+'</div><span>'+ex.title+'</span>';
+    item.onclick=function(){goTo(i);};
+    nav.appendChild(item);
+  });
+}
+
+function buildExercises(){
+  var container=document.getElementById('exerciseContainer');
+  EXERCISES.forEach(function(ex,i){
+    var card=document.createElement('div');
+    card.className='exercise-card'; card.id='card-'+i;
+    card.innerHTML=buildExHTML(ex,i);
+    container.appendChild(card);
+    card.querySelectorAll('textarea,input,select').forEach(function(el){
+      if(el.closest('.er-node'))return;
+      el.addEventListener('input',function(){updateProgress();autoResize(el);});
+      el.addEventListener('change',function(){updateProgress();});
+    });
+  });
+  // init ER canvases after DOM insertion
+  EXERCISES.forEach(function(ex){
+    ex.sections.forEach(function(sec){
+      if(sec.type==='er-canvas') initERCanvas(sec.canvasId);
+    });
+  });
+}
+
+function buildExHTML(ex,exIdx){
+  var h='';
+  h+='<div class="exercise-header">';
+  h+='<div class="exercise-tag" style="color:'+ex.tagColor+';background:'+ex.tagBg+'">'+ex.tag+'</div>';
+  h+='<div class="exercise-title">'+ex.title+'</div>';
+  h+='<div class="exercise-desc">'+ex.desc+'</div>';
+  h+='<div class="exercise-progress"><div class="ex-prog-bar"><div class="ex-prog-fill" id="exprog-'+exIdx+'" style="width:0%"></div></div><div class="ex-prog-label" id="exprog-lbl-'+exIdx+'">0% answered</div></div>';
+  h+='</div><div class="exercise-body">';
+  h+='<div class="info-box gold"><h4>Setup</h4><p>'+ex.setup+'</p></div>';
+
+  ex.sections.forEach(function(sec){
+    h+='<div class="section-heading">'+sec.heading+'</div>';
+    if(sec.intro) h+='<p style="font-size:13.5px;margin-bottom:.75rem;color:var(--txt2)">'+sec.intro+'</p>';
+
+    if(sec.type==='scenario')                h+='<div class="scenario-box">'+sec.html+'</div>';
+    else if(sec.type==='form-image')         h+=buildFormImage(sec);
+    else if(sec.type==='entity-hunt-table')  h+=buildEntityHuntTable(exIdx,sec.rows||6);
+    else if(sec.type==='attribute-table')    h+=buildAttributeTable(exIdx,sec.rows||10);
+    else if(sec.type==='er-canvas')          h+=buildERCanvasHTML(sec.canvasId);
+
+    if(sec.questions){
+      sec.questions.forEach(function(q){
+        h+='<div class="question-block">';
+        h+='<div class="question-text"><span class="qnum">Q:</span>'+q.text+'</div>';
+        h+='<textarea id="ans-'+q.id+'" rows="'+(q.rows||3)+'" placeholder="Your answer…" oninput="saveField(\''+q.id+'\',this.value);autoResize(this)" onchange="saveField(\''+q.id+'\',this.value)"></textarea>';
+        h+='</div>';
+      });
+    }
+  });
+
+  h+='<div class="nav-btns">';
+  if(exIdx>0) h+='<button class="btn-ghost" onclick="goTo('+(exIdx-1)+')">← Previous</button>';
+  else h+='<div></div>';
+  h+='<div class="nav-btns-right">';
+  if(exIdx<EXERCISES.length-1) h+='<button class="btn-primary" onclick="goTo('+(exIdx+1)+')">Next exercise →</button>';
+  else h+='<button class="btn-success" onclick="finish()">✓ Finish &amp; download</button>';
+  h+='</div></div>';
+  h+='</div>';
+  return h;
+}
+
+function buildFormImage(sec){
+  var src = window[sec.img];
+  return '<div class="form-image-wrap"><img src="'+src+'" alt="'+sec.caption+'"><div class="cap">'+sec.caption+'</div></div>';
+}
+
+function buildEntityHuntTable(i,rows){
+  var h='<div class="table-wrap"><table class="lab-table">';
+  h+='<thead><tr><th style="width:26%">Entity name</th><th>Why does it need to exist?</th><th style="width:22%">Strong or weak entity?</th></tr></thead><tbody>';
+  for(var j=0;j<rows;j++){
+    var id='ent-'+i+'-'+j;
+    h+='<tr>';
+    h+='<td><input type="text" id="'+id+'-name" placeholder="e.g. Student" oninput="saveField(\''+id+'-name\',this.value);updateProgress()"></td>';
+    h+='<td><input type="text" id="'+id+'-why" placeholder="Explain briefly…" oninput="saveField(\''+id+'-why\',this.value);updateProgress()"></td>';
+    h+='<td><select id="'+id+'-type" onchange="saveField(\''+id+'-type\',this.value);updateProgress()"><option value="">—</option><option>Strong</option><option>Weak</option></select></td>';
+    h+='</tr>';
+  }
+  h+='</tbody></table></div>';
+  return h;
+}
+
+function buildAttributeTable(i,rows){
+  var h='<div class="table-wrap"><table class="lab-table">';
+  h+='<thead><tr><th style="width:20%">Entity</th><th>Attribute</th><th style="width:18%">Data type guess</th><th style="width:16%">PK candidate?</th></tr></thead><tbody>';
+  for(var j=0;j<rows;j++){
+    var id='attr-'+i+'-'+j;
+    h+='<tr>';
+    h+='<td><input type="text" id="'+id+'-ent" placeholder="Entity" oninput="saveField(\''+id+'-ent\',this.value);updateProgress()"></td>';
+    h+='<td><input type="text" id="'+id+'-name" placeholder="Attribute name" oninput="saveField(\''+id+'-name\',this.value);updateProgress()"></td>';
+    h+='<td><input type="text" id="'+id+'-dt" placeholder="e.g. VARCHAR" oninput="saveField(\''+id+'-dt\',this.value);updateProgress()"></td>';
+    h+='<td><select id="'+id+'-pk" onchange="saveField(\''+id+'-pk\',this.value);updateProgress()"><option value="">—</option><option>Yes</option><option>No</option></select></td>';
+    h+='</tr>';
+  }
+  h+='</tbody></table></div>';
+  return h;
+}
+
+// ═══════════════════════════════════════════════
+// DRAG & DROP ER BUILDER
+// ═══════════════════════════════════════════════
+function buildERCanvasHTML(canvasId){
+  var h='<div class="er-builder" data-canvas="'+canvasId+'">';
+  h+='<div class="er-toolbar">';
+  h+='<div class="er-tool entity" draggable="true" data-type="entity"><span class="er-tool-icon">▭</span> Entity</div>';
+  h+='<div class="er-tool weak-entity" draggable="true" data-type="weak-entity"><span class="er-tool-icon">▭</span> Weak Entity</div>';
+  h+='<div class="er-tool attribute" draggable="true" data-type="attribute"><span class="er-tool-icon">◯</span> Attribute</div>';
+  h+='<div class="er-tool pk-attribute" draggable="true" data-type="pk-attribute"><span class="er-tool-icon">◯</span> PK Attribute</div>';
+  h+='<div class="er-tool derived-attribute" draggable="true" data-type="derived-attribute"><span class="er-tool-icon">◌</span> Derived Attr</div>';
+  h+='<div class="er-tool multi-attribute" draggable="true" data-type="multi-attribute"><span class="er-tool-icon">◎</span> Multivalued Attr</div>';
+  h+='<div class="er-tool relationship" draggable="true" data-type="relationship"><span class="er-tool-icon">◇</span> Relationship</div>';
+  h+='</div>';
+  h+='<div class="er-canvas-wrap">';
+  h+='<div class="er-canvas" id="ercanvas-'+canvasId+'">';
+  h+='<div class="er-empty-msg" id="erempty-'+canvasId+'">Drag shapes from the toolbar above onto this canvas.<br>Click two shapes in a row to connect them with a line.</div>';
+  h+='<svg class="er-lines" id="erlines-'+canvasId+'"></svg>';
+  h+='</div>';
+  h+='</div>';
+  h+='<div class="er-actions">';
+  h+='<button class="btn-ghost er-conn-btn" id="erconnect-'+canvasId+'" onclick="toggleConnectMode(\''+canvasId+'\')">🔗 Connect mode: off</button>';
+  h+='<button class="btn-ghost" onclick="clearERCanvas(\''+canvasId+'\')">🗑 Clear canvas</button>';
+  h+='<span style="font-size:11.5px;color:var(--txt3);align-self:center;margin-left:auto">Double-click a shape to rename it</span>';
+  h+='</div>';
+  h+='</div>';
+  return h;
+}
+
+function initERCanvas(canvasId){
+  ER_STATE[canvasId] = ER_STATE[canvasId] || {nodes:[], edges:[], connectMode:false, pendingConnect:null, seq:0};
+  var builder = document.querySelector('.er-builder[data-canvas="'+canvasId+'"]');
+  if(!builder) return;
+  var canvas = document.getElementById('ercanvas-'+canvasId);
+
+  // toolbar drag sources
+  builder.querySelectorAll('.er-tool').forEach(function(tool){
+    tool.addEventListener('dragstart', function(e){
+      e.dataTransfer.setData('text/plain', tool.getAttribute('data-type'));
+      e.dataTransfer.effectAllowed='copy';
+    });
+  });
+
+  canvas.addEventListener('dragover', function(e){ e.preventDefault(); });
+  canvas.addEventListener('drop', function(e){
+    e.preventDefault();
+    var type = e.dataTransfer.getData('text/plain');
+    if(!type) return;
+    var rect = canvas.getBoundingClientRect();
+    var x = e.clientX - rect.left;
+    var y = e.clientY - rect.top;
+    addERNode(canvasId, type, x, y);
+  });
+}
+
+function labelForType(type){
+  if(type==='entity') return 'Entity';
+  if(type==='weak-entity') return 'WeakEntity';
+  if(type==='attribute') return 'attribute';
+  if(type==='pk-attribute') return 'pk_attr';
+  if(type==='derived-attribute') return 'derived_attr';
+  if(type==='multi-attribute') return 'multi_attr';
+  if(type==='relationship') return 'relates';
+  return 'node';
+}
+
+function addERNode(canvasId, type, x, y){
+  var state = ER_STATE[canvasId];
+  var id = canvasId+'-node-'+(state.seq++);
+  var node = {id:id, type:type, x:Math.max(0,x-45), y:Math.max(0,y-16), text:labelForType(type)};
+  state.nodes.push(node);
+  renderERNode(canvasId, node);
+  updateERGeometry(canvasId);
+  markERAnswered(canvasId);
+}
+
+function renderERNode(canvasId, node){
+  var canvas = document.getElementById('ercanvas-'+canvasId);
+  var empty = document.getElementById('erempty-'+canvasId);
+  if(empty) empty.style.display='none';
+  var el = document.createElement('div');
+  el.className = 'er-node '+node.type+'-node';
+  el.id = node.id;
+  el.style.left = node.x+'px';
+  el.style.top = node.y+'px';
+  el.innerHTML = '<span class="delbtn" onclick="deleteERNode(\''+canvasId+'\',\''+node.id+'\',event)">✕</span>'+
+    (node.type==='relationship' ? '<span class="rlabel"><input type="text" value="'+node.text+'" oninput="renameERNode(\''+canvasId+'\',\''+node.id+'\',this.value)"></span>' :
+    node.type==='multi-attribute' ? '<span class="mlabel"><input type="text" value="'+node.text+'" oninput="renameERNode(\''+canvasId+'\',\''+node.id+'\',this.value)"></span>' :
+    '<input type="text" value="'+node.text+'" oninput="renameERNode(\''+canvasId+'\',\''+node.id+'\',this.value)">');
+  canvas.appendChild(el);
+  wireNodeDrag(canvasId, el);
+  el.addEventListener('click', function(e){
+    if(e.target.tagName==='INPUT'||e.target.classList.contains('delbtn')) return;
+    handleNodeClickForConnect(canvasId, node.id);
+  });
+}
+
+function renameERNode(canvasId, nodeId, val){
+  var state = ER_STATE[canvasId];
+  var n = state.nodes.find(function(n){return n.id===nodeId;});
+  if(n){ n.text = val; markERAnswered(canvasId); }
+}
+
+function deleteERNode(canvasId, nodeId, evt){
+  if(evt) evt.stopPropagation();
+  var state = ER_STATE[canvasId];
+  state.nodes = state.nodes.filter(function(n){return n.id!==nodeId;});
+  state.edges = state.edges.filter(function(e){return e.from!==nodeId && e.to!==nodeId;});
+  var el = document.getElementById(nodeId);
+  if(el) el.remove();
+  updateERGeometry(canvasId);
+  if(state.nodes.length===0){
+    var empty = document.getElementById('erempty-'+canvasId);
+    if(empty) empty.style.display='block';
+  }
+  markERAnswered(canvasId);
+}
+
+function wireNodeDrag(canvasId, el){
+  var state = ER_STATE[canvasId];
+  var canvas = document.getElementById('ercanvas-'+canvasId);
+  var dragging=false, offX=0, offY=0;
+
+  function startDrag(clientX, clientY){
+    var rect = canvas.getBoundingClientRect();
+    var elRect = el.getBoundingClientRect();
+    offX = clientX - elRect.left;
+    offY = clientY - elRect.top;
+    dragging = true;
+    el.style.zIndex = 10;
+  }
+  function moveDrag(clientX, clientY){
+    if(!dragging) return;
+    var rect = canvas.getBoundingClientRect();
+    var x = clientX - rect.left - offX;
+    var y = clientY - rect.top - offY;
+    x = Math.max(0, Math.min(x, rect.width-30));
+    y = Math.max(0, Math.min(y, rect.height-20));
+    el.style.left = x+'px';
+    el.style.top = y+'px';
+    var n = state.nodes.find(function(n){return n.id===el.id;});
+    if(n){ n.x=x; n.y=y; }
+    updateERGeometry(canvasId);
+  }
+  function endDrag(){ dragging=false; }
+
+  el.addEventListener('mousedown', function(e){
+    if(e.target.tagName==='INPUT'||e.target.classList.contains('delbtn')) return;
+    startDrag(e.clientX, e.clientY);
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', function(e){ moveDrag(e.clientX, e.clientY); });
+  document.addEventListener('mouseup', endDrag);
+
+  el.addEventListener('touchstart', function(e){
+    if(e.target.tagName==='INPUT'||e.target.classList.contains('delbtn')) return;
+    var t=e.touches[0]; startDrag(t.clientX,t.clientY);
+  }, {passive:true});
+  el.addEventListener('touchmove', function(e){
+    var t=e.touches[0]; moveDrag(t.clientX,t.clientY);
+  }, {passive:true});
+  el.addEventListener('touchend', endDrag);
+}
+
+function toggleConnectMode(canvasId){
+  var state = ER_STATE[canvasId];
+  state.connectMode = !state.connectMode;
+  state.pendingConnect = null;
+  var btn = document.getElementById('erconnect-'+canvasId);
+  btn.textContent = state.connectMode ? '🔗 Connect mode: ON — click two shapes' : '🔗 Connect mode: off';
+  btn.classList.toggle('er-connect-active', state.connectMode);
+}
+
+function handleNodeClickForConnect(canvasId, nodeId){
+  var state = ER_STATE[canvasId];
+  if(!state.connectMode) return;
+  if(!state.pendingConnect){
+    state.pendingConnect = nodeId;
+    var el = document.getElementById(nodeId);
+    if(el) el.style.boxShadow = '0 0 0 3px var(--burgundy)';
+  } else {
+    if(state.pendingConnect !== nodeId){
+      openCardinalityPicker(canvasId, state.pendingConnect, nodeId);
+    }
+    var prevEl = document.getElementById(state.pendingConnect);
+    if(prevEl) prevEl.style.boxShadow = '';
+    state.pendingConnect = null;
+  }
+}
+
+function nodeIsAttributeType(canvasId, nodeId){
+  var state = ER_STATE[canvasId];
+  var n = state.nodes.find(function(n){return n.id===nodeId;});
+  return n && (n.type==='attribute' || n.type==='pk-attribute' || n.type==='derived-attribute' || n.type==='multi-attribute');
+}
+
+function openCardinalityPicker(canvasId, fromId, toId){
+  // Entity/weak-entity <-> attribute links never need a cardinality label
+  if(nodeIsAttributeType(canvasId, fromId) || nodeIsAttributeType(canvasId, toId)){
+    var state = ER_STATE[canvasId];
+    state.edges.push({from:fromId, to:toId, connType:'attr'});
+    updateERGeometry(canvasId);
+    markERAnswered(canvasId);
+    return;
+  }
+  var fromEl = document.getElementById(fromId);
+  var fromLabel = fromEl ? (fromEl.querySelector('input')?fromEl.querySelector('input').value:'') : '';
+
+  // remove any existing picker
+  var existing = document.getElementById('cardpicker-overlay');
+  if(existing) existing.remove();
+
+  var overlay = document.createElement('div');
+  overlay.id = 'cardpicker-overlay';
+  overlay.className = 'cardpicker-overlay';
+  overlay.innerHTML =
+    '<div class="cardpicker-modal">' +
+      '<h4>Set cardinality &amp; participation</h4>' +
+      '<p class="cardpicker-sub">How does <strong>'+escapeHtml(fromLabel)+'</strong> participate in this relationship?</p>' +
+      '<div class="cardpicker-row cardpicker-row-single">' +
+        '<div class="cardpicker-side">' +
+          '<div class="cardpicker-entname">'+escapeHtml(fromLabel)+'</div>' +
+          '<select id="cardpicker-from">'+
+            '<option value="1">1</option>'+
+            '<option value="N">N</option>'+
+            '<option value="M">M</option>'+
+          '</select>' +
+          '<label class="cardpicker-total"><input type="checkbox" id="cardpicker-from-total"> Total</label>' +
+        '</div>' +
+      '</div>' +
+      '<p class="cardpicker-note">"Total" = every '+escapeHtml(fromLabel)+' record must participate (double line). Leave unchecked for optional/partial participation (single line).</p>' +
+      '<div class="cardpicker-btns">' +
+        '<button class="btn-ghost" onclick="cancelCardinalityPicker()">Cancel</button>' +
+        '<button class="btn-primary" onclick="confirmCardinalityPicker(\''+canvasId+'\',\''+fromId+'\',\''+toId+'\')">Add connection</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+}
+
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+function cancelCardinalityPicker(){
+  var overlay = document.getElementById('cardpicker-overlay');
+  if(overlay) overlay.remove();
+}
+
+function confirmCardinalityPicker(canvasId, fromId, toId){
+  var fromVal = document.getElementById('cardpicker-from').value;
+  var fromTotal = document.getElementById('cardpicker-from-total').checked;
+  var state = ER_STATE[canvasId];
+  state.edges.push({from:fromId, to:toId, fromCard:fromVal, fromTotal:fromTotal, connType:'card'});
+  cancelCardinalityPicker();
+  updateERGeometry(canvasId);
+  markERAnswered(canvasId);
+}
+
+function updateERGeometry(canvasId){
+  var state = ER_STATE[canvasId];
+  var svg = document.getElementById('erlines-'+canvasId);
+  if(!svg) return;
+  svg.innerHTML='';
+  state.edges.forEach(function(edge){
+    var a = document.getElementById(edge.from);
+    var b = document.getElementById(edge.to);
+    if(!a||!b) return;
+    var canvas = document.getElementById('ercanvas-'+canvasId);
+    var cRect = canvas.getBoundingClientRect();
+    var aRect = a.getBoundingClientRect();
+    var bRect = b.getBoundingClientRect();
+    var x1 = aRect.left + aRect.width/2 - cRect.left;
+    var y1 = aRect.top + aRect.height/2 - cRect.top;
+    var x2 = bRect.left + bRect.width/2 - cRect.left;
+    var y2 = bRect.top + bRect.height/2 - cRect.top;
+    var connType = edge.connType || 'attr';
+
+    if(connType==='card'){
+      drawParticipationSegment(svg, x1, y1, x2, y2, edge.fromTotal);
+      addCardBadge(svg, x1, y1, x2, y2, 0.5, edge.fromCard);
+    } else {
+      var line = document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1',x1); line.setAttribute('y1',y1);
+      line.setAttribute('x2',x2); line.setAttribute('y2',y2);
+      line.setAttribute('stroke','#6E1423');
+      line.setAttribute('stroke-width','1.5');
+      svg.appendChild(line);
+    }
+  });
+}
+
+function drawParticipationSegment(svg, x1, y1, x2, y2, isTotal){
+  if(!isTotal){
+    var line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',x1); line.setAttribute('y1',y1);
+    line.setAttribute('x2',x2); line.setAttribute('y2',y2);
+    line.setAttribute('stroke','#6E1423'); line.setAttribute('stroke-width','2');
+    svg.appendChild(line);
+    return;
+  }
+  // total participation -> draw as two parallel lines (double line)
+  var dx = x2-x1, dy = y2-y1;
+  var len = Math.sqrt(dx*dx+dy*dy) || 1;
+  var nx = -dy/len, ny = dx/len; // unit normal
+  var offset = 2.5;
+  [-1,1].forEach(function(dir){
+    var line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1', x1+nx*offset*dir); line.setAttribute('y1', y1+ny*offset*dir);
+    line.setAttribute('x2', x2+nx*offset*dir); line.setAttribute('y2', y2+ny*offset*dir);
+    line.setAttribute('stroke','#6E1423'); line.setAttribute('stroke-width','2');
+    svg.appendChild(line);
+  });
+}
+
+function addCardBadge(svg, x1, y1, x2, y2, t, label){
+  var x = x1 + (x2-x1)*t;
+  var y = y1 + (y2-y1)*t;
+  var w = 20;
+  var rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  rect.setAttribute('x', x-w/2); rect.setAttribute('y', y-9);
+  rect.setAttribute('width', w); rect.setAttribute('height', 18);
+  rect.setAttribute('rx', 4);
+  rect.setAttribute('fill', '#FBF2DC');
+  rect.setAttribute('stroke', '#D9AE4E');
+  rect.setAttribute('stroke-width','1');
+  var text = document.createElementNS('http://www.w3.org/2000/svg','text');
+  text.setAttribute('x', x); text.setAttribute('y', y+3.5);
+  text.setAttribute('text-anchor','middle');
+  text.setAttribute('font-size','10.5');
+  text.setAttribute('font-weight','700');
+  text.setAttribute('fill','#8a6410');
+  text.setAttribute('font-family','-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif');
+  text.textContent = label;
+  svg.appendChild(rect);
+  svg.appendChild(text);
+}
+
+function clearERCanvas(canvasId){
+  var state = ER_STATE[canvasId];
+  state.nodes=[]; state.edges=[]; state.pendingConnect=null;
+  var canvas = document.getElementById('ercanvas-'+canvasId);
+  canvas.querySelectorAll('.er-node').forEach(function(n){n.remove();});
+  var svg = document.getElementById('erlines-'+canvasId);
+  if(svg) svg.innerHTML='';
+  var empty = document.getElementById('erempty-'+canvasId);
+  if(empty) empty.style.display='block';
+  markERAnswered(canvasId);
+}
+
+function markERAnswered(canvasId){
+  updateProgress();
+}
+
+function serializeERState(){
+  var out={};
+  Object.keys(ER_STATE).forEach(function(k){
+    out[k]={nodes:ER_STATE[k].nodes, edges:ER_STATE[k].edges};
+  });
+  return out;
+}
+
+function loadERState(data){
+  if(!data) return;
+  Object.keys(data).forEach(function(canvasId){
+    var saved = data[canvasId];
+    if(!saved || !saved.nodes) return;
+    var canvas = document.getElementById('ercanvas-'+canvasId);
+    if(!canvas) return;
+    ER_STATE[canvasId] = ER_STATE[canvasId] || {nodes:[], edges:[], connectMode:false, pendingConnect:null, seq:0};
+    var state = ER_STATE[canvasId];
+    state.nodes = saved.nodes; state.edges = saved.edges || [];
+    var maxSeq=0;
+    saved.nodes.forEach(function(n){
+      renderERNode(canvasId, n);
+      var m = n.id.match(/-node-(\d+)$/);
+      if(m) maxSeq = Math.max(maxSeq, parseInt(m[1])+1);
+    });
+    state.seq = maxSeq;
+    setTimeout(function(){ updateERGeometry(canvasId); }, 50);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+function goTo(idx){
+  document.querySelectorAll('.exercise-card').forEach(function(c){c.classList.remove('visible');});
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
+  document.getElementById('completionCard').classList.remove('visible');
+  var card=document.getElementById('card-'+idx);
+  if(card){
+    card.classList.add('visible');
+    window.scrollTo(0,0);
+    card.querySelectorAll('textarea').forEach(function(ta){ autoResize(ta); });
+    card.querySelectorAll('.er-builder').forEach(function(b){
+      var cid = b.getAttribute('data-canvas');
+      setTimeout(function(){ updateERGeometry(cid); }, 60);
+    });
+  }
+  var nav=document.getElementById('nav-'+idx);
+  if(nav)nav.classList.add('active');
+  currentEx=idx;
+}
+
+function finish(){
+  document.querySelectorAll('.exercise-card').forEach(function(c){c.classList.remove('visible');});
+  document.getElementById('completionCard').classList.add('visible');
+  document.getElementById('completionCard').scrollIntoView({behavior:'smooth'});
+  saveDraft();
+}
+
+// ═══════════════════════════════════════════════
+// ANSWERS & PROGRESS
+// ═══════════════════════════════════════════════
+function saveField(id,val){answers[id]=val;}
+
+function autoResize(el){
+  var rows = parseInt(el.getAttribute('rows') || 3);
+  var lineH = parseFloat(getComputedStyle(el).lineHeight) || 22;
+  var padT  = parseFloat(getComputedStyle(el).paddingTop)    || 10;
+  var padB  = parseFloat(getComputedStyle(el).paddingBottom) || 10;
+  var minH  = rows * lineH + padT + padB;
+  el.style.height = 'auto';
+  el.style.height = Math.max(el.scrollHeight, minH) + 'px';
+}
+
+function getAllFields(){
+  var f={};
+  document.querySelectorAll('textarea,input[type=text],select').forEach(function(el){
+    if(el.closest('.er-node')) return;
+    if(el.id&&!['f-name','f-id','f-class','f-date'].includes(el.id))f[el.id]=el;
+  });
+  return f;
+}
+
+function countAnswered(fields){
+  var total=0,done=0;
+  Object.keys(fields).forEach(function(id){
+    var el=fields[id]; total++;
+    var val=(el.value||'').trim();
+    if(val&&val!=='')done++;
+  });
+  return{total:total,done:done};
+}
+
+function updateProgress(){
+  var fields=getAllFields();
+  var counts=countAnswered(fields);
+
+  // count each ER canvas as one countable unit (done if it has >=1 node)
+  var erTotal=0, erDone=0;
+  Object.keys(ER_STATE).forEach(function(k){
+    erTotal++;
+    if(ER_STATE[k].nodes.length>0) erDone++;
+  });
+
+  var totalAll=counts.total+erTotal, doneAll=counts.done+erDone;
+  var pct=totalAll>0?Math.round(doneAll/totalAll*100):0;
+  document.getElementById('progFill').style.width=pct+'%';
+  document.getElementById('progPct').textContent=pct+'%';
+
+  EXERCISES.forEach(function(ex,i){
+    var exFields={};
+    var card=document.getElementById('card-'+i);
+    Object.keys(fields).forEach(function(id){
+      if(card&&card.contains(fields[id]))exFields[id]=fields[id];
+    });
+    var ec=countAnswered(exFields);
+    var exTotal=ec.total, exDone=ec.done;
+    var canvasId = ex.sections.filter(function(s){return s.type==='er-canvas';}).map(function(s){return s.canvasId;})[0];
+    if(canvasId){
+      exTotal+=1;
+      exDone+=(ER_STATE[canvasId]&&ER_STATE[canvasId].nodes.length>0)?1:0;
+    }
+    var epct=exTotal>0?Math.round(exDone/exTotal*100):0;
+    var fill=document.getElementById('exprog-'+i);
+    var lbl=document.getElementById('exprog-lbl-'+i);
+    if(fill)fill.style.width=epct+'%';
+    if(lbl)lbl.textContent=epct+'% answered';
+    var dot=document.getElementById('navdot-'+i);
+    if(dot){
+      if(epct===100){dot.classList.add('done');dot.textContent='✓';}
+      else{dot.classList.remove('done');dot.textContent=i+1;}
+    }
+    var navItem=document.getElementById('nav-'+i);
+    if(navItem)navItem.classList.toggle('done',epct===100);
+  });
+  document.querySelectorAll('textarea').forEach(function(el){
+    el.classList.toggle('answered',(el.value||'').trim().length>0);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// SAVE / LOAD / DOWNLOAD
+// ═══════════════════════════════════════════════
+function gatherAll(){
+  var data={
+    lab:'dbms-960231-er-model-lab',
+    meta:{
+      name:document.getElementById('f-name').value,
+      studentId:document.getElementById('f-id').value,
+      classSection:document.getElementById('f-class').value,
+      date:document.getElementById('f-date').value,
+      savedAt:new Date().toISOString()
+    },
+    answers:{},
+    erDiagrams: serializeERState(),
+    integrityLog:{pasteAttempts:AP.strikes,events:AP.log}
+  };
+  var fields=getAllFields();
+  Object.keys(fields).forEach(function(id){data.answers[id]=fields[id].value;});
+  return data;
+}
+
+function saveDraft(){
+  try{
+    localStorage.setItem('dbms_er_lab_draft',JSON.stringify(gatherAll()));
+    showToast('Draft saved ✓');
+  }catch(e){showToast('Could not save');}
+}
+
+function loadDraft(){
+  try{
+    var raw=localStorage.getItem('dbms_er_lab_draft');
+    if(!raw)return;
+    var data=JSON.parse(raw);
+    if(data.meta){
+      if(data.meta.name)document.getElementById('f-name').value=data.meta.name;
+      if(data.meta.studentId)document.getElementById('f-id').value=data.meta.studentId;
+      if(data.meta.classSection)document.getElementById('f-class').value=data.meta.classSection;
+      if(data.meta.date)document.getElementById('f-date').value=data.meta.date;
+    }
+    if(data.answers){
+      Object.keys(data.answers).forEach(function(id){
+        var el=document.getElementById(id);
+        if(!el)return;
+        el.value=data.answers[id];
+        if(el.tagName==='TEXTAREA')autoResize(el);
+      });
+    }
+    if(data.erDiagrams){
+      loadERState(data.erDiagrams);
+    }
+    updateProgress();
+  }catch(e){}
+}
+
+function downloadJSON(){
+  var data=gatherAll();
+  var name=(data.meta.name||'student').replace(/\s+/g,'-').toLowerCase();
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url; a.download='dbms-er-lab-'+name+'.json'; a.click();
+  URL.revokeObjectURL(url); showToast('Downloaded ✓');
+}
+
+function showToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},2200);
+}
+
+// ═══════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded',function(){
+  init(); AP.buildDots(); AP.wireAll();
+  var observer=new MutationObserver(function(){AP.wireAll();});
+  observer.observe(document.getElementById('exerciseContainer'),{childList:true,subtree:true});
+  AP.record('info','Lab initialised — integrity monitoring active');
+});
+document.addEventListener('keydown',function(e){
+  if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();saveDraft();}
+});
+document.addEventListener('visibilitychange',function(){
+  AP.record('info',document.hidden?'Tab hidden':'Tab visible again');
+});
+document.addEventListener('contextmenu',function(e){
+  var el=e.target;
+  if(el&&(el.tagName==='TEXTAREA'||el.tagName==='INPUT')){
+    if(!['f-name','f-id','f-class','f-date'].includes(el.id) && !el.closest('.er-node')){e.preventDefault();}
+  }
+});
+window.addEventListener('resize', function(){
+  Object.keys(ER_STATE).forEach(function(k){ updateERGeometry(k); });
+});
+
+</script>
+</body>
+</html>
