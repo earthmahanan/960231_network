@@ -1,0 +1,1646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DBMS Lab — Section 01: ER Model to Relational Schema Mapping</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F7F1E8;
+  --card:#FFFEFB;
+  --burgundy:#6E1423;
+  --burgundy-light:#8C1D2E;
+  --burgundy-dark:#4A0E18;
+  --gold:#C9962C;
+  --gold-light:#E8C46A;
+  --gold-bg:#FBF2DC;
+  --gold-bd:#D9AE4E;
+  --teal:#0F6E56;
+  --teal-bg:#E1F5EE;
+  --teal-bd:#5DCAA5;
+  --red:#791F1F;
+  --red-bg:#FCEBEB;
+  --red-bd:#F09595;
+  --purple:#6E2A6E;
+  --purple-bg:#EFE4F0;
+  --purple-bd:#C9A8CC;
+  --txt:#2b211c;
+  --txt2:#6b5d52;
+  --txt3:#9a8c7f;
+  --bdr:#e3d5bf;
+  --bdr2:#cbb894;
+  --radius:10px;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+html,body{min-height:100%;background:var(--bg);font-family:var(--sans);color:var(--txt);font-size:15px;line-height:1.6}
+.shell{display:flex;min-height:100vh}
+.sidebar{width:260px;flex-shrink:0;background:var(--burgundy);position:sticky;top:0;height:100vh;overflow-y:auto;padding:1.5rem 0}
+.main{flex:1;max-width:920px;padding:2rem 2.5rem 4rem;min-width:0}
+@media(max-width:768px){.sidebar{display:none}.main{padding:1.25rem 1rem 3rem}}
+
+.sidebar-logo{font-size:17px;font-weight:700;color:#fff;padding:0 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:8px;line-height:1.3;flex-wrap:wrap}
+.sidebar-logo .mod-badge{font-size:11px;font-weight:600;background:rgba(201,150,44,.28);color:var(--gold-light);border-radius:4px;padding:2px 7px;letter-spacing:.05em}
+.sidebar-title{font-size:11px;font-weight:600;color:rgba(255,255,255,.5);letter-spacing:.08em;text-transform:uppercase;padding:0 1.25rem;margin-bottom:.75rem}
+.nav-item{display:flex;align-items:center;gap:10px;padding:.6rem 1.25rem;cursor:pointer;transition:background .15s;font-size:13px;color:rgba(255,255,255,.8);border-left:3px solid transparent}
+.nav-item:hover{background:rgba(255,255,255,.08)}
+.nav-item.active{background:rgba(255,255,255,.12);color:#fff;border-left-color:var(--gold-light)}
+.nav-item.done{color:rgba(255,255,255,.9)}
+.nav-dot{width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;transition:all .2s}
+.nav-dot.done{background:var(--gold-light);border-color:var(--gold-light);color:var(--burgundy-dark)}
+.nav-dot.active{border-color:#fff;color:#fff}
+.progress-bar-wrap{padding:1rem 1.25rem .5rem;margin-top:.5rem}
+.progress-bar-label{font-size:11px;color:rgba(255,255,255,.55);margin-bottom:6px;display:flex;justify-content:space-between}
+.progress-bar{height:4px;background:rgba(255,255,255,.18);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:var(--gold-light);border-radius:2px;transition:width .4s ease}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.75rem;flex-wrap:wrap;gap:12px}
+.topbar-left h1{font-size:22px;font-weight:700;color:var(--burgundy);margin-bottom:2px}
+.topbar-left p{font-size:13px;color:var(--txt2)}
+.topbar-right{display:flex;gap:8px;align-items:center}
+button{font-family:var(--sans);cursor:pointer;border:none;border-radius:8px;font-size:13px;font-weight:500;padding:8px 16px;transition:all .15s}
+button:disabled{opacity:.4;cursor:not-allowed}
+.btn-ghost{background:transparent;border:1.5px solid var(--bdr2);color:var(--txt2)}
+.btn-ghost:hover:not(:disabled){background:var(--card);border-color:var(--burgundy);color:var(--burgundy)}
+.btn-primary{background:var(--burgundy);color:#fff}
+.btn-primary:hover:not(:disabled){background:var(--burgundy-light)}
+.btn-success{background:var(--gold);color:#3b2a08}
+.btn-success:hover:not(:disabled){background:var(--gold-light)}
+
+.student-banner{background:var(--card);border:1.5px solid var(--bdr);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1.75rem;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.student-banner h3{font-size:12px;font-weight:600;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.75rem}
+.student-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:520px){.student-grid{grid-template-columns:1fr}}
+.field-group{display:flex;flex-direction:column;gap:4px}
+.field-group label{font-size:12px;font-weight:600;color:var(--txt2)}
+.field-group input{border:1.5px solid var(--bdr);border-radius:6px;padding:7px 10px;font-size:14px;font-family:var(--sans);color:var(--txt);background:var(--bg);transition:border .15s}
+.field-group input:focus{outline:none;border-color:var(--burgundy);background:#fff}
+
+.exercise-card{background:var(--card);border:1.5px solid var(--bdr);border-radius:var(--radius);margin-bottom:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden;display:none}
+.exercise-card.visible{display:block}
+.exercise-header{padding:1.25rem 1.5rem 1rem;border-bottom:1.5px solid var(--bdr)}
+.exercise-tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;display:inline-block;padding:2px 8px;border-radius:4px;margin-bottom:6px}
+.exercise-title{font-size:19px;font-weight:700;color:var(--burgundy);margin-bottom:3px}
+.exercise-desc{font-size:13px;color:var(--txt2)}
+.exercise-body{padding:1.25rem 1.5rem}
+.exercise-progress{display:flex;align-items:center;gap:8px;margin-top:.75rem}
+.ex-prog-bar{flex:1;height:5px;background:var(--bg);border-radius:3px;overflow:hidden}
+.ex-prog-fill{height:100%;background:var(--gold-bd);border-radius:3px;transition:width .3s}
+.ex-prog-label{font-size:11px;color:var(--txt3);white-space:nowrap}
+
+.info-box{border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem;border:.5px solid}
+.info-box h4{font-size:13px;font-weight:700;margin-bottom:.4rem}
+.info-box p,.info-box ul,.info-box ol{font-size:13.5px;line-height:1.7}
+.info-box ul,.info-box ol{padding-left:1.25rem}
+.info-box.gold{background:var(--gold-bg);border-color:var(--gold-bd)}.info-box.gold h4{color:#8a6410}
+.info-box.teal{background:var(--teal-bg);border-color:var(--teal-bd)}.info-box.teal h4{color:var(--teal)}
+.info-box.red{background:var(--red-bg);border-color:var(--red-bd)}.info-box.red h4{color:var(--red)}
+.info-box.gray{background:#f4f0e6;border-color:var(--bdr)}.info-box.gray h4{color:var(--txt2)}
+.info-box code{font-family:var(--mono);background:rgba(0,0,0,.06);padding:1px 5px;border-radius:4px;font-size:12px}
+
+.section-heading{font-size:15px;font-weight:700;color:var(--burgundy);margin:1.5rem 0 .75rem;padding-bottom:.4rem;border-bottom:2px solid var(--gold-bg)}
+.step-label{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--burgundy);background:var(--gold-bg);border-radius:4px;padding:3px 10px;margin-bottom:.6rem}
+
+.question-block{margin-bottom:1.25rem}
+.question-text{font-size:14px;font-weight:600;color:var(--txt);margin-bottom:.5rem;line-height:1.5}
+.question-text .qnum{color:var(--burgundy);margin-right:4px}
+textarea{width:100%;border:1.5px solid var(--bdr);border-radius:8px;padding:10px 12px;font-size:13.5px;font-family:var(--mono);color:var(--txt);background:var(--bg);resize:vertical;transition:border .15s;line-height:1.6;min-height:90px;box-sizing:border-box}
+textarea:focus{outline:none;border-color:var(--burgundy);background:#fff}
+textarea.answered{border-color:var(--gold-bd);background:#fffdf6}
+.hint{font-size:12px;color:var(--txt3);margin-top:4px;font-style:italic}
+
+.table-wrap{overflow-x:auto;margin-bottom:1rem;border-radius:8px;border:1.5px solid var(--bdr)}
+.lab-table{width:100%;border-collapse:collapse;font-size:13px}
+.lab-table th{background:var(--burgundy);color:#fff;padding:8px 10px;text-align:left;font-weight:600;font-size:12px}
+.lab-table td{border-bottom:1px solid var(--bdr);padding:6px 8px;vertical-align:top}
+.lab-table tr:last-child td{border-bottom:none}
+.lab-table tr:nth-child(even) td{background:#faf6ec}
+.lab-table td input[type=text],.lab-table td select{width:100%;border:1px solid var(--bdr);border-radius:4px;padding:5px 7px;font-size:12.5px;font-family:var(--sans);background:#fff;color:var(--txt)}
+.lab-table td input[type=text]:focus,.lab-table td select:focus{outline:none;border-color:var(--burgundy)}
+.lab-table .row-label{font-weight:600;color:var(--burgundy);background:#f2ead9 !important;white-space:nowrap;font-size:12.5px}
+
+.form-image-wrap{text-align:center;margin-bottom:1rem;background:#fff;border:1.5px solid var(--bdr);border-radius:8px;padding:1rem}
+.form-image-wrap img{max-width:100%;height:auto;border-radius:4px;border:1px solid var(--bdr);cursor:zoom-in}
+.form-image-wrap .cap{font-size:12px;color:var(--txt2);margin-top:.5rem;font-weight:600}
+
+.scenario-box{background:var(--gold-bg);border:1px solid var(--gold-bd);border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem;font-size:13.5px;line-height:1.8;color:#3b2a08}
+.scenario-box strong{color:var(--burgundy)}
+.scenario-box ul{padding-left:1.25rem;margin-top:.4rem}
+.scenario-box li{margin-bottom:.5rem}
+
+.fun-fact{display:flex;gap:10px;align-items:flex-start;background:var(--purple-bg);border:.5px solid var(--purple-bd);border-radius:8px;padding:.85rem 1rem;margin-bottom:1.25rem}
+.fun-fact .ff-icon{font-size:22px;line-height:1}
+.fun-fact .ff-text{font-size:13px;color:var(--purple);line-height:1.6}
+.fun-fact .ff-text strong{color:var(--purple)}
+
+.checklist{list-style:none;margin-bottom:1rem}
+.checklist li{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--txt2);padding:5px 0}
+.checklist li input{margin-top:3px;accent-color:var(--burgundy)}
+
+.nav-btns{display:flex;justify-content:space-between;align-items:center;margin-top:1.75rem;padding-top:1.25rem;border-top:1.5px solid var(--bdr)}
+.nav-btns-right{display:flex;gap:8px}
+
+.completion-card{background:var(--card);border:2px solid var(--gold-bd);border-radius:var(--radius);padding:2rem;text-align:center;box-shadow:0 4px 16px rgba(110,20,35,.12);display:none}
+.completion-card.visible{display:block}
+.completion-card .check{font-size:52px;margin-bottom:.75rem}
+.completion-card h2{font-size:24px;font-weight:700;color:var(--burgundy);margin-bottom:.5rem}
+.completion-card p{font-size:15px;color:var(--txt2);margin-bottom:1.5rem}
+.completion-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+.toast{position:fixed;bottom:1.25rem;right:1.25rem;background:var(--burgundy);color:#fff;font-size:13px;padding:9px 16px;border-radius:8px;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;z-index:100}
+.toast.show{opacity:1;transform:translateY(0)}
+
+.badge-oto{color:#8a6410;background:var(--gold-bg);border:1px solid var(--gold-bd)}
+.badge-omany{color:var(--teal);background:var(--teal-bg);border:1px solid var(--teal-bd)}
+.badge-manymany{color:var(--red);background:var(--red-bg);border:1px solid var(--red-bd)}
+.badge{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 7px;border-radius:4px;display:inline-block;margin-left:6px}
+
+/* ═══ RELATIONAL SCHEMA BUILDER (CANVAS) ═══ */
+.schema-builder{border:1.5px solid var(--bdr);border-radius:10px;overflow:hidden;margin-bottom:1rem;background:#fff}
+.schema-toolbar{display:flex;gap:8px;align-items:center;padding:.85rem 1rem;background:var(--gold-bg);border-bottom:1.5px solid var(--bdr);flex-wrap:wrap}
+.schema-toolbar span{font-size:11.5px;color:var(--txt3);margin-left:auto}
+.schema-body{padding:1rem;position:relative;min-height:460px;overflow:auto}
+.schema-empty{font-size:13px;color:var(--txt3);padding:1.5rem;text-align:center;width:100%}
+.fk-arrows-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:5;overflow:visible}
+.tbl-col-row{position:relative}
+.tbl-card{border:1.6px solid #0C447C;border-radius:8px;width:280px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.1);position:absolute;left:0;top:0;user-select:none}
+.tbl-card.dragging{box-shadow:0 6px 20px rgba(0,0,0,.22);z-index:20;transition:none}
+.tbl-head{background:#0C447C;color:#fff;padding:7px 10px;border-radius:6px 6px 0 0;display:flex;align-items:center;gap:6px;cursor:grab}
+.tbl-head:active{cursor:grabbing}
+.tbl-head input{flex:1;background:transparent;border:none;color:#fff;font-weight:700;font-size:13px;font-family:var(--sans)}
+.tbl-head input:focus{outline:none}
+.tbl-head .delbtn{width:18px;height:18px;background:rgba(255,255,255,.25);color:#fff;border-radius:50%;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.tbl-head .delbtn:hover{background:var(--red)}
+.tbl-cols{padding:2px 0}
+.tbl-col-row{display:grid;grid-template-columns:18px 18px 1fr 20px;gap:5px;align-items:center;padding:4px 8px;border-bottom:1px solid #f0ece0}
+.tbl-col-row:last-child{border-bottom:none}
+.tbl-col-row input[type=checkbox]{cursor:pointer}
+.tbl-col-row input[type=text]{border:none;background:transparent;font-size:11.5px;font-family:var(--mono);color:var(--txt);min-width:0}
+.tbl-col-row input[type=text]:focus{outline:none;background:#fffdf0}
+.tbl-col-row.pk input[type=text]{font-weight:700;text-decoration:underline;color:var(--teal)}
+.tbl-col-row.fk input[type=text]{color:#8a6410;font-style:italic}
+.tbl-col-del{opacity:0;font-size:10px;color:var(--red);cursor:pointer;text-align:center}
+.tbl-col-row:hover .tbl-col-del{opacity:1}
+.tbl-col-legend{display:flex;gap:8px;padding:2px 8px;font-size:9px;color:var(--txt3)}
+.tbl-addcol{width:100%;background:#faf6ec;border:none;border-top:1px dashed var(--bdr);padding:5px 8px;font-size:11px;color:var(--txt2);text-align:left;cursor:pointer;border-radius:0 0 6px 6px}
+.tbl-addcol:hover{background:var(--gold-bg);color:var(--burgundy)}
+.er-connect-active{background:var(--burgundy) !important;color:#fff !important;border-color:var(--burgundy) !important}
+
+/* ═══ CROW'S FOOT LEGEND ═══ */
+.cf-legend{display:flex;flex-wrap:wrap;gap:14px;background:#fff;border:1.5px solid var(--bdr);border-radius:8px;padding:.85rem 1rem;margin-bottom:1rem}
+.cf-legend-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--txt2)}
+.cf-legend-item svg{flex-shrink:0}
+.cf-legend-item b{color:var(--txt)}
+
+/* ═══ CROW'S FOOT ER BUILDER (CANVAS) ═══ */
+.er-builder{border:1.5px solid var(--bdr);border-radius:10px;overflow:hidden;margin-bottom:1rem;background:#fff}
+.er-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:.85rem 1rem;background:var(--gold-bg);border-bottom:1.5px solid var(--bdr)}
+.er-tool{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:8px;font-size:11.5px;font-weight:600;cursor:grab;user-select:none;border:1.5px solid;transition:transform .1s;background:#E6F1FB;border-color:#85B7EB;color:#0C447C}
+.er-tool.weak-entity{border-style:double;border-width:4px}
+.er-tool:active{cursor:grabbing;transform:scale(.96)}
+.er-tool-icon{font-size:14px}
+.er-toolbar-hint{font-size:11px;color:var(--txt3);margin-left:auto}
+.er-canvas-wrap{position:relative}
+.er-canvas{position:relative;width:100%;height:640px;background:
+    linear-gradient(0deg,transparent 24px,rgba(0,0,0,.035) 25px),
+    linear-gradient(90deg,transparent 24px,rgba(0,0,0,.035) 25px);
+  background-size:25px 25px;background-color:#fdfbf6;overflow:auto;touch-action:none}
+svg.er-lines{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1}
+
+.cf-entity{position:absolute;min-width:170px;background:#fff;border:1.6px solid #0C447C;border-radius:6px;box-shadow:0 2px 6px rgba(0,0,0,.1);z-index:5;font-size:12px}
+.cf-entity.weak{border-style:double;border-width:5px}
+.cf-entity.selected{box-shadow:0 0 0 3px var(--burgundy),0 2px 6px rgba(0,0,0,.1)}
+.cf-head{background:#0C447C;color:#fff;padding:6px 8px;border-radius:4px 4px 0 0;display:flex;align-items:center;gap:6px;cursor:grab}
+.cf-head:active{cursor:grabbing}
+.cf-head input{flex:1;background:transparent;border:none;color:#fff;font-weight:700;font-size:12.5px;font-family:var(--sans);min-width:40px}
+.cf-head input:focus{outline:none}
+.cf-head .delbtn{width:16px;height:16px;background:rgba(255,255,255,.25);color:#fff;border-radius:50%;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.cf-head .delbtn:hover{background:var(--red)}
+.cf-attrs{padding:4px 0}
+.cf-attr-legend{display:flex;gap:6px;padding:2px 8px;font-size:9px;color:var(--txt3)}
+.cf-attr-row{display:flex;align-items:center;flex-wrap:wrap;gap:5px;padding:3px 8px;border-bottom:1px solid #f0ece0}
+.cf-attr-row:last-child{border-bottom:none}
+.cf-attr-row input[type=checkbox]{flex-shrink:0;cursor:pointer}
+.cf-attr-row input[type=text]{flex:1;border:none;background:transparent;font-size:11.5px;font-family:var(--sans);color:var(--txt);min-width:40px}
+.cf-attr-row input[type=text]:focus{outline:none;background:#fffdf0}
+.cf-attr-row.pk input[type=text]{font-weight:700;text-decoration:underline;color:var(--teal)}
+.cf-attr-row.fk input[type=text]{color:#8a6410;font-style:italic}
+.cf-attr-row .attr-del{opacity:0;font-size:10px;color:var(--red);cursor:pointer;flex-shrink:0}
+.cf-attr-row:hover .attr-del{opacity:1}
+.cf-attr-fkref{flex-basis:100%;font-size:10.5px;font-style:italic;color:#8a6410;border:1px dashed var(--gold-bd);border-radius:4px;padding:3px 6px;background:var(--gold-bg);font-family:var(--mono)}
+.cf-addattr{width:100%;background:#faf6ec;border:none;border-top:1px dashed var(--bdr);padding:4px 8px;font-size:11px;color:var(--txt2);text-align:left;cursor:pointer;border-radius:0 0 4px 4px}
+.cf-addattr:hover{background:var(--gold-bg);color:var(--burgundy)}
+
+.er-actions{display:flex;gap:8px;padding:.6rem 1rem;background:#faf6ec;border-top:1.5px solid var(--bdr);flex-wrap:wrap;align-items:center}
+.er-actions button{font-size:12px;padding:6px 12px}
+.er-conn-btn{font-size:11.5px !important;padding:5px 10px !important}
+.er-conn-btn.er-connect-active{background:var(--burgundy) !important;color:#fff !important;border-color:var(--burgundy) !important}
+
+.relpicker-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;display:flex;align-items:center;justify-content:center;padding:1rem}
+.relpicker-modal{background:#fff;border-radius:12px;padding:1.5rem 1.75rem;max-width:460px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.relpicker-modal h4{font-size:15px;font-weight:700;color:var(--burgundy);margin-bottom:.35rem;text-align:center}
+.relpicker-modal .rp-sub{font-size:12px;color:var(--txt2);text-align:center;margin-bottom:1rem}
+.rp-label-field{margin-bottom:1rem}
+.rp-label-field label{display:block;font-size:11.5px;font-weight:600;color:var(--txt2);margin-bottom:4px}
+.rp-label-field input{width:100%;border:1.5px solid var(--bdr2);border-radius:6px;padding:8px 10px;font-size:13px;font-family:var(--sans)}
+.rp-sides{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem}
+.rp-side{border:1.5px solid var(--bdr);border-radius:8px;padding:.7rem .8rem}
+.rp-side .rp-entname{font-size:12px;font-weight:700;color:var(--burgundy);margin-bottom:6px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rp-side select{width:100%;border:1.5px solid var(--bdr2);border-radius:6px;padding:6px 8px;font-size:12px;color:var(--txt)}
+.rp-note{font-size:11px;color:var(--txt3);line-height:1.5;text-align:center;margin-bottom:1rem;padding:0 4px}
+.rp-btns{display:flex;gap:8px;justify-content:center}
+.rp-btns button{font-size:13px}
+
+.zoom-overlay{display:none;position:fixed;inset:0;background:rgba(20,10,8,.85);z-index:200;align-items:center;justify-content:center;padding:2rem;cursor:zoom-out}
+.zoom-overlay.visible{display:flex}
+.zoom-overlay img{max-width:100%;max-height:100%;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+
+@media print{
+  .sidebar,.topbar-right,.nav-btns,.toast,.zoom-overlay,
+  .er-toolbar,.er-actions,.schema-toolbar,
+  .cf-legend .er-toolbar-hint{display:none !important}
+  html,body{background:#fff}
+  .shell{display:block}
+  .main{max-width:100%;padding:0 .25in}
+  .exercise-card{display:block !important;break-inside:avoid;box-shadow:none;border:1px solid #ccc;margin-bottom:1rem;page-break-inside:avoid}
+  .exercise-card + .exercise-card{page-break-before:always}
+  .completion-card{display:none !important}
+  textarea{border:1px solid #ccc;min-height:60px;background:#fff !important}
+  .er-canvas,.schema-body{height:auto !important;min-height:120px;overflow:visible !important;background:#fff !important}
+  .cf-entity,.tbl-card{position:relative !important;left:auto !important;top:auto !important;display:inline-block;vertical-align:top;margin:6px;break-inside:avoid}
+  .form-image-wrap img{max-height:6in;object-fit:contain}
+  body{font-size:11.5px}
+  a[href]:after{content:""}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="sidebar">
+    <div class="sidebar-logo">ER Modeling & Relational Schema Mapping <span class="mod-badge">960231</span></div>
+    <div class="sidebar-title">Exercises</div>
+    <div class="nav-item active" id="nav-0" onclick="showExercise(0)">
+      <span class="nav-dot active" id="navdot-0">1</span> University Registration &amp; Accommodation
+    </div>
+    <div class="nav-item" id="nav-1" onclick="showExercise(1)">
+      <span class="nav-dot" id="navdot-1">2</span> The Movie Database
+    </div>
+    <div class="nav-item" id="nav-2" onclick="showExercise(2)">
+      <span class="nav-dot" id="navdot-2">3</span> Real-Estate Agency
+    </div>
+    <div class="nav-item" id="nav-3" onclick="showExercise(3)">
+      <span class="nav-dot" id="navdot-3">4</span> Sales Dept. ERD (Crow's Foot)
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-label"><span>Overall progress</span><span id="progPct">0%</span></div>
+      <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1>DBMS Labsheet — ER Modeling &amp; Relational Schema Mapping</h1>
+        <p>Turn every diamond and box into a proper table — then design one from scratch. No shortcuts, no guessing.</p>
+      </div>
+      <div class="topbar-right">
+        <button class="btn-ghost" onclick="saveDraft()">💾 Save draft</button>
+        <button class="btn-primary" onclick="printLab()">🖨️ Print / Export PDF</button>
+      </div>
+    </div>
+
+    <div class="student-banner">
+      <h3>Student Information</h3>
+      <div class="student-grid">
+        <div class="field-group"><label>Full Name</label><input type="text" id="f-name" placeholder="Your name"></div>
+        <div class="field-group"><label>Student ID</label><input type="text" id="f-id" placeholder="e.g. 6512345"></div>
+        <div class="field-group"><label>Section</label><input type="text" id="f-class" placeholder="e.g. DBMS-960231 / Sec 1"></div>
+        <div class="field-group"><label>Date</label><input type="date" id="f-date"></div>
+      </div>
+    </div>
+
+    <div class="fun-fact">
+      <div class="ff-icon">🧩</div>
+      <div class="ff-text"><strong>Why this matters:</strong> every ORM you'll ever use (Prisma, Sequelize, SQLAlchemy, Hibernate) is quietly doing this exact mapping behind the scenes. Nail it by hand once, and generated migrations will never look like magic to you again.</div>
+    </div>
+
+    <!-- ═══ EXERCISE 1 ═══ -->
+    <section class="exercise-card visible" id="card-0">
+      <div class="exercise-header">
+        <span class="exercise-tag" style="background:var(--gold-bg);color:#8a6410">Exercise 1 of 4</span>
+        <div class="exercise-title">The University Registration &amp; Accommodation ERD</div>
+        <div class="exercise-desc">Map your own ER diagram from Lab 06 into a full relational schema.</div>
+        <div class="exercise-progress">
+          <div class="ex-prog-bar"><div class="ex-prog-fill" id="exprog-0" style="width:0%"></div></div>
+          <span class="ex-prog-label" id="exprog-lbl-0">0% answered</span>
+        </div>
+      </div>
+      <div class="exercise-body">
+        <div class="info-box gold">
+          <h4>📌 Task</h4>
+          <p>Use the ERD you designed yourself in <strong>Lab 06 (University Registration &amp; Accommodation)</strong>. This exercise has no given diagram — you bring your own, so keep it next to this page as you work.</p>
+        </div>
+
+        <!-- <div class="section-heading">Step 1 · Recall the mapping rules</div>
+        <div class="info-box teal">
+          <h4>✅ Quick-reference: ER → Relational</h4>
+          <ul>
+            <li><strong>Strong entity</strong> → its own table; PK = entity's key attribute.</li>
+            <li><strong>Weak entity</strong> → own table; PK = its partial key + owner's PK (composite).</li>
+            <li><strong>Multi-valued attribute</strong> → separate table with FK back to the owner.</li>
+            <li><strong>1:1 relationship</strong> → merge FK into either side (prefer the participating/optional side).</li>
+            <li><strong>1:N relationship</strong> → FK goes on the "many" side.</li>
+            <li><strong>M:N relationship</strong> → new bridge/junction table holding both PKs (+ any relationship attributes).</li>
+          </ul>
+        </div> -->
+
+        <div class="section-heading">Step 1 · Build your relational schema on the canvas</div>
+        <div class="question-block">
+          <div class="question-text"><span class="qnum">Q1.1</span> Add one table card per schema. Tick the left checkbox for <strong>PK</strong>, tick the right checkbox for <strong>FK</strong> then type what it references (e.g. <code style="font-family:var(--mono)">Building.BuildingID</code>). Turn on FK arrows to visually check your links.</div>
+          <div id="schema-ex1-slot"></div>
+        </div>
+        <div class="question-block">
+          <div class="question-text"><span class="qnum">Q1.2 Is there anything you would like to change in your ERD after finishing the relational-to-schema mapping?</span> </div>
+          <textarea id="q1-bridge" placeholder=""></textarea>
+        </div>
+        <!-- <div class="question-block">
+          <div class="question-text"><span class="qnum">Q1.3</span> Which entity, if any, turned out to be a weak entity? Justify why it cannot exist without its owner.</div>
+          <textarea id="q1-weak" placeholder="e.g. ROOM_BOOKING is weak because a booking record only makes sense tied to a specific ROOM..."></textarea>
+        </div> -->
+
+        <div class="fun-fact">
+          <div class="ff-icon">💡</div>
+          <div class="ff-text"><strong>Sanity check:</strong> count your relationships in the ERD, then count your foreign keys + bridge tables in the schema. They should match 1-for-1.</div>
+        </div>
+      </div>
+      <div class="nav-btns">
+        <button class="btn-ghost" disabled>← Previous</button>
+        <div class="nav-btns-right"><button class="btn-primary" onclick="showExercise(1)">Next: Movie Database →</button></div>
+      </div>
+    </section>
+
+    <!-- ═══ EXERCISE 2 ═══ -->
+    <section class="exercise-card" id="card-1">
+      <div class="exercise-header">
+        <span class="exercise-tag" style="background:var(--teal-bg);color:var(--teal)">Exercise 2 of 4</span>
+        <div class="exercise-title">The Movie Database</div>
+        <div class="exercise-desc">Map the given ERD below into a relational schema.</div>
+        <div class="exercise-progress">
+          <div class="ex-prog-bar"><div class="ex-prog-fill" id="exprog-1" style="width:0%"></div></div>
+          <span class="ex-prog-label" id="exprog-lbl-1">0% answered</span>
+        </div>
+      </div>
+      <div class="exercise-body">
+        <div class="form-image-wrap">
+          <img src="erd_02.png" alt="Movie Database ER Diagram" onclick="openZoom(this.src)">
+          <div class="cap">Given ERD — The Movie Database (click to zoom)</div>
+        </div>
+
+        <!-- <div class="section-heading">Step 1 · Identify every construct</div>
+        <div class="question-block">
+          <div class="question-text"><span class="qnum">Q2.1</span> List all entities (strong &amp; weak) and all relationships with their cardinalities (1:1, 1:N, M:N).</div>
+          <textarea id="q2-identify" placeholder="Entities: MOVIE, ACTOR, DIRECTOR, GENRE, ...&#10;Relationships: MOVIE—ACTOR (M:N, 'acts in'), MOVIE—DIRECTOR (N:1), ..."></textarea>
+        </div> -->
+
+        <div class="section-heading">Step 1 · Build the relational schema on the canvas</div>
+        <div class="question-block">
+          <div class="question-text"><span class="qnum">Q2.1</span> Map the diagram into table cards: table name, all attributes, PK/FK checkboxes. Remember — this diagram has THREE separate M:N relationships, so you'll need bridge tables for Has(ProductionCompany–Movie is 1:N, no bridge needed), Directed_by, Act_in, and Speaks/Has(Movies–Quotes).</div>
+          <div id="schema-ex2-slot"></div>
+        </div>
+        <!-- <div class="question-block">
+          <div class="question-text"><span class="qnum">Q2.2</span> Pick the one M:N relationship in this diagram you find trickiest. Explain, in your own words, why a bridge table is the only correct solution (why can't you just add a FK to either side?).</div>
+          <textarea id="q2-explain" placeholder="Because each movie can have many actors AND each actor can appear in many movies, a single FK column on either table can only store one value per row..."></textarea>
+        </div> -->
+
+        <div class="info-box red">
+          <h4>⚠️ Common mistake</h4>
+          <p>Don't forget attributes that belong to the <em>relationship itself</em> (like an actor's role name, or a screening date) — these live in the bridge table, not in either entity table.</p>
+        </div>
+      </div>
+      <div class="nav-btns">
+        <button class="btn-ghost" onclick="showExercise(0)">← Previous</button>
+        <div class="nav-btns-right"><button class="btn-primary" onclick="showExercise(2)">Next: Real-Estate Agency →</button></div>
+      </div>
+    </section>
+
+    <!-- ═══ EXERCISE 3 ═══ -->
+    <section class="exercise-card" id="card-2">
+      <div class="exercise-header">
+        <span class="exercise-tag" style="background:var(--red-bg);color:var(--red)">Exercise 3 of 4</span>
+        <div class="exercise-title">The Real-Estate Agency Forms</div>
+        <div class="exercise-desc">Map the given ERD, then produce a complete data dictionary.</div>
+        <div class="exercise-progress">
+          <div class="ex-prog-bar"><div class="ex-prog-fill" id="exprog-2" style="width:0%"></div></div>
+          <span class="ex-prog-label" id="exprog-lbl-2">0% answered</span>
+        </div>
+      </div>
+      <div class="exercise-body">
+        <div class="form-image-wrap">
+          <img src="erd_03.png" alt="Real-Estate Agency ER Diagram" onclick="openZoom(this.src)">
+          <div class="cap">Given ERD — Real-Estate Agency (click to zoom)</div>
+        </div>
+
+        <div class="section-heading">Step 1 · Build the relational schema on the canvas</div>
+        <div class="question-block">
+          <div class="question-text"><span class="qnum">Q3.1</span> Map the ERD into relational schema.</div>
+          <div id="schema-ex3-slot"></div>
+        </div>
+
+        <div class="section-heading">Step 2 · Data dictionary</div>
+        <div class="info-box gold">
+          <h4>📖 What a data dictionary needs</h4>
+          <p>For every attribute of every table: data type, size/precision, nullability, default (if any), and a one-line business meaning. This is what a real DBA hands to the dev team before anyone writes a single migration.</p>
+        </div>
+        <div class="table-wrap">
+          <table class="lab-table" id="dict-table">
+            <thead><tr><th style="width:16%">Table</th><th style="width:16%">Attribute</th><th style="width:14%">Data Type</th><th style="width:10%">Nullable?</th><th style="width:12%">Key</th><th>Description</th></tr></thead>
+            <tbody id="dict-rows"></tbody>
+          </table>
+        </div>
+        <button class="btn-ghost" onclick="addDictRow()">+ Add row</button>
+
+        <div class="fun-fact" style="margin-top:1.25rem">
+          <div class="ff-icon">🏠</div>
+          <div class="ff-text"><strong>Real talk:</strong> real-estate platforms like Zillow run on schemas that look almost exactly like what you're building here — property, agent, client, viewing/booking. You're not doing a toy exercise, you're doing day-one work at a proptech startup.</div>
+        </div>
+      </div>
+      <div class="nav-btns">
+        <button class="btn-ghost" onclick="showExercise(1)">← Previous</button>
+        <div class="nav-btns-right"><button class="btn-primary" onclick="showExercise(3)">Next: Sales Dept. ERD →</button></div>
+      </div>
+    </section>
+
+    <!-- ═══ EXERCISE 4 ═══ -->
+    <section class="exercise-card" id="card-3">
+      <div class="exercise-header">
+        <span class="exercise-tag" style="background:var(--purple-bg);color:var(--purple)">Exercise 4 of 4</span>
+        <div class="exercise-title">Sales Departments — ER Model (Crow's Foot Style)</div>
+        <div class="exercise-desc">Section 02 · Question 1 — design the ER model from the description, Crow's Foot notation.</div>
+        <div class="exercise-progress">
+          <div class="ex-prog-bar"><div class="ex-prog-fill" id="exprog-3" style="width:0%"></div></div>
+          <span class="ex-prog-label" id="exprog-lbl-3">0% answered</span>
+        </div>
+      </div>
+      <div class="exercise-body">
+        <div class="info-box gold">
+          <h4>📌 Task</h4>
+          <p>Unlike Exercises 1–3, you are not mapping a given ERD — you are <strong>designing one from scratch</strong> based on the business description below, using <strong>Crow's Foot notation</strong> (not Chen notation).</p>
+        </div>
+
+        <div class="section-heading">Scenario · Sales Departments</div>
+        <div class="scenario-box">
+          <strong>Design the ER model (Crow's Foot style) of the given description:</strong>
+          <ul>
+            <li>The system must be able to record the details of each <strong>PRODUCT</strong>, i.e. product code, product name, the <strong>DEPARTMENT</strong> that the product has been sold, and the contact information of the <strong>SUPPLIER</strong>.</li>
+            <li>The <strong>INVOICES</strong> have to be issued to the <strong>CUSTOMER</strong> for product selling. An invoice's detail includes invoice ID, customer code/name, date/time of issuing, total amount to be paid (by the customer), and the detail of each product in such invoice including product code, product name, quantity, and amount of money to be paid by the customer for such product.</li>
+            <li>The price of products can be changed through the time. Such change has been proceeded at the end of the day (23:50–0:00), so during a single day, the price has to be fixed. The system must be able to report the <strong>history</strong> of such changes.</li>
+            <li>The system must allow changes for customers' details.</li>
+            <li>Availability of each product, i.e. total remaining and each remaining from each purchasing, must be able to be reported.</li>
+          </ul>
+        </div>
+
+        <!-- <div class="info-box red">
+          <h4>⚠️ Read carefully — the traps are intentional</h4>
+          <p>Three phrases in the description are there to test whether you actually design, not just template an invoice system: <strong>"the price... has to be fixed" per day</strong> (→ price history needs a time-stamped table, not a column on PRODUCT), <strong>"each remaining from each purchasing"</strong> (→ stock must be trackable per purchase batch, not just one running total), and <strong>invoice line detail repeats product info</strong> (→ that's an M:N between INVOICE and PRODUCT with its own attributes, i.e. a proper invoice-line entity).</p>
+        </div> -->
+
+        <div class="section-heading">Step 1 · Build the ER diagram on the canvas (Crow's Foot)</div>
+        <div class="question-block">
+          <div class="question-text"><span class="qnum">Q4.1 &amp; Q4.2</span> Drag <strong>Entity</strong> boxes onto the canvas, add attributes (tick the checkbox for PK), then turn on <strong>Connect mode</strong> and click two entities in a row to draw a relationship — pick the Crow's Foot cardinality symbol for each side and give the relationship a verb-phrase label. Click the ✎ badge on any line later to edit or delete it.</div>
+          <div id="ercanvas-ex4-slot"></div>
+        </div>
+
+        <!-- <div class="section-heading">Step 2 · Justify your trickiest design decision</div>
+        <div class="question-block">
+          <div class="question-text"><span class="qnum">Q4.3</span> Pick ONE of the three traps above (price history, per-batch remaining stock, or invoice-line detail) and explain in your own words why a simple column on an existing entity would NOT satisfy the requirement, and what your entity/relationship does instead.</div>
+          <textarea id="q4-justify" placeholder="e.g. A single 'Price' column on PRODUCT can only ever hold today's price — it can't answer 'what did this cost last Tuesday?', which the requirement explicitly asks for. So I created a PRICE_HISTORY entity..."></textarea>
+        </div> -->
+
+        <div class="fun-fact">
+          <div class="ff-icon">🛒</div>
+          <div class="ff-text"><strong>Why this matters:</strong> this is basically a mini point-of-sale schema — the same shape used by Shopify, Square, and every retail ERP on the planet. Price history and per-batch inventory are exactly the two things that separate a toy schema from one that survives an audit.</div>
+        </div>
+      </div>
+      <div class="nav-btns">
+        <button class="btn-ghost" onclick="showExercise(2)">← Previous</button>
+        <div class="nav-btns-right"><button class="btn-success" onclick="finishLab()">✓ Finish Labsheet</button></div>
+      </div>
+    </section>
+
+    <!-- ═══ COMPLETION ═══ -->
+    <div class="completion-card" id="completionCard">
+      <div class="check">🏆</div>
+      <h2>Labsheet Complete!</h2>
+      <p>You've mapped three ER diagrams into working relational schemas and designed a fourth from scratch. Print or save as PDF and bring it to the lab session.</p>
+      <div class="completion-actions">
+        <button class="btn-ghost" onclick="showExercise(3)">← Review answers</button>
+        <button class="btn-primary" onclick="printLab()">🖨️ Print / Export PDF</button>
+        <button class="btn-ghost" onclick="downloadJSON()">⬇ Also save as .json (backup)</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="zoom-overlay" id="zoomOverlay" onclick="closeZoom()"><img id="zoomImg" src="" alt="zoomed diagram"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+var EXERCISE_COUNT = 4;
+var SCHEMA_IDS = ['ex1','ex2','ex3'];
+var SCHEMA_STATE = {};
+
+// ═══ RELATIONAL SCHEMA BUILDER (CANVAS) ═══
+function buildSchemaHTML(schemaId){
+  var h='<div class="schema-builder" data-schema="'+schemaId+'">';
+  h+='<div class="schema-toolbar">';
+  h+='<button class="btn-primary" style="font-size:12px;padding:6px 12px" onclick="addTable(\''+schemaId+'\')">+ Add schema</button>';
+  h+='<button class="btn-ghost er-conn-btn" id="fkbtn-'+schemaId+'" style="font-size:12px;padding:6px 12px" onclick="toggleFkArrows(\''+schemaId+'\')">🔗 Show FK arrows: off</button>';
+  h+='<button class="btn-ghost" style="font-size:12px;padding:6px 12px" onclick="clearSchema(\''+schemaId+'\')">🗑 Clear all</button>';
+  h+='<span>PK = left checkbox &middot; FK = right checkbox + reference text (e.g. Table.column)</span>';
+  h+='</div>';
+  h+='<div class="schema-body" id="schemabody-'+schemaId+'">';
+  h+='<div class="schema-empty" id="schemaempty-'+schemaId+'">No schema yet — click "+ Add schema" to start mapping the ER diagram.</div>';
+  h+='<svg class="fk-arrows-svg" id="fkarrows-'+schemaId+'"></svg>';
+  h+='</div>';
+  h+='</div>';
+  return h;
+}
+function initSchemaBuilder(schemaId){
+  SCHEMA_STATE[schemaId] = SCHEMA_STATE[schemaId] || {tables:[], seq:0, colSeq:0, showArrows:false};
+}
+function addTable(schemaId){
+  var state = SCHEMA_STATE[schemaId];
+  var id = schemaId+'-tbl-'+(state.seq++);
+  var idx = state.tables.length;
+  var table = { id:id, name:'schema_name',
+    x: 24 + (idx%3)*320,
+    y: 90 + Math.floor(idx/3)*260,
+    cols:[
+    {id:'c'+(state.colSeq++), name:'id', pk:true, fk:false, fkref:''},
+    {id:'c'+(state.colSeq++), name:'', pk:false, fk:false, fkref:''}
+  ]};
+  state.tables.push(table);
+  renderTable(schemaId, table);
+  markSchemaAnswered(schemaId);
+  updateSchemaCanvasSize(schemaId);
+}
+function renderTable(schemaId, table){
+  var body = document.getElementById('schemabody-'+schemaId);
+  var empty = document.getElementById('schemaempty-'+schemaId);
+  if(empty) empty.style.display='none';
+  var el = document.createElement('div');
+  el.className='tbl-card'; el.id = table.id;
+  el.style.left = (table.x||0)+'px';
+  el.style.top = (table.y||0)+'px';
+  el.innerHTML = renderTableInner(schemaId, table);
+  body.appendChild(el);
+  wireTableDrag(schemaId, table, el);
+}
+function wireTableDrag(schemaId, table, el){
+  var head = el.querySelector('.tbl-head');
+  if(!head) return;
+  head.addEventListener('mousedown', function(e){
+    if(e.target.tagName==='INPUT' || e.target.classList.contains('delbtn')) return;
+    e.preventDefault();
+    var body = document.getElementById('schemabody-'+schemaId);
+    var startX = e.clientX, startY = e.clientY;
+    var origX = table.x||0, origY = table.y||0;
+    el.classList.add('dragging');
+    function onMove(ev){
+      var dx = ev.clientX - startX, dy = ev.clientY - startY;
+      table.x = Math.max(0, origX + dx);
+      table.y = Math.max(0, origY + dy);
+      el.style.left = table.x+'px';
+      el.style.top = table.y+'px';
+      renderFkArrows(schemaId);
+    }
+    function onUp(){
+      el.classList.remove('dragging');
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      updateSchemaCanvasSize(schemaId);
+      renderFkArrows(schemaId);
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+  head.addEventListener('touchstart', function(e){
+    if(e.target.tagName==='INPUT' || e.target.classList.contains('delbtn')) return;
+    var t0 = e.touches[0];
+    var startX = t0.clientX, startY = t0.clientY;
+    var origX = table.x||0, origY = table.y||0;
+    el.classList.add('dragging');
+    function onMove(ev){
+      var t=ev.touches[0];
+      var dx = t.clientX - startX, dy = t.clientY - startY;
+      table.x = Math.max(0, origX + dx);
+      table.y = Math.max(0, origY + dy);
+      el.style.left = table.x+'px';
+      el.style.top = table.y+'px';
+      renderFkArrows(schemaId);
+      ev.preventDefault();
+    }
+    function onEnd(){
+      el.classList.remove('dragging');
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onEnd);
+      updateSchemaCanvasSize(schemaId);
+      renderFkArrows(schemaId);
+    }
+    document.addEventListener('touchmove', onMove, {passive:false});
+    document.addEventListener('touchend', onEnd);
+  }, {passive:true});
+}
+function updateSchemaCanvasSize(schemaId){
+  var state = SCHEMA_STATE[schemaId];
+  var body = document.getElementById('schemabody-'+schemaId);
+  if(!state||!body) return;
+  var maxBottom = 460, maxRight = 100;
+  state.tables.forEach(function(t){
+    var el = document.getElementById(t.id);
+    var h = el ? el.offsetHeight : 160;
+    maxBottom = Math.max(maxBottom, (t.y||0) + h + 40);
+    maxRight = Math.max(maxRight, (t.x||0) + 300);
+  });
+  body.style.minHeight = maxBottom+'px';
+  body.style.minWidth = maxRight+'px';
+}
+function renderTableInner(schemaId, table){
+  var h = '<div class="tbl-head">'+
+    '<input type="text" value="'+escapeHtmlR(table.name)+'" oninput="renameTable(\''+schemaId+'\',\''+table.id+'\',this.value)">'+
+    '<span class="delbtn" onclick="deleteTable(\''+schemaId+'\',\''+table.id+'\',event)">✕</span>'+
+    '</div>';
+  h += '<div class="tbl-col-legend"><span style="width:18px">PK</span><span style="width:18px">FK</span><span style="flex:1"></span></div>';
+  h += '<div class="tbl-cols">';
+  table.cols.forEach(function(c){
+    h += '<div class="tbl-col-row'+(c.pk?' pk':'')+(c.fk?' fk':'')+'" id="row-'+table.id+'-'+c.id+'">'+
+      '<input type="checkbox" title="Primary key" '+(c.pk?'checked':'')+' onchange="toggleColPK(\''+schemaId+'\',\''+table.id+'\',\''+c.id+'\',this.checked)">'+
+      '<input type="checkbox" title="Foreign key" '+(c.fk?'checked':'')+' onchange="toggleColFK(\''+schemaId+'\',\''+table.id+'\',\''+c.id+'\',this.checked)">'+
+      '<input type="text" value="'+escapeHtmlR(c.name)+'" placeholder="column_name" oninput="renameCol(\''+schemaId+'\',\''+table.id+'\',\''+c.id+'\',this.value)">'+
+      '<span class="tbl-col-del" onclick="deleteCol(\''+schemaId+'\',\''+table.id+'\',\''+c.id+'\',event)">✕</span>'+
+      (c.fk ? '<div style="grid-column:1/-1;padding:2px 0 4px"><input type="text" value="'+escapeHtmlR(c.fkref)+'" placeholder="references Table.column" style="width:100%;font-size:10.5px;font-style:italic;color:#8a6410;border:1px dashed var(--gold-bd);border-radius:4px;padding:3px 6px;background:var(--gold-bg)" oninput="setColFkRef(\''+schemaId+'\',\''+table.id+'\',\''+c.id+'\',this.value)"></div>' : '')+
+      '</div>';
+  });
+  h += '</div>';
+  h += '<button class="tbl-addcol" onclick="addCol(\''+schemaId+'\',\''+table.id+'\',event)">+ Column</button>';
+  return h;
+}
+function refreshTable(schemaId, table){
+  var el = document.getElementById(table.id);
+  if(!el) return;
+  el.innerHTML = renderTableInner(schemaId, table);
+  wireTableDrag(schemaId, table, el);
+  updateSchemaCanvasSize(schemaId);
+}
+function findTable(schemaId, tableId){ return SCHEMA_STATE[schemaId].tables.find(function(t){return t.id===tableId;}); }
+function findCol(table, colId){ return table.cols.find(function(c){return c.id===colId;}); }
+function renameTable(schemaId, tableId, val){ var t=findTable(schemaId,tableId); if(t){ t.name=val; markSchemaAnswered(schemaId); } }
+function addCol(schemaId, tableId, evt){
+  if(evt) evt.stopPropagation();
+  var state=SCHEMA_STATE[schemaId]; var t=findTable(schemaId,tableId); if(!t)return;
+  t.cols.push({id:'c'+(state.colSeq++), name:'', pk:false, fk:false, fkref:''});
+  refreshTable(schemaId,t); markSchemaAnswered(schemaId);
+}
+function renameCol(schemaId, tableId, colId, val){
+  var t=findTable(schemaId,tableId); if(!t)return; var c=findCol(t,colId); if(c){c.name=val; markSchemaAnswered(schemaId);}
+}
+function toggleColPK(schemaId, tableId, colId, checked){
+  var t=findTable(schemaId,tableId); if(!t)return; var c=findCol(t,colId); if(c){c.pk=checked;}
+  refreshTable(schemaId,t); markSchemaAnswered(schemaId);
+}
+function toggleColFK(schemaId, tableId, colId, checked){
+  var t=findTable(schemaId,tableId); if(!t)return; var c=findCol(t,colId); if(c){c.fk=checked;}
+  refreshTable(schemaId,t); markSchemaAnswered(schemaId);
+}
+function setColFkRef(schemaId, tableId, colId, val){
+  var t=findTable(schemaId,tableId); if(!t)return; var c=findCol(t,colId); if(c){c.fkref=val; markSchemaAnswered(schemaId);}
+}
+function deleteCol(schemaId, tableId, colId, evt){
+  if(evt) evt.stopPropagation();
+  var t=findTable(schemaId,tableId); if(!t)return;
+  t.cols=t.cols.filter(function(c){return c.id!==colId;});
+  refreshTable(schemaId,t); markSchemaAnswered(schemaId);
+}
+function deleteTable(schemaId, tableId, evt){
+  if(evt) evt.stopPropagation();
+  var state=SCHEMA_STATE[schemaId];
+  state.tables=state.tables.filter(function(t){return t.id!==tableId;});
+  var el=document.getElementById(tableId); if(el) el.remove();
+  if(state.tables.length===0){
+    var empty=document.getElementById('schemaempty-'+schemaId);
+    if(empty) empty.style.display='block';
+  }
+  markSchemaAnswered(schemaId);
+  updateSchemaCanvasSize(schemaId);
+}
+function clearSchema(schemaId){
+  var state=SCHEMA_STATE[schemaId];
+  state.tables=[];
+  var body=document.getElementById('schemabody-'+schemaId);
+  body.querySelectorAll('.tbl-card').forEach(function(n){n.remove();});
+  var empty=document.getElementById('schemaempty-'+schemaId);
+  if(empty) empty.style.display='block';
+  markSchemaAnswered(schemaId);
+}
+function markSchemaAnswered(schemaId){ updateProgress(); renderFkArrows(schemaId); }
+function toggleFkArrows(schemaId){
+  var state = SCHEMA_STATE[schemaId];
+  state.showArrows = !state.showArrows;
+  var btn = document.getElementById('fkbtn-'+schemaId);
+  if(btn){
+    btn.textContent = state.showArrows ? '🔗 Show FK arrows: ON' : '🔗 Show FK arrows: off';
+    btn.classList.toggle('er-connect-active', state.showArrows);
+  }
+  renderFkArrows(schemaId);
+}
+function ensureArrowMarker(svg, schemaId){
+  if(svg.querySelector('marker')) return;
+  var defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+  var marker = document.createElementNS('http://www.w3.org/2000/svg','marker');
+  marker.setAttribute('id','fkarrow-'+schemaId);
+  marker.setAttribute('markerWidth','8'); marker.setAttribute('markerHeight','8');
+  marker.setAttribute('refX','6'); marker.setAttribute('refY','4');
+  marker.setAttribute('orient','auto');
+  var path = document.createElementNS('http://www.w3.org/2000/svg','path');
+  path.setAttribute('d','M0,0 L8,4 L0,8 Z');
+  path.setAttribute('fill','#6E1423');
+  marker.appendChild(path);
+  defs.appendChild(marker);
+  svg.appendChild(defs);
+}
+function renderFkArrows(schemaId){
+  var svg = document.getElementById('fkarrows-'+schemaId);
+  var container = document.getElementById('schemabody-'+schemaId);
+  if(!svg||!container) return;
+  svg.innerHTML='';
+  var state = SCHEMA_STATE[schemaId];
+  if(!state || !state.showArrows) return;
+  ensureArrowMarker(svg, schemaId);
+  var cRect = container.getBoundingClientRect();
+
+  // 1) Collect every FK link with its resolved source/target row geometry,
+  //    attaching at the RIGHT edge of each row (side-entry style).
+  var links = [];
+  var maxRight = 0;
+  state.tables.forEach(function(t){
+    t.cols.forEach(function(c){
+      if(!c.fk || !c.fkref) return;
+      var parts = c.fkref.split('.');
+      if(parts.length<2) return;
+      var refTableName = parts[0].trim().toLowerCase();
+      var refColName = parts.slice(1).join('.').trim().toLowerCase();
+      var refTable = state.tables.find(function(tt){return tt.name.trim().toLowerCase()===refTableName;});
+      if(!refTable) return;
+      var refCol = refTable.cols.find(function(cc){return cc.name.trim().toLowerCase()===refColName;});
+      if(!refCol) return;
+      var srcRow = document.getElementById('row-'+t.id+'-'+c.id);
+      var dstRow = document.getElementById('row-'+refTable.id+'-'+refCol.id);
+      if(!srcRow||!dstRow) return;
+      var sRect = srcRow.getBoundingClientRect();
+      var dRect = dstRow.getBoundingClientRect();
+      var sx = sRect.right - cRect.left, sy = sRect.top + sRect.height/2 - cRect.top;
+      var dx = dRect.right - cRect.left, dy = dRect.top + dRect.height/2 - cRect.top;
+      maxRight = Math.max(maxRight, sRect.right-cRect.left, dRect.right-cRect.left);
+      links.push({sx:sx, sy:sy, dx:dx, dy:dy, label:t.name+'.'+c.name});
+    });
+  });
+  if(!links.length) return;
+
+  // 2) Give every link its own dedicated vertical lane to the right of the
+  //    widest table (no wrap-around reuse), ordered top-to-bottom by source
+  //    row so lines fan out cleanly instead of crossing over each other.
+  links.sort(function(a,b){ return a.sy - b.sy; });
+  var laneGap = 16;
+  var baseLane = maxRight + 20;
+
+  links.forEach(function(link, i){
+    var lane = baseLane + i*laneGap;
+    var d = 'M '+link.sx+' '+link.sy+
+            ' L '+lane+' '+link.sy+
+            ' L '+lane+' '+link.dy+
+            ' L '+(link.dx+6)+' '+link.dy;
+    var p=document.createElementNS('http://www.w3.org/2000/svg','path');
+    p.setAttribute('d',d); p.setAttribute('fill','none');
+    p.setAttribute('stroke','#6E1423'); p.setAttribute('stroke-width','1.4');
+    p.setAttribute('marker-end','url(#fkarrow-'+schemaId+')');
+    var title=document.createElementNS('http://www.w3.org/2000/svg','title');
+    title.textContent = link.label+' → references';
+    p.appendChild(title);
+    svg.appendChild(p);
+  });
+
+  // 3) Make sure the canvas actually has room for the widest lane, otherwise
+  //    the last arrows would render past the visible/scrollable area.
+  var neededWidth = baseLane + links.length*laneGap + 30;
+  if(neededWidth > container.scrollWidth){
+    container.style.minWidth = neededWidth+'px';
+  }
+}
+function escapeHtmlR(s){
+  return (s||'').replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function serializeSchemaState(){
+  var out={};
+  Object.keys(SCHEMA_STATE).forEach(function(k){ out[k]={tables:SCHEMA_STATE[k].tables}; });
+  return out;
+}
+function loadSchemaState(data){
+  if(!data) return;
+  Object.keys(data).forEach(function(schemaId){
+    var saved=data[schemaId];
+    if(!saved||!saved.tables) return;
+    var body=document.getElementById('schemabody-'+schemaId);
+    if(!body) return;
+    SCHEMA_STATE[schemaId]=SCHEMA_STATE[schemaId]||{tables:[],seq:0,colSeq:0,showArrows:false};
+    var state=SCHEMA_STATE[schemaId];
+    state.tables=saved.tables;
+    var maxSeq=0, maxColSeq=0;
+    saved.tables.forEach(function(t, idx){
+      if(typeof t.x!=='number' || typeof t.y!=='number'){
+        t.x = 24 + (idx%3)*320;
+        t.y = 90 + Math.floor(idx/3)*260;
+      }
+      renderTable(schemaId,t);
+      var m=t.id.match(/-tbl-(\d+)$/); if(m) maxSeq=Math.max(maxSeq,parseInt(m[1])+1);
+      (t.cols||[]).forEach(function(c){
+        var cm=(c.id||'').match(/^c(\d+)$/); if(cm) maxColSeq=Math.max(maxColSeq,parseInt(cm[1])+1);
+      });
+    });
+    state.seq=maxSeq; state.colSeq=maxColSeq;
+    updateSchemaCanvasSize(schemaId);
+  });
+}
+
+// ═══ CROW'S FOOT ER BUILDER (CANVAS) ═══
+var ER_STATE = {}; // per canvasId: {nodes:[{id,weak,x,y,name,attrs:[{id,name,pk}]}], edges:[{from,to,fromCard,toCard,label}], connectMode, pendingConnect, seq, attrSeq}
+var CF_OPTIONS = [
+  {v:'one',      label:"Exactly one  (mandatory)"},
+  {v:'zero-one', label:"Zero or one  (optional)"},
+  {v:'many',     label:"One or many  (mandatory many)"},
+  {v:'zero-many',label:"Zero or many  (optional many)"}
+];
+function cfLegendSVG(){
+  return '<svg width="26" height="18" viewBox="0 0 26 18">'+
+    '<line x1="1" y1="9" x2="25" y2="9" stroke="#6E1423" stroke-width="1.5"/>'+
+    '<line x1="6" y1="4" x2="6" y2="14" stroke="#6E1423" stroke-width="1.5"/>'+
+    '<line x1="10" y1="4" x2="10" y2="14" stroke="#6E1423" stroke-width="1.5"/>'+
+    '</svg>';
+}
+function cfLegendSVG2(){
+  return '<svg width="26" height="18" viewBox="0 0 26 18">'+
+    '<line x1="1" y1="9" x2="25" y2="9" stroke="#6E1423" stroke-width="1.5"/>'+
+    '<circle cx="6" cy="9" r="3.4" fill="#fff" stroke="#6E1423" stroke-width="1.5"/>'+
+    '<line x1="11" y1="4" x2="11" y2="14" stroke="#6E1423" stroke-width="1.5"/>'+
+    '</svg>';
+}
+function cfLegendSVG3(){
+  return '<svg width="26" height="18" viewBox="0 0 26 18">'+
+    '<line x1="1" y1="9" x2="25" y2="9" stroke="#6E1423" stroke-width="1.5"/>'+
+    '<line x1="19" y1="4" x2="19" y2="14" stroke="#6E1423" stroke-width="1.5"/>'+
+    '<line x1="19" y1="9" x2="7" y2="3" stroke="#6E1423" stroke-width="1.5"/>'+
+    '<line x1="19" y1="9" x2="7" y2="15" stroke="#6E1423" stroke-width="1.5"/>'+
+    '</svg>';
+}
+function cfLegendSVG4(){
+  return '<svg width="26" height="18" viewBox="0 0 26 18">'+
+    '<line x1="1" y1="9" x2="25" y2="9" stroke="#6E1423" stroke-width="1.5"/>'+
+    '<line x1="19" y1="9" x2="7" y2="3" stroke="#6E1423" stroke-width="1.5"/>'+
+    '<line x1="19" y1="9" x2="7" y2="15" stroke="#6E1423" stroke-width="1.5"/>'+
+    '<circle cx="4" cy="9" r="3.4" fill="#fff" stroke="#6E1423" stroke-width="1.5"/>'+
+    '</svg>';
+}
+function buildERCanvasHTML(canvasId){
+  var h='<div class="er-builder" data-canvas="'+canvasId+'">';
+  // h+='<div class="cf-legend">';
+  // h+='<div class="cf-legend-item">'+cfLegendSVG()+'<b>||</b> Exactly one (mandatory)</div>';
+  // h+='<div class="cf-legend-item">'+cfLegendSVG2()+'<b>o|</b> Zero or one (optional)</div>';
+  // h+='<div class="cf-legend-item">'+cfLegendSVG3()+'<b>|&lt;</b> One or many (mandatory)</div>';
+  // h+='<div class="cf-legend-item">'+cfLegendSVG4()+'<b>o&lt;</b> Zero or many (optional)</div>';
+  // h+='</div>';
+  h+='<div class="er-toolbar">';
+  h+='<div class="er-tool" draggable="true" data-weak="0"><span class="er-tool-icon">▭</span> Entity</div>';
+  h+='<span class="er-toolbar-hint">Drag a box onto the canvas, then use + Attribute inside it</span>';
+  h+='</div>';
+  h+='<div class="er-canvas-wrap">';
+  h+='<div class="er-canvas" id="ercanvas-'+canvasId+'">';
+  h+='<div class="er-empty-msg" id="erempty-'+canvasId+'" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:13px;color:var(--txt3);text-align:center;pointer-events:none;max-width:300px">Drag an Entity box from the toolbar above onto this canvas.<br>Click two entities in a row (with Connect mode ON) to draw a relationship line.</div>';
+  h+='<svg class="er-lines" id="erlines-'+canvasId+'"></svg>';
+  h+='</div>';
+  h+='</div>';
+  h+='<div class="er-actions">';
+  h+='<button class="btn-ghost er-conn-btn" id="erconnect-'+canvasId+'" onclick="toggleConnectMode(\''+canvasId+'\')">🔗 Connect mode: off</button>';
+  h+='<button class="btn-ghost" onclick="clearERCanvas(\''+canvasId+'\')">🗑 Clear canvas</button>';
+  h+='<span style="font-size:11.5px;color:var(--txt3);align-self:center;margin-left:auto">Click the ✎ badge (or the name tag) on any relationship line to edit its cardinality or delete it</span>';
+  h+='</div>';
+  h+='</div>';
+  return h;
+}
+function initERCanvas(canvasId){
+  ER_STATE[canvasId] = ER_STATE[canvasId] || {nodes:[], edges:[], connectMode:false, pendingConnect:null, seq:0, attrSeq:0};
+  var builder = document.querySelector('.er-builder[data-canvas="'+canvasId+'"]');
+  if(!builder) return;
+  var canvas = document.getElementById('ercanvas-'+canvasId);
+  builder.querySelectorAll('.er-tool').forEach(function(tool){
+    tool.addEventListener('dragstart', function(e){
+      e.dataTransfer.setData('text/plain', tool.getAttribute('data-weak'));
+      e.dataTransfer.effectAllowed='copy';
+    });
+  });
+  canvas.addEventListener('dragover', function(e){ e.preventDefault(); });
+  canvas.addEventListener('drop', function(e){
+    e.preventDefault();
+    var weakFlag = e.dataTransfer.getData('text/plain');
+    if(weakFlag===''||weakFlag===null||weakFlag===undefined) return;
+    var rect = canvas.getBoundingClientRect();
+    var x = e.clientX - rect.left;
+    var y = e.clientY - rect.top;
+    addCFEntity(canvasId, weakFlag==='1', x, y);
+  });
+}
+function addCFEntity(canvasId, isWeak, x, y){
+  var state = ER_STATE[canvasId];
+  var id = canvasId+'-ent-'+(state.seq++);
+  var node = {
+    id:id, weak:isWeak, x:Math.max(0,x-85), y:Math.max(0,y-20),
+    name: isWeak ? 'WeakEntity' : 'Entity',
+    attrs:[{id:'a'+(state.attrSeq++), name:'id', pk:true, fk:false, fkref:''}]
+  };
+  state.nodes.push(node);
+  renderCFEntity(canvasId, node);
+  updateERGeometry(canvasId);
+  markERAnswered(canvasId);
+}
+function renderCFEntity(canvasId, node){
+  var canvas = document.getElementById('ercanvas-'+canvasId);
+  var empty = document.getElementById('erempty-'+canvasId);
+  if(empty) empty.style.display='none';
+  var el = document.createElement('div');
+  el.className = 'cf-entity'+(node.weak?' weak':'');
+  el.id = node.id;
+  el.style.left = node.x+'px';
+  el.style.top = node.y+'px';
+  el.innerHTML = renderCFEntityInner(canvasId, node);
+  canvas.appendChild(el);
+  wireCFEntity(canvasId, el, node);
+}
+function renderCFEntityInner(canvasId, node){
+  var h = '<div class="cf-head">'+
+    '<input type="text" value="'+escapeHtmlR(node.name)+'" oninput="renameCFEntity(\''+canvasId+'\',\''+node.id+'\',this.value)">'+
+    '<span class="delbtn" onclick="deleteCFEntity(\''+canvasId+'\',\''+node.id+'\',event)">✕</span>'+
+    '</div>';
+  h += '<div class="cf-attr-legend"><span style="width:14px">PK</span><span style="width:14px">FK</span></div>';
+  h += '<div class="cf-attrs">';
+  node.attrs.forEach(function(a){
+    h += '<div class="cf-attr-row'+(a.pk?' pk':'')+(a.fk?' fk':'')+'">'+
+      '<input type="checkbox" title="Primary key" '+(a.pk?'checked':'')+' onchange="toggleCFAttrPK(\''+canvasId+'\',\''+node.id+'\',\''+a.id+'\',this.checked)">'+
+      '<input type="checkbox" title="Foreign key" '+(a.fk?'checked':'')+' onchange="toggleCFAttrFK(\''+canvasId+'\',\''+node.id+'\',\''+a.id+'\',this.checked)">'+
+      '<input type="text" value="'+escapeHtmlR(a.name)+'" placeholder="attribute" oninput="renameCFAttr(\''+canvasId+'\',\''+node.id+'\',\''+a.id+'\',this.value)">'+
+      '<span class="attr-del" onclick="deleteCFAttr(\''+canvasId+'\',\''+node.id+'\',\''+a.id+'\',event)">✕</span>'+
+      (a.fk ? '<input type="text" class="cf-attr-fkref" value="'+escapeHtmlR(a.fkref||'')+'" placeholder="references Entity.attribute" oninput="setCFAttrFkRef(\''+canvasId+'\',\''+node.id+'\',\''+a.id+'\',this.value)">' : '')+
+      '</div>';
+  });
+  h += '</div>';
+  h += '<button class="cf-addattr" onclick="addCFAttr(\''+canvasId+'\',\''+node.id+'\',event)">+ Attribute</button>';
+  return h;
+}
+function refreshCFEntity(canvasId, node){
+  var el = document.getElementById(node.id);
+  if(!el) return;
+  el.innerHTML = renderCFEntityInner(canvasId, node);
+  wireCFEntity(canvasId, el, node);
+  updateERGeometry(canvasId);
+}
+function wireCFEntity(canvasId, el, node){
+  var head = el.querySelector('.cf-head');
+  var canvas = document.getElementById('ercanvas-'+canvasId);
+  var dragging=false, offX=0, offY=0;
+  function startDrag(clientX, clientY){
+    var elRect = el.getBoundingClientRect();
+    offX = clientX - elRect.left;
+    offY = clientY - elRect.top;
+    dragging = true;
+    el.style.zIndex = 10;
+  }
+  function moveDrag(clientX, clientY){
+    if(!dragging) return;
+    var rect = canvas.getBoundingClientRect();
+    var x = clientX - rect.left - offX;
+    var y = clientY - rect.top - offY;
+    x = Math.max(0, x); y = Math.max(0, y);
+    el.style.left = x+'px';
+    el.style.top = y+'px';
+    var n = ER_STATE[canvasId].nodes.find(function(n){return n.id===el.id;});
+    if(n){ n.x=x; n.y=y; }
+    updateERGeometry(canvasId);
+  }
+  function endDrag(){ dragging=false; }
+  head.addEventListener('mousedown', function(e){
+    if(e.target.tagName==='INPUT'||e.target.classList.contains('delbtn')) return;
+    startDrag(e.clientX, e.clientY);
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', function(e){ moveDrag(e.clientX, e.clientY); });
+  document.addEventListener('mouseup', endDrag);
+  head.addEventListener('touchstart', function(e){
+    if(e.target.tagName==='INPUT'||e.target.classList.contains('delbtn')) return;
+    var t=e.touches[0]; startDrag(t.clientX,t.clientY);
+  }, {passive:true});
+  head.addEventListener('touchmove', function(e){
+    var t=e.touches[0]; moveDrag(t.clientX,t.clientY);
+  }, {passive:true});
+  head.addEventListener('touchend', endDrag);
+  el.addEventListener('click', function(e){
+    if(e.target.tagName==='INPUT'||e.target.classList.contains('delbtn')||e.target.classList.contains('attr-del')||e.target.classList.contains('cf-addattr')) return;
+    handleEntityClickForConnect(canvasId, node.id);
+  });
+}
+function renameCFEntity(canvasId, nodeId, val){
+  var n = ER_STATE[canvasId].nodes.find(function(n){return n.id===nodeId;});
+  if(n){ n.name = val; markERAnswered(canvasId); updateERGeometry(canvasId); }
+}
+function addCFAttr(canvasId, nodeId, evt){
+  if(evt) evt.stopPropagation();
+  var state = ER_STATE[canvasId];
+  var n = state.nodes.find(function(n){return n.id===nodeId;});
+  if(!n) return;
+  n.attrs.push({id:'a'+(state.attrSeq++), name:'', pk:false, fk:false, fkref:''});
+  refreshCFEntity(canvasId, n);
+  markERAnswered(canvasId);
+}
+function renameCFAttr(canvasId, nodeId, attrId, val){
+  var n = ER_STATE[canvasId].nodes.find(function(n){return n.id===nodeId;});
+  if(!n) return;
+  var a = n.attrs.find(function(a){return a.id===attrId;});
+  if(a){ a.name = val; markERAnswered(canvasId); }
+}
+function toggleCFAttrPK(canvasId, nodeId, attrId, checked){
+  var n = ER_STATE[canvasId].nodes.find(function(n){return n.id===nodeId;});
+  if(!n) return;
+  var a = n.attrs.find(function(a){return a.id===attrId;});
+  if(a){ a.pk = checked; }
+  refreshCFEntity(canvasId, n);
+  markERAnswered(canvasId);
+}
+function toggleCFAttrFK(canvasId, nodeId, attrId, checked){
+  var n = ER_STATE[canvasId].nodes.find(function(n){return n.id===nodeId;});
+  if(!n) return;
+  var a = n.attrs.find(function(a){return a.id===attrId;});
+  if(a){ a.fk = checked; if(!checked) a.fkref=''; }
+  refreshCFEntity(canvasId, n);
+  markERAnswered(canvasId);
+}
+function setCFAttrFkRef(canvasId, nodeId, attrId, val){
+  var n = ER_STATE[canvasId].nodes.find(function(n){return n.id===nodeId;});
+  if(!n) return;
+  var a = n.attrs.find(function(a){return a.id===attrId;});
+  if(a){ a.fkref = val; markERAnswered(canvasId); }
+}
+function deleteCFAttr(canvasId, nodeId, attrId, evt){
+  if(evt) evt.stopPropagation();
+  var n = ER_STATE[canvasId].nodes.find(function(n){return n.id===nodeId;});
+  if(!n) return;
+  n.attrs = n.attrs.filter(function(a){return a.id!==attrId;});
+  refreshCFEntity(canvasId, n);
+  markERAnswered(canvasId);
+}
+function deleteCFEntity(canvasId, nodeId, evt){
+  if(evt) evt.stopPropagation();
+  var state = ER_STATE[canvasId];
+  state.nodes = state.nodes.filter(function(n){return n.id!==nodeId;});
+  state.edges = state.edges.filter(function(e){return e.from!==nodeId && e.to!==nodeId;});
+  var el = document.getElementById(nodeId);
+  if(el) el.remove();
+  updateERGeometry(canvasId);
+  if(state.nodes.length===0){
+    var empty = document.getElementById('erempty-'+canvasId);
+    if(empty) empty.style.display='block';
+  }
+  markERAnswered(canvasId);
+}
+function toggleConnectMode(canvasId){
+  var state = ER_STATE[canvasId];
+  state.connectMode = !state.connectMode;
+  if(state.pendingConnect){
+    var prevEl=document.getElementById(state.pendingConnect);
+    if(prevEl) prevEl.classList.remove('selected');
+  }
+  state.pendingConnect = null;
+  var btn = document.getElementById('erconnect-'+canvasId);
+  btn.textContent = state.connectMode ? '🔗 Connect mode: ON — click two entities' : '🔗 Connect mode: off';
+  btn.classList.toggle('er-connect-active', state.connectMode);
+}
+function handleEntityClickForConnect(canvasId, nodeId){
+  var state = ER_STATE[canvasId];
+  if(!state.connectMode) return;
+  if(!state.pendingConnect){
+    state.pendingConnect = nodeId;
+    var el = document.getElementById(nodeId);
+    if(el) el.classList.add('selected');
+  } else {
+    if(state.pendingConnect !== nodeId){
+      openRelationshipPicker(canvasId, state.pendingConnect, nodeId);
+    }
+    var prevEl = document.getElementById(state.pendingConnect);
+    if(prevEl) prevEl.classList.remove('selected');
+    state.pendingConnect = null;
+  }
+}
+function cfOptionsHTML(sel){
+  return CF_OPTIONS.map(function(o){return '<option value="'+o.v+'"'+(o.v===sel?' selected':'')+'>'+o.label+'</option>';}).join('');
+}
+function openRelationshipPicker(canvasId, fromId, toId){
+  var state = ER_STATE[canvasId];
+  var fromN = state.nodes.find(function(n){return n.id===fromId;});
+  var toN = state.nodes.find(function(n){return n.id===toId;});
+  var fromLabel = fromN ? fromN.name : '';
+  var toLabel = toN ? toN.name : '';
+  showRelModal({
+    mode:'create', canvasId:canvasId, fromId:fromId, toId:toId,
+    fromLabel:fromLabel, toLabel:toLabel,
+    label:'', fromCard:'one', toCard:'many'
+  });
+}
+function editRelationshipUI(canvasId, idx){
+  var state = ER_STATE[canvasId];
+  var edge = state.edges[idx];
+  if(!edge) return;
+  var fromN = state.nodes.find(function(n){return n.id===edge.from;});
+  var toN = state.nodes.find(function(n){return n.id===edge.to;});
+  showRelModal({
+    mode:'edit', canvasId:canvasId, edgeIdx:idx,
+    fromLabel: fromN?fromN.name:'', toLabel: toN?toN.name:'',
+    label: edge.label||'', fromCard: edge.fromCard||'one', toCard: edge.toCard||'many'
+  });
+}
+function showRelModal(cfg){
+  var existing = document.getElementById('relpicker-overlay');
+  if(existing) existing.remove();
+  var overlay = document.createElement('div');
+  overlay.id = 'relpicker-overlay';
+  overlay.className = 'relpicker-overlay';
+  overlay.innerHTML =
+    '<div class="relpicker-modal">'+
+      '<h4>'+(cfg.mode==='edit'?'Edit relationship':'Define the relationship')+'</h4>'+
+      '<p class="rp-sub">'+escapeHtmlR(cfg.fromLabel)+' &#8596; '+escapeHtmlR(cfg.toLabel)+'</p>'+
+      '<div class="rp-label-field"><label>Relationship name (verb phrase, e.g. "sold in")</label><input type="text" id="rp-label" placeholder="e.g. sold in / belongs to / issued to" value="'+escapeHtmlR(cfg.label)+'"></div>'+
+      '<div class="rp-sides">'+
+        '<div class="rp-side"><div class="rp-entname">'+escapeHtmlR(cfg.fromLabel)+' side</div><select id="rp-from">'+cfOptionsHTML(cfg.fromCard)+'</select></div>'+
+        '<div class="rp-side"><div class="rp-entname">'+escapeHtmlR(cfg.toLabel)+' side</div><select id="rp-to">'+cfOptionsHTML(cfg.toCard)+'</select></div>'+
+      '</div>'+
+      '<p class="rp-note">Pick the symbol that sits <strong>next to each entity</strong>. E.g. for "one Department has many Products": Department side = Exactly one, Product side = One or many.</p>'+
+      '<div class="rp-btns">'+
+        (cfg.mode==='edit' ? '<button class="btn-ghost" style="color:var(--red);border-color:var(--red-bd)" onclick="deleteRelationshipFromModal(\''+cfg.canvasId+'\','+cfg.edgeIdx+')">🗑 Delete</button>' : '')+
+        '<button class="btn-ghost" onclick="cancelRelationshipPicker()">Cancel</button>'+
+        '<button class="btn-primary" onclick="'+(cfg.mode==='edit'
+          ? 'confirmEditRelationship(\''+cfg.canvasId+'\','+cfg.edgeIdx+')'
+          : 'confirmRelationshipPicker(\''+cfg.canvasId+'\',\''+cfg.fromId+'\',\''+cfg.toId+'\')')+'">'+(cfg.mode==='edit'?'Save changes':'Add relationship')+'</button>'+
+      '</div>'+
+    '</div>';
+  document.body.appendChild(overlay);
+}
+function cancelRelationshipPicker(){
+  var overlay = document.getElementById('relpicker-overlay');
+  if(overlay) overlay.remove();
+}
+function confirmRelationshipPicker(canvasId, fromId, toId){
+  var label = document.getElementById('rp-label').value || '';
+  var fromCard = document.getElementById('rp-from').value;
+  var toCard = document.getElementById('rp-to').value;
+  var state = ER_STATE[canvasId];
+  state.edges.push({from:fromId, to:toId, fromCard:fromCard, toCard:toCard, label:label});
+  cancelRelationshipPicker();
+  updateERGeometry(canvasId);
+  markERAnswered(canvasId);
+}
+function confirmEditRelationship(canvasId, idx){
+  var label = document.getElementById('rp-label').value || '';
+  var fromCard = document.getElementById('rp-from').value;
+  var toCard = document.getElementById('rp-to').value;
+  var state = ER_STATE[canvasId];
+  var edge = state.edges[idx];
+  if(edge){ edge.label=label; edge.fromCard=fromCard; edge.toCard=toCard; }
+  cancelRelationshipPicker();
+  updateERGeometry(canvasId);
+  markERAnswered(canvasId);
+}
+function deleteRelationshipFromModal(canvasId, idx){
+  cancelRelationshipPicker();
+  deleteEdge(canvasId, idx);
+}
+function deleteEdge(canvasId, idx){
+  var state = ER_STATE[canvasId];
+  state.edges.splice(idx,1);
+  updateERGeometry(canvasId);
+  markERAnswered(canvasId);
+}
+function clipToRect(rect, cx, cy, tx, ty){
+  var dx = tx-cx, dy = ty-cy;
+  if(dx===0 && dy===0) return {x:cx,y:cy};
+  var hw = rect.width/2, hh = rect.height/2;
+  var tMin = Infinity;
+  if(dx!==0){ tMin = Math.min(tMin, hw/Math.abs(dx)); }
+  if(dy!==0){ tMin = Math.min(tMin, hh/Math.abs(dy)); }
+  if(tMin===Infinity) tMin=0;
+  return {x: cx+dx*tMin, y: cy+dy*tMin};
+}
+function drawCFEnd(svg, x, y, ux, uy, card){
+  var px = -uy, py = ux;
+  var barHalf = 6;
+  function drawBar(dist){
+    var cx=x+ux*dist, cy=y+uy*dist;
+    var l=document.createElementNS('http://www.w3.org/2000/svg','line');
+    l.setAttribute('x1',cx-px*barHalf); l.setAttribute('y1',cy-py*barHalf);
+    l.setAttribute('x2',cx+px*barHalf); l.setAttribute('y2',cy+py*barHalf);
+    l.setAttribute('stroke','#6E1423'); l.setAttribute('stroke-width','1.6');
+    svg.appendChild(l);
+  }
+  function drawCircle(dist){
+    var cx=x+ux*dist, cy=y+uy*dist;
+    var c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx',cx); c.setAttribute('cy',cy); c.setAttribute('r',4.2);
+    c.setAttribute('fill','#fdfbf6'); c.setAttribute('stroke','#6E1423'); c.setAttribute('stroke-width','1.6');
+    svg.appendChild(c);
+  }
+  function drawCrowfoot(toeDist, tipDist){
+    var toex=x+ux*toeDist, toey=y+uy*toeDist;
+    var tipx=x+ux*tipDist, tipy=y+uy*tipDist;
+    [-1,1].forEach(function(dir){
+      var l=document.createElementNS('http://www.w3.org/2000/svg','line');
+      l.setAttribute('x1',toex+px*barHalf*dir); l.setAttribute('y1',toey+py*barHalf*dir);
+      l.setAttribute('x2',tipx); l.setAttribute('y2',tipy);
+      l.setAttribute('stroke','#6E1423'); l.setAttribute('stroke-width','1.6');
+      svg.appendChild(l);
+    });
+    var l2=document.createElementNS('http://www.w3.org/2000/svg','line');
+    l2.setAttribute('x1',toex); l2.setAttribute('y1',toey);
+    l2.setAttribute('x2',tipx); l2.setAttribute('y2',tipy);
+    l2.setAttribute('stroke','#6E1423'); l2.setAttribute('stroke-width','1.6');
+    svg.appendChild(l2);
+  }
+  if(card==='one'){ drawBar(3); drawBar(8); }
+  else if(card==='zero-one'){ drawBar(3); drawCircle(13); }
+  else if(card==='many'){ drawCrowfoot(3,16); drawBar(16); }
+  else if(card==='zero-many'){ drawCrowfoot(3,16); drawCircle(23); }
+}
+function updateERGeometry(canvasId){
+  var state = ER_STATE[canvasId];
+  var svg = document.getElementById('erlines-'+canvasId);
+  if(!svg) return;
+  svg.innerHTML='';
+  var canvas = document.getElementById('ercanvas-'+canvasId);
+  if(!canvas) return;
+  var cRect = canvas.getBoundingClientRect();
+  state.edges.forEach(function(edge, idx){
+    var a = document.getElementById(edge.from);
+    var b = document.getElementById(edge.to);
+    if(!a||!b) return;
+    var aRect = a.getBoundingClientRect();
+    var bRect = b.getBoundingClientRect();
+    var acx = aRect.left+aRect.width/2-cRect.left, acy = aRect.top+aRect.height/2-cRect.top;
+    var bcx = bRect.left+bRect.width/2-cRect.left, bcy = bRect.top+bRect.height/2-cRect.top;
+    var aRectLocal = {width:aRect.width, height:aRect.height};
+    var bRectLocal = {width:bRect.width, height:bRect.height};
+    var p1 = clipToRect(aRectLocal, acx, acy, bcx, bcy);
+    var p2 = clipToRect(bRectLocal, bcx, bcy, acx, acy);
+    var line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',p1.x); line.setAttribute('y1',p1.y);
+    line.setAttribute('x2',p2.x); line.setAttribute('y2',p2.y);
+    line.setAttribute('stroke','#6E1423'); line.setAttribute('stroke-width','1.5');
+    svg.appendChild(line);
+    var dx=p2.x-p1.x, dy=p2.y-p1.y, len=Math.sqrt(dx*dx+dy*dy)||1;
+    var ux=dx/len, uy=dy/len;
+    drawCFEnd(svg, p1.x, p1.y, ux, uy, edge.fromCard||'one');
+    drawCFEnd(svg, p2.x, p2.y, -ux, -uy, edge.toCard||'many');
+    var mx=(p1.x+p2.x)/2, my=(p1.y+p2.y)/2;
+    if(edge.label){
+      var rectW = Math.max(24, edge.label.length*6+10);
+      var rect=document.createElementNS('http://www.w3.org/2000/svg','rect');
+      rect.setAttribute('x',mx-rectW/2); rect.setAttribute('y',my-9);
+      rect.setAttribute('width',rectW); rect.setAttribute('height',18);
+      rect.setAttribute('rx',4); rect.setAttribute('fill','#FBF2DC');
+      rect.setAttribute('stroke','#D9AE4E'); rect.setAttribute('stroke-width','1');
+      rect.setAttribute('style','pointer-events:auto;cursor:pointer');
+      rect.addEventListener('click', (function(i){return function(){ editRelationshipUI(canvasId, i); };})(idx));
+      svg.appendChild(rect);
+      var text=document.createElementNS('http://www.w3.org/2000/svg','text');
+      text.setAttribute('x',mx); text.setAttribute('y',my+3.5);
+      text.setAttribute('text-anchor','middle'); text.setAttribute('font-size','10');
+      text.setAttribute('font-weight','600'); text.setAttribute('fill','#8a6410');
+      text.setAttribute('font-family','-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif');
+      text.setAttribute('style','pointer-events:auto;cursor:pointer');
+      text.textContent = edge.label;
+      text.addEventListener('click', (function(i){return function(){ editRelationshipUI(canvasId, i); };})(idx));
+      svg.appendChild(text);
+    } else {
+      var handle=document.createElementNS('http://www.w3.org/2000/svg','circle');
+      handle.setAttribute('cx',mx); handle.setAttribute('cy',my); handle.setAttribute('r',9);
+      handle.setAttribute('fill','#FBF2DC'); handle.setAttribute('stroke','#D9AE4E'); handle.setAttribute('stroke-width','1.2');
+      handle.setAttribute('style','pointer-events:auto;cursor:pointer');
+      handle.addEventListener('click', (function(i){return function(){ editRelationshipUI(canvasId, i); };})(idx));
+      svg.appendChild(handle);
+      var htext=document.createElementNS('http://www.w3.org/2000/svg','text');
+      htext.setAttribute('x',mx); htext.setAttribute('y',my+3.2);
+      htext.setAttribute('text-anchor','middle'); htext.setAttribute('font-size','10');
+      htext.setAttribute('fill','#8a6410'); htext.setAttribute('style','pointer-events:none;user-select:none');
+      htext.textContent = '✎';
+      svg.appendChild(htext);
+    }
+  });
+}
+function clearERCanvas(canvasId){
+  var state = ER_STATE[canvasId];
+  state.nodes=[]; state.edges=[]; state.pendingConnect=null;
+  var canvas = document.getElementById('ercanvas-'+canvasId);
+  canvas.querySelectorAll('.cf-entity').forEach(function(n){n.remove();});
+  var svg = document.getElementById('erlines-'+canvasId);
+  if(svg) svg.innerHTML='';
+  var empty = document.getElementById('erempty-'+canvasId);
+  if(empty) empty.style.display='block';
+  markERAnswered(canvasId);
+}
+function markERAnswered(canvasId){ updateProgress(); }
+function serializeERState(){
+  var out={};
+  Object.keys(ER_STATE).forEach(function(k){
+    out[k]={nodes:ER_STATE[k].nodes, edges:ER_STATE[k].edges};
+  });
+  return out;
+}
+function loadERState(data){
+  if(!data) return;
+  Object.keys(data).forEach(function(canvasId){
+    var saved = data[canvasId];
+    if(!saved || !saved.nodes) return;
+    var canvas = document.getElementById('ercanvas-'+canvasId);
+    if(!canvas) return;
+    ER_STATE[canvasId] = ER_STATE[canvasId] || {nodes:[], edges:[], connectMode:false, pendingConnect:null, seq:0, attrSeq:0};
+    var state = ER_STATE[canvasId];
+    state.nodes = saved.nodes; state.edges = saved.edges || [];
+    var maxSeq=0, maxAttrSeq=0;
+    saved.nodes.forEach(function(n){
+      renderCFEntity(canvasId, n);
+      var m = n.id.match(/-ent-(\d+)$/);
+      if(m) maxSeq = Math.max(maxSeq, parseInt(m[1])+1);
+      (n.attrs||[]).forEach(function(a){
+        var am = (a.id||'').match(/^a(\d+)$/);
+        if(am) maxAttrSeq = Math.max(maxAttrSeq, parseInt(am[1])+1);
+      });
+    });
+    state.seq = maxSeq; state.attrSeq = maxAttrSeq;
+    setTimeout(function(){ updateERGeometry(canvasId); }, 50);
+  });
+}
+
+
+function showExercise(i){
+  for(var k=0;k<EXERCISE_COUNT;k++){
+    document.getElementById('card-'+k).classList.toggle('visible', k===i);
+    document.getElementById('nav-'+k).classList.toggle('active', k===i);
+  }
+  document.getElementById('completionCard').classList.remove('visible');
+  window.scrollTo({top:0,behavior:'smooth'});
+  setTimeout(function(){ renderFkArrows(SCHEMA_IDS[i]); if(i===3) updateERGeometry('ex4'); }, 60);
+}
+
+function finishLab(){
+  for(var k=0;k<EXERCISE_COUNT;k++){
+    document.getElementById('card-'+k).classList.remove('visible');
+    document.getElementById('nav-'+k).classList.remove('active');
+  }
+  document.getElementById('completionCard').classList.add('visible');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function openZoom(src){
+  document.getElementById('zoomImg').src = src;
+  document.getElementById('zoomOverlay').classList.add('visible');
+}
+function closeZoom(){ document.getElementById('zoomOverlay').classList.remove('visible'); }
+
+function getAllTextFields(){
+  var ids = ['q1-bridge','q1-weak','q2-identify','q2-explain','q4-justify'];
+  var out = {};
+  ids.forEach(function(id){ var el=document.getElementById(id); if(el) out[id]=el; });
+  return out;
+}
+
+var DICT_ROW_COUNT = 0;
+function addDictRow(prefill){
+  var tbody = document.getElementById('dict-rows');
+  var idx = DICT_ROW_COUNT++;
+  var tr = document.createElement('tr');
+  var fields = ['table','attr','type','nullable','key','desc'];
+  var placeholders = ['PROPERTY','Price','DECIMAL(12,2)','NO','','Asking price of the property in THB'];
+  tr.innerHTML = fields.map(function(f,i){
+    return '<td><input type="text" class="dict-field" data-row="'+idx+'" data-field="'+f+'" placeholder="'+placeholders[i]+'"></td>';
+  }).join('');
+  tbody.appendChild(tr);
+  if(prefill){
+    fields.forEach(function(f){
+      var el = tr.querySelector('[data-field="'+f+'"]');
+      if(el && prefill[f]!==undefined) el.value = prefill[f];
+    });
+  }
+  wireInputs();
+}
+
+function wireInputs(){
+  document.querySelectorAll('textarea').forEach(function(el){
+    el.oninput = function(){ autoResize(el); updateProgress(); };
+  });
+  document.querySelectorAll('.dict-field').forEach(function(el){
+    el.oninput = updateProgress;
+  });
+}
+
+function autoResize(el){
+  el.style.height='auto';
+  el.style.height=(el.scrollHeight)+'px';
+}
+
+function countAnswered(fields){
+  var total=0, done=0;
+  Object.keys(fields).forEach(function(id){
+    total++;
+    var val=(fields[id].value||'').trim();
+    if(val) done++;
+  });
+  return {total:total, done:done};
+}
+
+function updateProgress(){
+  var fields = getAllTextFields();
+  var overall = countAnswered(fields);
+  var schemaTotal=0, schemaDone=0;
+  SCHEMA_IDS.forEach(function(sid){
+    schemaTotal++;
+    if(SCHEMA_STATE[sid] && SCHEMA_STATE[sid].tables.length>0) schemaDone++;
+  });
+  var erTotal=1, erDone=(ER_STATE['ex4'] && ER_STATE['ex4'].nodes.length>0)?1:0;
+  var totalAll = overall.total+schemaTotal+erTotal, doneAll = overall.done+schemaDone+erDone;
+  var pct = totalAll>0 ? Math.round(doneAll/totalAll*100) : 0;
+  document.getElementById('progFill').style.width = pct+'%';
+  document.getElementById('progPct').textContent = pct+'%';
+
+  var exFieldMap = {
+    0:{fields:['q1-bridge','q1-weak'], schema:'ex1', er:null},
+    1:{fields:['q2-identify','q2-explain'], schema:'ex2', er:null},
+    2:{fields:[], schema:'ex3', er:null},
+    3:{fields:['q4-justify'], schema:null, er:'ex4'}
+  };
+  Object.keys(exFieldMap).forEach(function(i){
+    var cfg = exFieldMap[i];
+    var t=0,d=0;
+    cfg.fields.forEach(function(id){
+      var el=document.getElementById(id); t++;
+      if(el && (el.value||'').trim()) d++;
+    });
+    if(cfg.schema){
+      t++; if(SCHEMA_STATE[cfg.schema] && SCHEMA_STATE[cfg.schema].tables.length>0) d++;
+    }
+    if(cfg.er){
+      t++; if(ER_STATE[cfg.er] && ER_STATE[cfg.er].nodes.length>0) d++;
+    }
+    var epct = t>0 ? Math.round(d/t*100) : 0;
+    var fill = document.getElementById('exprog-'+i);
+    var lbl = document.getElementById('exprog-lbl-'+i);
+    if(fill) fill.style.width = epct+'%';
+    if(lbl) lbl.textContent = epct+'% answered';
+    var dot = document.getElementById('navdot-'+i);
+    if(dot){
+      if(epct===100){ dot.classList.add('done'); dot.textContent='✓'; }
+      else { dot.classList.remove('done'); dot.textContent=(parseInt(i)+1); }
+    }
+    var navItem = document.getElementById('nav-'+i);
+    if(navItem) navItem.classList.toggle('done', epct===100);
+  });
+
+  document.querySelectorAll('textarea').forEach(function(el){
+    el.classList.toggle('answered', (el.value||'').trim().length>0);
+  });
+}
+
+function gatherAll(){
+  var data = {
+    lab:'dbms-section01-er-to-relational-mapping',
+    meta:{
+      name:document.getElementById('f-name').value,
+      studentId:document.getElementById('f-id').value,
+      classSection:document.getElementById('f-class').value,
+      date:document.getElementById('f-date').value,
+      savedAt:new Date().toISOString()
+    },
+    answers:{},
+    dataDictionary:[],
+    schemas: serializeSchemaState(),
+    erDiagrams: serializeERState()
+  };
+  var fields = getAllTextFields();
+  Object.keys(fields).forEach(function(id){ data.answers[id]=fields[id].value; });
+
+  var rows = document.querySelectorAll('#dict-rows tr');
+  rows.forEach(function(tr){
+    var row = {};
+    tr.querySelectorAll('.dict-field').forEach(function(inp){
+      row[inp.dataset.field] = inp.value;
+    });
+    data.dataDictionary.push(row);
+  });
+  return data;
+}
+
+function printLab(){
+  window.print();
+}
+
+function saveDraft(){
+  try{
+    localStorage.setItem('dbms_section01_relmap_draft', JSON.stringify(gatherAll()));
+    showToast('Draft saved ✓');
+  }catch(e){ showToast('Could not save'); }
+}
+
+function loadDraft(){
+  try{
+    var raw = localStorage.getItem('dbms_section01_relmap_draft');
+    if(!raw) return;
+    var data = JSON.parse(raw);
+    if(data.meta){
+      if(data.meta.name) document.getElementById('f-name').value = data.meta.name;
+      if(data.meta.studentId) document.getElementById('f-id').value = data.meta.studentId;
+      if(data.meta.classSection) document.getElementById('f-class').value = data.meta.classSection;
+      if(data.meta.date) document.getElementById('f-date').value = data.meta.date;
+    }
+    if(data.answers){
+      Object.keys(data.answers).forEach(function(id){
+        var el = document.getElementById(id);
+        if(!el) return;
+        el.value = data.answers[id];
+        autoResize(el);
+      });
+    }
+    if(data.dataDictionary && data.dataDictionary.length){
+      document.getElementById('dict-rows').innerHTML='';
+      DICT_ROW_COUNT=0;
+      data.dataDictionary.forEach(function(row){ addDictRow(row); });
+    }
+    if(data.schemas){ loadSchemaState(data.schemas); }
+    if(data.erDiagrams){ loadERState(data.erDiagrams); }
+    updateProgress();
+    SCHEMA_IDS.forEach(function(sid){ setTimeout(function(){ renderFkArrows(sid); }, 80); });
+  }catch(e){}
+}
+
+function downloadJSON(){
+  var data = gatherAll();
+  var name = (data.meta.name||'student').replace(/\s+/g,'-').toLowerCase();
+  var blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href=url; a.download='dbms-section01-relational-mapping-'+name+'.json'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('Downloaded ✓');
+}
+
+function showToast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2200);
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  SCHEMA_IDS.forEach(function(sid){
+    initSchemaBuilder(sid);
+    var slot = document.getElementById('schema-'+sid+'-slot');
+    if(slot) slot.innerHTML = buildSchemaHTML(sid);
+    updateSchemaCanvasSize(sid);
+  });
+  var erSlot = document.getElementById('ercanvas-ex4-slot');
+  if(erSlot){
+    erSlot.innerHTML = buildERCanvasHTML('ex4');
+    initERCanvas('ex4');
+  }
+  addDictRow();
+  addDictRow();
+  addDictRow();
+  wireInputs();
+  loadDraft();
+  updateProgress();
+});
+document.addEventListener('keydown', function(e){
+  if((e.ctrlKey||e.metaKey) && e.key==='s'){ e.preventDefault(); saveDraft(); }
+});
+document.addEventListener('keydown', function(e){
+  if(e.key==='Escape') closeZoom();
+});
+window.addEventListener('resize', function(){
+  SCHEMA_IDS.forEach(function(sid){ renderFkArrows(sid); });
+  updateERGeometry('ex4');
+});
+</script>
+</body>
+</html>
