@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DBMS Lab — Normalization</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F7F1E8;
+  --card:#FFFEFB;
+  --burgundy:#6E1423;
+  --burgundy-light:#8C1D2E;
+  --burgundy-dark:#4A0E18;
+  --gold:#C9962C;
+  --gold-light:#E8C46A;
+  --gold-bg:#FBF2DC;
+  --gold-bd:#D9AE4E;
+  --teal:#0F6E56;
+  --teal-bg:#E1F5EE;
+  --teal-bd:#5DCAA5;
+  --red:#791F1F;
+  --red-bg:#FCEBEB;
+  --red-bd:#F09595;
+  --blue-bg:#F3E9D8;
+  --blue-bd:#D9AE4E;
+  --txt:#2b211c;
+  --txt2:#6b5d52;
+  --txt3:#9a8c7f;
+  --bdr:#e3d5bf;
+  --bdr2:#cbb894;
+  --radius:10px;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+html,body{min-height:100%;background:var(--bg);font-family:var(--sans);color:var(--txt);font-size:15px;line-height:1.6}
+.shell{display:flex;min-height:100vh}
+.sidebar{width:260px;flex-shrink:0;background:var(--burgundy);position:sticky;top:0;height:100vh;overflow-y:auto;padding:1.5rem 0}
+.main{flex:1;max-width:960px;padding:2rem 2.5rem 4rem;min-width:0}
+@media(max-width:768px){.sidebar{display:none}.main{padding:1.25rem 1rem 3rem}}
+.sidebar-logo{font-size:17px;font-weight:700;color:#fff;padding:0 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:8px;line-height:1.3;flex-wrap:wrap}
+.sidebar-logo .mod-badge{font-size:11px;font-weight:600;background:rgba(201,150,44,.28);color:var(--gold-light);border-radius:4px;padding:2px 7px;letter-spacing:.05em}
+.sidebar-title{font-size:11px;font-weight:600;color:rgba(255,255,255,.5);letter-spacing:.08em;text-transform:uppercase;padding:0 1.25rem;margin-bottom:.75rem}
+.nav-item{display:flex;align-items:center;gap:10px;padding:.6rem 1.25rem;cursor:pointer;transition:background .15s;font-size:13px;color:rgba(255,255,255,.8);border-left:3px solid transparent}
+.nav-item:hover{background:rgba(255,255,255,.08)}
+.nav-item.active{background:rgba(255,255,255,.12);color:#fff;border-left-color:var(--gold-light)}
+.nav-item.done{color:rgba(255,255,255,.9)}
+.nav-dot{width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;transition:all .2s}
+.nav-dot.done{background:var(--gold-light);border-color:var(--gold-light);color:var(--burgundy-dark)}
+.nav-dot.active{border-color:#fff;color:#fff}
+.progress-bar-wrap{padding:1rem 1.25rem .5rem;margin-top:.5rem}
+.progress-bar-label{font-size:11px;color:rgba(255,255,255,.55);margin-bottom:6px;display:flex;justify-content:space-between}
+.progress-bar{height:4px;background:rgba(255,255,255,.18);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:var(--gold-light);border-radius:2px;transition:width .4s ease}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.75rem;flex-wrap:wrap;gap:12px}
+.topbar-left h1{font-size:22px;font-weight:700;color:var(--burgundy);margin-bottom:2px}
+.topbar-left p{font-size:13px;color:var(--txt2)}
+.topbar-right{display:flex;gap:8px;align-items:center}
+button{font-family:var(--sans);cursor:pointer;border:none;border-radius:8px;font-size:13px;font-weight:500;padding:8px 16px;transition:all .15s}
+button:disabled{opacity:.4;cursor:not-allowed}
+.btn-ghost{background:transparent;border:1.5px solid var(--bdr2);color:var(--txt2)}
+.btn-ghost:hover:not(:disabled){background:var(--card);border-color:var(--burgundy);color:var(--burgundy)}
+.btn-primary{background:var(--burgundy);color:#fff}
+.btn-primary:hover:not(:disabled){background:var(--burgundy-light)}
+.btn-success{background:var(--gold);color:#3b2a08}
+.btn-success:hover:not(:disabled){background:var(--gold-light)}
+.student-banner{background:var(--card);border:1.5px solid var(--bdr);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1.75rem;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.student-banner h3{font-size:12px;font-weight:600;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.75rem}
+.student-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:520px){.student-grid{grid-template-columns:1fr}}
+.field-group{display:flex;flex-direction:column;gap:4px}
+.field-group label{font-size:12px;font-weight:600;color:var(--txt2)}
+.field-group input{border:1.5px solid var(--bdr);border-radius:6px;padding:7px 10px;font-size:14px;font-family:var(--sans);color:var(--txt);background:var(--bg);transition:border .15s}
+.field-group input:focus{outline:none;border-color:var(--burgundy);background:#fff}
+.exercise-card{background:var(--card);border:1.5px solid var(--bdr);border-radius:var(--radius);margin-bottom:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden;display:none}
+.exercise-card.visible{display:block}
+.exercise-header{padding:1.25rem 1.5rem 1rem;border-bottom:1.5px solid var(--bdr)}
+.exercise-tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;display:inline-block;padding:2px 8px;border-radius:4px;margin-bottom:6px}
+.exercise-title{font-size:19px;font-weight:700;color:var(--burgundy);margin-bottom:3px}
+.exercise-desc{font-size:13px;color:var(--txt2)}
+.exercise-body{padding:1.25rem 1.5rem}
+.exercise-progress{display:flex;align-items:center;gap:8px;margin-top:.75rem}
+.ex-prog-bar{flex:1;height:5px;background:var(--bg);border-radius:3px;overflow:hidden}
+.ex-prog-fill{height:100%;background:var(--gold-bd);border-radius:3px;transition:width .3s}
+.ex-prog-label{font-size:11px;color:var(--txt3);white-space:nowrap}
+.info-box{border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem;border:.5px solid}
+.info-box h4{font-size:13px;font-weight:700;margin-bottom:.4rem}
+.info-box p,.info-box ul,.info-box ol{font-size:13.5px;line-height:1.7}
+.info-box ul,.info-box ol{padding-left:1.25rem}
+.info-box.gold{background:var(--gold-bg);border-color:var(--gold-bd)}.info-box.gold h4{color:#8a6410}
+.info-box.teal{background:var(--teal-bg);border-color:var(--teal-bd)}.info-box.teal h4{color:var(--teal)}
+.info-box.red{background:var(--red-bg);border-color:var(--red-bd)}.info-box.red h4{color:var(--red)}
+.info-box.gray{background:#f4f0e6;border-color:var(--bdr)}.info-box.gray h4{color:var(--txt2)}
+.info-box code{font-family:var(--mono);background:rgba(0,0,0,.06);padding:1px 5px;border-radius:4px;font-size:12px}
+.section-heading{font-size:15px;font-weight:700;color:var(--burgundy);margin:1.5rem 0 .75rem;padding-bottom:.4rem;border-bottom:2px solid var(--gold-bg)}
+.step-label{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--burgundy);background:var(--gold-bg);border-radius:4px;padding:3px 10px;margin-bottom:.6rem}
+.question-block{margin-bottom:1.25rem}
+.question-text{font-size:14px;font-weight:600;color:var(--txt);margin-bottom:.5rem;line-height:1.5}
+.question-text .qnum{color:var(--burgundy);margin-right:4px}
+textarea{width:100%;border:1.5px solid var(--bdr);border-radius:8px;padding:10px 12px;font-size:13.5px;font-family:var(--sans);color:var(--txt);background:var(--bg);resize:vertical;transition:border .15s;line-height:1.6;min-height:72px;box-sizing:border-box;overflow:hidden}
+textarea:focus{outline:none;border-color:var(--burgundy);background:#fff}
+textarea.answered{border-color:var(--gold-bd);background:#fffdf6}
+.table-wrap{overflow-x:auto;margin-bottom:1rem;border-radius:8px;border:1.5px solid var(--bdr)}
+.lab-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.lab-table th{background:var(--burgundy);color:#fff;padding:7px 9px;text-align:left;font-weight:600;font-size:11.5px;white-space:nowrap}
+.lab-table td{border-bottom:1px solid var(--bdr);padding:6px 9px;font-family:var(--mono);font-size:12px;white-space:nowrap}
+.lab-table tr:last-child td{border-bottom:none}
+.lab-table tr:nth-child(even) td{background:#faf6ec}
+.scenario-box{background:var(--gold-bg);border:1px solid var(--gold-bd);border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem;font-size:13.5px;line-height:1.75;color:#3b2a08}
+.scenario-box strong{color:var(--burgundy)}
+.scenario-box.compact{font-size:13px}
+.fun-fact{display:flex;gap:10px;align-items:flex-start;background:#EFE4F0;border:.5px solid #C9A8CC;border-radius:8px;padding:.85rem 1rem;margin-bottom:1.25rem}
+.fun-fact .ff-icon{font-size:22px;line-height:1}
+.fun-fact .ff-text{font-size:13px;color:#6E2A6E;line-height:1.6}
+.fun-fact .ff-text strong{color:#6E2A6E}
+.nav-btns{display:flex;justify-content:space-between;align-items:center;margin-top:1.75rem;padding-top:1.25rem;border-top:1.5px solid var(--bdr)}
+.nav-btns-right{display:flex;gap:8px}
+.completion-card{background:var(--card);border:2px solid var(--gold-bd);border-radius:var(--radius);padding:2rem;text-align:center;box-shadow:0 4px 16px rgba(110,20,35,.12);display:none}
+.completion-card.visible{display:block}
+.completion-card .check{font-size:52px;margin-bottom:.75rem}
+.completion-card h2{font-size:24px;font-weight:700;color:var(--burgundy);margin-bottom:.5rem}
+.completion-card p{font-size:15px;color:var(--txt2);margin-bottom:1.5rem}
+.completion-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.toast{position:fixed;bottom:1.25rem;right:1.25rem;background:var(--burgundy);color:#fff;font-size:13px;padding:9px 16px;border-radius:8px;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;z-index:100}
+.toast.show{opacity:1;transform:translateY(0)}
+.ilog{font-family:var(--mono);font-size:11px;background:#f4f0e6;border:1px solid var(--bdr);border-radius:6px;padding:.5rem .75rem;max-height:80px;overflow-y:auto;color:var(--txt2);margin-top:.5rem}
+.il-e{padding:1px 0;border-bottom:.5px solid var(--bdr)}
+.il-e:last-child{border-bottom:none}
+.il-w{color:#A32D2D;font-weight:500}
+.strike-chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#633806;background:#FAEEDA;border:1.5px solid #EF9F27;border-radius:20px;padding:4px 12px}
+.strike-chip.danger{color:#791F1F;background:#FCEBEB;border-color:#F09595}
+
+/* ═══ RELATION TABLE (simple row-based schema entry) ═══ */
+.schema-builder{border:1.5px solid var(--bdr);border-radius:10px;overflow:hidden;margin-bottom:1rem;background:var(--card)}
+.schema-toolbar{display:flex;gap:8px;align-items:center;padding:.85rem 1rem;background:var(--gold-bg);border-bottom:1.5px solid var(--bdr);flex-wrap:wrap}
+.schema-toolbar span{font-size:11.5px;color:var(--txt3);margin-left:auto}
+.schema-body{padding:1rem}
+.schema-empty{font-size:13px;color:var(--txt3);padding:1.5rem;text-align:center;width:100%}
+.rel-table{width:100%;border-collapse:separate;border-spacing:0 8px}
+.rel-table thead th{background:var(--burgundy);color:#fff;text-align:left;font-size:13px;font-weight:700;padding:10px 14px}
+.rel-table thead th:first-child{border-radius:8px 0 0 8px}
+.rel-table thead th:last-child{border-radius:0 8px 8px 0}
+.rel-row td{padding:0 6px}
+.rel-row input,.rel-row textarea{width:100%;box-sizing:border-box;border:1.5px solid var(--bdr);border-radius:8px;padding:10px 12px;font-size:13.5px;font-family:var(--sans);color:var(--txt);background:var(--bg)}
+.rel-row input::placeholder,.rel-row textarea::placeholder{color:var(--txt3)}
+.rel-row input:focus,.rel-row textarea:focus{outline:none;border-color:var(--burgundy);background:#fff}
+.rel-row td:first-child{width:18%}
+.rel-row td:last-child{width:28%}
+.rel-row .fkcell{display:flex;align-items:flex-start;gap:4px}
+.rel-row textarea.rel-expand{resize:vertical;min-height:41px;height:41px;line-height:1.6;font-family:var(--sans);overflow:hidden}
+.rel-row .fkcell textarea{border-color:var(--gold-bd)}
+.rel-row .rel-del{width:26px;height:26px;flex-shrink:0;border-radius:50%;border:1.5px solid var(--bdr2);background:transparent;color:var(--txt3);font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:6px;margin-top:2px}
+.rel-row .rel-del:hover{background:var(--red-bg);border-color:var(--red-bd);color:var(--red)}
+.rel-row-outer{display:flex;align-items:center}
+.rel-addrow{width:100%;background:#faf6ec;border:1.5px dashed var(--bdr2);border-radius:8px;padding:10px;font-size:12.5px;color:var(--txt2);text-align:center;cursor:pointer;margin-top:.25rem}
+.rel-addrow:hover{background:var(--gold-bg);color:var(--burgundy);border-color:var(--gold-bd)}
+
+@media print{
+  .sidebar,.topbar-right,.nav-btns,.toast,.schema-toolbar{display:none !important}
+  .main{padding:0;max-width:100%}
+  .exercise-card{display:block !important;break-inside:avoid;box-shadow:none;border:1px solid #ccc;margin-bottom:1rem}
+  .completion-card{display:none !important}
+  textarea{border:1px solid #ccc;min-height:50px}
+  body{font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<div class="ap-overlay" id="apOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s">
+  <div class="ap-modal" style="background:#fff;border-radius:14px;padding:2rem 2.25rem;max-width:440px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25);transform:scale(.93);transition:transform .2s">
+    <div class="ap-icon" style="font-size:44px;margin-bottom:.75rem">&#9888;&#65039;</div>
+    <h2 style="font-size:19px;font-weight:700;color:#791F1F;margin-bottom:.5rem">Paste detected</h2>
+    <p id="apMsg" style="font-size:13.5px;color:#5f5e5a;margin-bottom:1.25rem;line-height:1.6">Copy-pasting is not allowed in this lab. Please type your answer in your own words — this helps demonstrate your understanding. The pasted text has been discarded.</p>
+    <div class="strikes-row" id="apStrikeRow" style="display:flex;justify-content:center;gap:8px;margin-bottom:1.25rem"></div>
+    <p id="apSubMsg" style="font-size:12.5px;color:#A32D2D;margin-bottom:1rem;min-height:18px"></p>
+    <button style="background:var(--burgundy);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;padding:10px 28px;cursor:pointer" onclick="dismissWarning()">I understand — I will type my answer</button>
+  </div>
+</div>
+<style>.ap-overlay.show{opacity:1;pointer-events:all}.ap-overlay.show .ap-modal{transform:scale(1)}.ap-sdot{width:16px;height:16px;border-radius:50%;border:2px solid #EF9F27;background:#fff;transition:background .3s}.ap-sdot.hit{background:#A32D2D;border-color:#A32D2D}</style>
+
+<div class="shell">
+
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    Normalization and Denormalization
+    <span class="mod-badge">DBMS &middot; 960231</span>
+  </div>
+  <div class="sidebar-title">Exercises</div>
+  <div id="navItems"></div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-label"><span>Overall progress</span><span id="progPct">0%</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+  </div>
+</nav>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>Normalization and Denormalization</h1>
+      <p>960231 Database Management System (DBMS) &middot; Class Activity &middot; Developer Track</p>
+    </div>
+    <div class="topbar-right">
+      <div class="strike-chip" id="strikeChip" style="display:none">&#9888; Paste detected</div>
+      <button class="btn-ghost" onclick="saveDraft()">&#128190; Save draft</button>
+      <button class="btn-ghost" onclick="window.print()">&#128424; Print / PDF</button>
+    </div>
+  </div>
+
+  <div class="student-banner">
+    <h3>Student information</h3>
+    <div class="student-grid">
+      <div class="field-group"><label for="f-name">Full name</label><input type="text" id="f-name" placeholder="Your name" oninput="updateProgress()"></div>
+      <div class="field-group"><label for="f-id">Student ID</label><input type="text" id="f-id" placeholder="e.g. s1234567" oninput="updateProgress()"></div>
+      <div class="field-group"><label for="f-class">Class / section</label><input type="text" id="f-class" placeholder="e.g. COMP201-A" oninput="updateProgress()"></div>
+      <div class="field-group"><label for="f-date">Date</label><input type="date" id="f-date" oninput="updateProgress()"></div>
+    </div>
+    <div style="margin-top:.9rem">
+      <div style="font-size:11px;font-weight:600;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Academic integrity log</div>
+      <div class="ilog" id="ilog"><div class="il-e">Lab opened &mdash; integrity monitoring active.</div></div>
+    </div>
+  </div>
+
+  <div class="fun-fact">
+    <div class="ff-icon">&#128161;</div>
+    <div class="ff-text"><strong>Why bother normalizing?</strong> Edgar F. Codd introduced normal forms in the early 1970s specifically to kill three anomalies — <strong>insertion</strong>, <strong>update</strong>, and <strong>deletion</strong> anomalies — that show up when one table is trying to describe more than one "fact" at a time. Every normal form you'll use today (1NF &rarr; 5NF) is just a stronger rule for making sure a table stores exactly one fact about exactly one thing.</div>
+  </div>
+
+  <!-- <div class="info-box teal" style="margin-bottom:1.75rem">
+    <h4>&#128220; Normal-form cheat sheet — read me first</h4>
+    <ol>
+      <li><strong>1NF (First Normal Form):</strong> every cell holds a single atomic value — no repeating groups, no comma/semicolon-separated lists, no "column 1 / column 2" clones of the same attribute.</li>
+      <li><strong>2NF:</strong> table is in 1NF, and <em>every non-key attribute depends on the WHOLE primary key</em> — no partial dependency on just part of a composite key.</li>
+      <li><strong>3NF:</strong> table is in 2NF, and <em>no non-key attribute depends on another non-key attribute</em> — no transitive dependency (A &rarr; B &rarr; C where C really depends on B, not on the key A).</li>
+      <li><strong>BCNF:</strong> for every functional dependency X &rarr; Y, X must be a candidate key (a stricter version of 3NF for tables with overlapping candidate keys).</li>
+      <li><strong>4NF:</strong> table is in BCNF, and has <em>no non-trivial multivalued dependency (MVD)</em> — i.e. no independent multivalued facts stuffed into the same table (X &#8608;&#8608; Y where Y has nothing to do with Z).</li>
+      <li><strong>5NF (Project-Join Normal Form):</strong> table is in 4NF, and cannot be losslessly decomposed any further — every remaining <em>join dependency</em> is implied by the candidate keys.</li>
+    </ol>
+  </div> -->
+
+  <div id="exerciseContainer"></div>
+
+  <div class="completion-card" id="completionCard">
+    <div class="check">&#9989;</div>
+    <h2>Lab complete!</h2>
+    <p>All questions answered. Download your submission and upload it as instructed.</p>
+    <div class="completion-actions">
+      <button class="btn-primary" onclick="downloadJSON()">&#11015; Download submission (.json)</button>
+      <button class="btn-ghost" onclick="window.print()">&#128424; Print / PDF</button>
+    </div>
+  </div>
+</main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+// DATA — the two source datasets, embedded so students see exactly
+// what's in filebased_sample.xlsx and NF.xlsx without opening Excel
+// ═══════════════════════════════════════════════
+var FILEBASED_DATA = {
+  headers:['Firstname','Lastname','NID','Birthdate','Address','Sex','Salary','Department','DLocation','Project'],
+  rows:[
+    ['John','Smith','1234567890123','1965-01-09','Mahidol Rd, Mueang, Chiang Mai','Male','30000','Administrator','Chiang Mai','Product X'],
+    ['Franklin','Wong','3333333445555','1955-12-08','Khlong Tan, Khlong Toei, Bangkok','Male','40000','Sale','Bangkok','Alpha'],
+    ['Franklin','Wong','3333333445555','1955-12-08','Khlong Tan, Khlong Toei, Bangkok','Male','40000','Sale','Bangkok','Beta'],
+    ['Franklin','Wong','3333333445555','1955-12-08','Khlong Tan, Khlong Toei, Bangkok','Male','40000','Research','Bangkok','Charlie'],
+    ['Alicia','Zelaya','9998877777777','1968-01-19','Silom, Bang Rak, Bangkok','Female','25000','Research','Bangkok','Charlie'],
+    ['Alicia','Zelaya','9998877777777','1968-01-19','Silom, Bang Rak, Bangkok','Female','25000','Administrator','Chiang Mai','Product X'],
+    ['Jennifer','Wallace','9876543211234','1941-06-20','Mueang, Chiang Mai','Female','43000','Administrator','Chiang Mai','Product X'],
+    ['Jennifer','Wallace','9876543211234','1941-06-20','Mueang, Chiang Mai','Female','43000','Administrator','Chiang Mai','Product Y'],
+    ['Jennifer','Wallace','9876543211234','1941-06-20','Mueang, Chiang Mai','Female','43000','Administrator','Chiang Mai','Product Z'],
+    ['Ramesh','English','6668844444444','1972-07-31','Bang Rak, Bangkok','Male','25000','Administrator','Bangkok','Product A'],
+    ['Ahmad','Jabbar','9879879879879','1969-03-29','Makkasan, Ratchathewi, Bangkok','Male','25000','Research','Bangkok','Charlie']
+  ]
+};
+
+var NF_DATA = {
+  headers:['Customer','Customer Address','Cust. Email Subscriptions','Mail Catalog 1','Mail Catalog 2','Product','Manufacturer','Manufacturer Address','Product Details','Cost','Qty','Line Total','Order Date','Order Total'],
+  rows:[
+    ['Bob Smith','123 Broadway Dr; bsmith@gmail.com','Baseball, Basketball','Basketball','Golf','Basketball','Spaulding','1 Spaulding Drive','29.5 Inch','25','1','25','2018-08-09','70'],
+    ['Bob Smith','123 Broadway Dr; bsmith@gmail.com','Baseball, Basketball','Basketball','Golf','Bat','Louisville Slugger','345 Slugger Avenue','33 Inch','35','1','35','2018-08-09','70'],
+    ['Bob Smith','123 Broadway Dr; bsmith@gmail.com','Baseball, Basketball','Basketball','Golf','Basketball','Spaulding','1 Spaulding Drive','29.5 Inch','25','1','25','2018-08-12','23'],
+    ['Jill Thomas','12 Kellogg Ave; jthomas@gmail.com','Baseball','Baseball','','Softball','Rawlings','23 Rawlings Court','4 Pack','6','2','12','2018-08-10','57'],
+    ['Jill Thomas','12 Kellogg Ave; jthomas@gmail.com','Baseball','Baseball','','Bat','Rawlings','23 Rawlings Court','32 Inch','45','1','45','2018-08-10','57'],
+    ['Bob Smith','5 Maple Street; smith5@hotmail.com','Golf','Golf','Baseball','Golf Balls','Titleist','1234 Titleist Road','1 Dozen','44','2','88','2018-08-12','88'],
+    ['Bob Smith','5 Maple Street; smith5@hotmail.com','Golf','Golf','Baseball','Basketball','Titleist','1234 Titleist Road','1 Dozen','44','2','88','2018-08-12','88']
+  ]
+};
+
+var EMP_NORM_DATA = {
+  headers:['emp_id','name','dept_id'],
+  rows:[
+    ['101','Franklin Wong','D5'],
+    ['104','Ahmad Jabbar','D5'],
+    ['102','Alicia Zelaya','D4'],
+    ['103','Jennifer Wallace','D4'],
+    ['105','John Smith','D4']
+  ]
+};
+
+var DEPT_NORM_DATA = {
+  headers:['dept_id','dept_name','dept_location'],
+  rows:[
+    ['D5','Research','Bangkok'],
+    ['D4','Administrator','Chiang Mai']
+  ]
+};
+
+var DENORM_DATA = {
+  headers:['emp_id','name','dept_id','dept_name','dept_location'],
+  rows:[
+    ['101','Franklin Wong','D5','Research','Bangkok'],
+    ['104','Ahmad Jabbar','D5','Research','Bangkok'],
+    ['102','Alicia Zelaya','D4','Administrator','Chiang Mai'],
+    ['103','Jennifer Wallace','D4','Administrator','Chiang Mai'],
+    ['105','John Smith','D4','Administrator','Chiang Mai']
+  ]
+};
+
+function renderDataTable(data){
+  var h='<div class="table-wrap"><table class="lab-table"><thead><tr>';
+  data.headers.forEach(function(hd){h+='<th>'+hd+'</th>';});
+  h+='</tr></thead><tbody>';
+  data.rows.forEach(function(r){
+    h+='<tr>'; r.forEach(function(c){h+='<td>'+(c===''?'&mdash;':c)+'</td>';}); h+='</tr>';
+  });
+  h+='</tbody></table></div>';
+  return h;
+}
+
+// ═══════════════════════════════════════════════
+// EXERCISES
+// ═══════════════════════════════════════════════
+var EXERCISES = [
+  {
+    id:'ex1', tag:'Exercise 1', tagColor:'#6E1423', tagBg:'#FBF2DC',
+    title:"Filebased_sample - Normalize to 5NF",
+    desc:'A flat, file-based employee record with two independent multivalued facts hiding in it. Find them, split them apart, and check whether a further 5NF split is really needed.',
+    setup:'This table came straight out of a legacy flat-file system — one row per (employee, department, project) combination, with department/location data copy-pasted onto every row. Read it carefully before you touch it.',
+    scenario:'Every employee belongs to <strong>one or more departments</strong> and works on <strong>one or more projects</strong> — and critically, <strong>which projects an employee works on has nothing to do with which departments they belong to</strong>. Separately, each <strong>department</strong> can span <strong>one or more locations</strong>. The table below tries to cram all of this into a single flat file, so the same employee, department, and location facts get repeated over and over.',
+    dataFn:function(){return renderDataTable(FILEBASED_DATA);},
+    tableBuilderId:'ex1-final',
+    questions:[
+      {id:'ex1-q1', label:'Q1a &middot; Anomalies', text:'Looking at the table above, describe one concrete <strong>insertion anomaly</strong>, one <strong>update anomaly</strong>, and one <strong>deletion anomaly</strong> that this flat file suffers from. Use actual rows/names as examples.'},
+      {id:'ex1-q2', label:'Q1a &middot; Functional & multivalued dependencies', text:'Write out the functional dependencies (FDs) you can identify in this table. '},
+      //{id:'ex1-q3', label:'Q1a &middot; 1NF → 4NF reasoning', text:'Explain, in your own words, why this table is already in 1NF/2NF/3NF/BCNF but still fails 4NF. Which two multivalued dependencies force the split?'},
+      //{id:'ex1-q4', label:'Q1a &middot; 5NF check', text:'After decomposing into 4NF relations, is there any join dependency left that would force a further split into 5NF, or does the join of your 4NF relations already reconstruct the original data losslessly with no spurious rows? Justify your answer.'}
+    ],
+    compareQ:{id:'ex1-q5', label:'Q1b &middot; Compare with Lab 01a, Question 1', text:'Compare your final decomposition here with your answer to <strong>Lab 05 - Question 2 Refactor the Spreadsheet — Minimum Duplication</strong>. Are the resulting tables the same? If they differ, explain what the differences are.'}
+  },
+  {
+    id:'ex2', tag:'Exercise 2', tagColor:'#0F6E56', tagBg:'#E1F5EE',
+    title:'NF.xlsx — Normalize to 3NF',
+    desc:'A single sprawling order report, straight from a spreadsheet, packed with repeating groups and transitive dependencies. Take it step by step: 1NF, then 2NF, then 3NF.',
+    setup:'This is the kind of "one giant sheet" report a non-technical office worker might build. It mixes customer, product, manufacturer, and order-line facts into one wide table with two "Mail Catalog" columns doing the same job.',
+    scenario:'Each row is one <strong>order line</strong>: a customer ordered a quantity of one product, from one manufacturer, on one date. Notice the <em>Customer Email Subscriptions</em> and two <em>Mail Catalog</em> columns are really the same repeating fact (which catalogs a customer is subscribed to), and <em>Product Manufacturer Address</em> only really depends on the manufacturer — not on the order at all.',
+    dataFn:function(){return renderDataTable(NF_DATA);},
+    tableBuilderId:'ex2-final',
+    questions:[
+      {id:'ex2-q1', label:'Step 1 &middot; Convert to 1NF', text:'This sheet starts in 0NF (repeating groups in the catalog columns, and a composite "address; email" cell). Describe exactly what you must do to bring it to 1NF — which columns need to be split, and which multivalued attribute needs to be pulled into its own row.'},
+      //{id:'ex2-q2', label:'Step 1 &middot; Candidate key at 1NF', text:'Once in 1NF, what is the primary key of the single big relation? (Hint: what combination of columns uniquely identifies one order line?)'},
+      {id:'ex2-q3', label:'Step 2 &middot; Convert to 2NF', text:'List every <strong>partial dependency</strong> you find — attributes that depend on only part of the composite key you identified above, not the whole key. Then describe how you split the relation to remove them.'},
+      {id:'ex2-q4', label:'Step 3 &middot; Convert to 3NF', text:'List every <strong>transitive dependency</strong> remaining after 2NF (attributes that depend on a non-key attribute, not directly on the key). Describe the final split that removes them and produces your 3NF schema.'}
+    ]
+  },
+  {
+    id:'ex3', tag:'Exercise 3', tagColor:'#6E1423', tagBg:'#FBF2DC',
+    title:'Denormalization — Breaking the Rules on Purpose',
+    desc:'',
+    setup:'A manager wants a single fast report: "employee name, department name, department location" for thousands of employees, refreshed on a dashboard every few seconds. Running the 3NF JOIN every time is starting to show up as a performance problem. Your job is to decide what — if anything — to denormalize, and to be honest about what it costs.',
+    scenario:'',
+    extraNote:'<div class="fun-fact"><div class="ff-icon">&#128161;</div><div class="ff-text"><strong>Normalize first, denormalize deliberately.</strong> Denormalization isn\'t "undoing" normalization — it\'s a controlled trade-off made after you understand the data. Rule of thumb: normalize until it hurts, denormalize until it works. You are trading write complexity, storage, and consistency risk for query speed — never do it without knowing exactly which anomaly you are reintroducing.</div></div>',
+    //dataLabel:'Starting point',
+    dataFn:function(){
+      var h='<p style="font-size:13.5px;margin:0 0 .5rem;color:var(--txt2)">This is the <strong>normalized (3NF)</strong> version from Exercise 1 — two separate relations, joined through <code>dept_id</code>:</p>';
+      h+='<p style="font-size:12.5px;font-weight:600;color:var(--burgundy);margin:.75rem 0 .35rem">Employee</p>';
+      h+=renderDataTable(EMP_NORM_DATA);
+      h+='<p style="font-size:12.5px;font-weight:600;color:var(--burgundy);margin:.9rem 0 .35rem">Department</p>';
+      h+=renderDataTable(DEPT_NORM_DATA);
+      h+='<p style="font-size:13.5px;margin:1.25rem 0 .5rem;color:var(--txt2)">Below is what the table looks like <strong>after</strong> denormalizing — <code>dept_name</code> and <code>dept_location</code> copied directly onto every Employee row so the dashboard can read them with no JOIN:</p>';
+      h+=renderDataTable(DENORM_DATA);
+      return h;
+    },
+    tableBuilderId:'ex3-final',
+    hideSchema:true,
+    questions:[
+      {id:'ex3-q1', label:'Q1 &middot; Why and when do we denormalize?', text:'In your own words, explain <strong>why</strong> a developer would deliberately reintroduce redundancy into a normalized database, and <strong>when</strong> it is actually worth doing. Refer to the read-heavy dashboard scenario above — what is it about this situation specifically that makes denormalization worth considering here?'},
+      {id:'ex3-q3a', label:'Q3a &middot; Scenario 1', text:'A new department, "Marketing," has just been created but no employee has been hired into it yet. Using the table above, which anomaly does this reintroduce — <strong>insertion</strong>, <strong>update</strong>, or <strong>deletion</strong>? Name the anomaly and explain why, referencing the table structure.'},
+      {id:'ex3-q3b', label:'Q3b &middot; Scenario 2', text:'The "Research" department in Bangkok is renamed to "R&amp;D." Looking at the rows in the table above that belong to this department, which anomaly does this reintroduce — <strong>insertion</strong>, <strong>update</strong>, or <strong>deletion</strong>? Name the anomaly and list every row that must now be changed.'},
+      {id:'ex3-q3c', label:'Q3c &middot; Scenario 3', text:'Every employee row for the "Administrator" department in Chiang Mai is deleted (e.g. those employees resign). Using the table above, which anomaly does this reintroduce — <strong>insertion</strong>, <strong>update</strong>, or <strong>deletion</strong>? Name the anomaly and explain what information about the Administrator department is lost as a side effect.'},
+      //{id:'ex3-q4', label:'Q4 &middot; Keep it consistent', text:'Denormalized data only stays useful if it does not silently go stale. Describe one realistic mechanism (a trigger, application-level write path, or scheduled batch job) that would keep your redundant columns in sync with the source of truth — and what would happen to the dashboard if that mechanism failed silently.'}
+    ]
+  }
+];
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+var currentEx = 0;
+var SCHEMA_STATE = {};
+
+var AP = {
+  strikes:0, log:[], currentField:'',
+  record:function(type,detail){
+    var e={ts:new Date().toISOString(),type:type,field:AP.currentField,detail:detail||''};
+    AP.log.push(e); AP.renderILog(e);
+  },
+  renderILog:function(entry){
+    var log=document.getElementById('ilog'); if(!log)return;
+    var d=document.createElement('div');
+    d.className='il-e'+(entry.type!=='info'?' il-w':'');
+    var t=entry.ts.slice(11,19);
+    d.textContent='['+t+'] '+(entry.field?'('+entry.field+') ':'')+entry.detail;
+    log.appendChild(d); log.scrollTop=log.scrollHeight;
+  },
+  onPaste:function(e,fid){
+    AP.strikes++; AP.record('paste','Paste attempt #'+AP.strikes+' in "'+fid+'"');
+    e.preventDefault(); AP.buildDots(); AP.updateChip();
+    document.getElementById('apMsg').textContent='Copy-pasting is not allowed. Please type your answer — this demonstrates your understanding. The pasted content was discarded.';
+    document.getElementById('apSubMsg').textContent='This incident is recorded in your submission.';
+    document.getElementById('apOverlay').classList.add('show');
+  },
+  updateChip:function(){
+    var c=document.getElementById('strikeChip'); if(!c)return;
+    c.style.display='inline-flex'; c.classList.add('danger');
+  },
+  wire:function(el){
+    if(!el||el._apWired)return; el._apWired=true;
+    var fid=el.id||el.name||'unknown';
+    el.addEventListener('focus',function(){AP.currentField=fid;});
+    el.addEventListener('blur',function(){AP.currentField='';});
+    el.addEventListener('paste',function(e){AP.onPaste(e,fid);});
+    el.addEventListener('keydown',function(e){
+      if((e.ctrlKey||e.metaKey)&&e.key==='v'){AP.onPaste(e,fid);}
+      if((e.ctrlKey||e.metaKey)&&e.key==='a'){
+        if(!['f-name','f-id','f-class','f-date'].includes(fid)){e.preventDefault();}
+      }
+    });
+    el.addEventListener('drop',function(e){
+      if(e.dataTransfer.types.includes('text/plain')){e.preventDefault();AP.strikes++;AP.updateChip();}
+    });
+  },
+  wireAll:function(){
+    document.querySelectorAll('textarea,input[type=text]').forEach(function(el){
+      if(['f-name','f-id','f-class','f-date'].includes(el.id))return;
+      if(el.closest('.schema-builder'))return;
+      AP.wire(el);
+    });
+  },
+  buildDots:function(){
+    var row=document.getElementById('apStrikeRow'); if(!row)return;
+    row.innerHTML=''; var total=Math.max(AP.strikes,3);
+    for(var i=0;i<total;i++){var d=document.createElement('div');d.className='ap-sdot'+(i<AP.strikes?' hit':'');row.appendChild(d);}
+  }
+};
+function dismissWarning(){document.getElementById('apOverlay').classList.remove('show');}
+
+// ═══════════════════════════════════════════════
+// BUILD
+// ═══════════════════════════════════════════════
+function init(){
+  buildNav(); buildExercises(); loadDraft(); goTo(0);
+  document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
+  setInterval(saveDraft,90000);
+}
+
+function buildNav(){
+  var nav=document.getElementById('navItems');
+  EXERCISES.forEach(function(ex,i){
+    var item=document.createElement('div');
+    item.className='nav-item'; item.id='nav-'+i;
+    item.innerHTML='<div class="nav-dot" id="navdot-'+i+'">'+(i+1)+'</div><span>'+ex.title.split(' — ')[0]+'</span>';
+    item.onclick=function(){goTo(i);};
+    nav.appendChild(item);
+  });
+}
+
+function buildExercises(){
+  var container=document.getElementById('exerciseContainer');
+  EXERCISES.forEach(function(ex,i){
+    var card=document.createElement('div');
+    card.className='exercise-card'; card.id='card-'+i;
+    card.innerHTML=buildExHTML(ex,i);
+    container.appendChild(card);
+    card.querySelectorAll('textarea').forEach(function(el){
+      el.addEventListener('input',function(){updateProgress();autoResize(el);});
+    });
+  });
+  EXERCISES.forEach(function(ex){ if(!ex.hideSchema) initSchemaBuilder(ex.tableBuilderId); });
+}
+
+function buildExHTML(ex,exIdx){
+  var h='';
+  h+='<div class="exercise-header">';
+  h+='<div class="exercise-tag" style="color:'+ex.tagColor+';background:'+ex.tagBg+'">'+ex.tag+'</div>';
+  h+='<div class="exercise-title">'+ex.title+'</div>';
+  h+='<div class="exercise-desc">'+ex.desc+'</div>';
+  h+='<div class="exercise-progress"><div class="ex-prog-bar"><div class="ex-prog-fill" id="exprog-'+exIdx+'" style="width:0%"></div></div><div class="ex-prog-label" id="exprog-lbl-'+exIdx+'">0% answered</div></div>';
+  h+='</div><div class="exercise-body">';
+  h+='<div class="info-box gold"><h4>Setup</h4><p>'+ex.setup+'</p></div>';
+
+  h+='<div class="section-heading">Scenario recap</div>';
+  h+='<div class="scenario-box compact">'+ex.scenario+'</div>';
+  if(ex.extraNote){ h+=ex.extraNote; }
+
+  h+='<div class="section-heading">'+(ex.dataLabel||'Source data')+'</div>';
+  h+=ex.dataFn();
+
+  h+='<div class="section-heading">Work through the questions</div>';
+  ex.questions.forEach(function(q,qi){
+    h+='<div class="question-block">';
+    h+='<div class="step-label">'+q.label+'</div>';
+    h+='<div class="question-text"><span class="qnum">Q'+(qi+1)+'.</span>'+q.text+'</div>';
+    h+='<textarea id="'+q.id+'" placeholder="Type your answer here..."></textarea>';
+    h+='</div>';
+  });
+
+  if(!ex.hideSchema){
+    h+='<div class="section-heading">'+(ex.schemaLabel||'Final normalized schema')+'</div>';
+    h+=buildSchemaHTML(ex.tableBuilderId);
+  }
+
+  if(ex.compareQ){
+    var cq=ex.compareQ;
+    h+='<div class="question-block">';
+    h+='<div class="step-label">'+cq.label+'</div>';
+    h+='<div class="question-text">'+cq.text+'</div>';
+    h+='<textarea id="'+cq.id+'" placeholder="Type your answer here..."></textarea>';
+    h+='</div>';
+  }
+
+  h+='<div class="nav-btns">';
+  if(exIdx>0) h+='<button class="btn-ghost" onclick="goTo('+(exIdx-1)+')">&larr; Previous</button>';
+  else h+='<div></div>';
+  h+='<div class="nav-btns-right">';
+  if(exIdx<EXERCISES.length-1) h+='<button class="btn-primary" onclick="goTo('+(exIdx+1)+')">Next exercise &rarr;</button>';
+  else h+='<button class="btn-success" onclick="finish()">&#10003; Finish &amp; download</button>';
+  h+='</div></div>';
+  h+='</div>';
+  return h;
+}
+
+// ═══════════════════════════════════════════════
+// RELATION TABLE (simple row-based schema entry)
+// ═══════════════════════════════════════════════
+function buildSchemaHTML(schemaId){
+  var h='<div class="schema-builder" data-schema="'+schemaId+'">';
+  h+='<div class="schema-toolbar">';
+  h+='<button class="btn-ghost" style="font-size:12px;padding:6px 12px" onclick="clearSchema(\''+schemaId+'\')">&#128465; Clear all</button>';
+  h+='<span>Mark the primary key with * in the Columns box &middot; drag the corner of any box to expand it for more room</span>';
+  h+='</div>';
+  h+='<div class="schema-body" id="schemabody-'+schemaId+'">';
+  h+='<div class="schema-empty" id="schemaempty-'+schemaId+'" style="display:none">No tables yet.</div>';
+  h+='<table class="rel-table"><thead><tr><th>Table name</th><th>Columns (mark the PK with *)</th><th>Links to (FK)</th></tr></thead>';
+  h+='<tbody id="schemarows-'+schemaId+'"></tbody></table>';
+  h+='<div class="rel-addrow" onclick="addTable(\''+schemaId+'\')">+ Add table</div>';
+  h+='</div>';
+  h+='</div>';
+  return h;
+}
+
+function initSchemaBuilder(schemaId){
+  if(SCHEMA_STATE[schemaId]) return;
+  SCHEMA_STATE[schemaId] = {tables:[], seq:0};
+  for(var i=0;i<4;i++){ addTable(schemaId, true); }
+}
+
+function addTable(schemaId, silent){
+  var state = SCHEMA_STATE[schemaId];
+  var id = schemaId+'-tbl-'+(state.seq++);
+  var table = {id:id, name:'', columns:'', fk:''};
+  state.tables.push(table);
+  renderTableRow(schemaId, table);
+  if(!silent) markSchemaAnswered(schemaId);
+}
+
+function renderTableRow(schemaId, table){
+  var tbody = document.getElementById('schemarows-'+schemaId);
+  if(!tbody) return;
+  var tr = document.createElement('tr');
+  tr.className='rel-row';
+  tr.id = table.id;
+  tr.innerHTML =
+    '<td><input type="text" value="'+escapeHtmlR(table.name)+'" placeholder="e.g. Employee" oninput="renameTable(\''+schemaId+'\',\''+table.id+'\',this.value)"></td>'+
+    '<td><textarea rows="1" class="rel-expand" placeholder="e.g. *NID, Firstname, Lastname, Salary, DeptID" oninput="setTableColumns(\''+schemaId+'\',\''+table.id+'\',this.value)">'+escapeHtmlR(table.columns)+'</textarea></td>'+
+    '<td><div class="rel-row-outer"><div class="fkcell" style="flex:1"><textarea rows="1" class="rel-expand" placeholder="e.g. DeptID &rarr; Department" oninput="setTableFk(\''+schemaId+'\',\''+table.id+'\',this.value)">'+escapeHtmlR(table.fk)+'</textarea></div>'+
+      '<button class="rel-del" title="Remove table" onclick="deleteTable(\''+schemaId+'\',\''+table.id+'\')">&#10005;</button></div></td>';
+  tbody.appendChild(tr);
+}
+
+function findTable(schemaId, tableId){
+  return SCHEMA_STATE[schemaId].tables.find(function(t){return t.id===tableId;});
+}
+function renameTable(schemaId, tableId, val){
+  var t=findTable(schemaId,tableId); if(t){ t.name=val; markSchemaAnswered(schemaId); }
+}
+function setTableColumns(schemaId, tableId, val){
+  var t=findTable(schemaId,tableId); if(t){ t.columns=val; markSchemaAnswered(schemaId); }
+}
+function setTableFk(schemaId, tableId, val){
+  var t=findTable(schemaId,tableId); if(t){ t.fk=val; markSchemaAnswered(schemaId); }
+}
+function deleteTable(schemaId, tableId){
+  var state=SCHEMA_STATE[schemaId];
+  state.tables = state.tables.filter(function(t){return t.id!==tableId;});
+  var el=document.getElementById(tableId); if(el) el.remove();
+  markSchemaAnswered(schemaId);
+}
+function clearSchema(schemaId){
+  if(!confirm('Clear all rows in this table?'))return;
+  var state=SCHEMA_STATE[schemaId];
+  state.tables=[];
+  var tbody=document.getElementById('schemarows-'+schemaId);
+  if(tbody) tbody.innerHTML='';
+  for(var i=0;i<4;i++){ addTable(schemaId, true); }
+  markSchemaAnswered(schemaId);
+}
+function markSchemaAnswered(schemaId){ updateProgress(); }
+function escapeHtmlR(s){
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function schemaHasContent(schemaId){
+  var state=SCHEMA_STATE[schemaId];
+  if(!state) return false;
+  return state.tables.some(function(t){ return (t.name||'').trim() || (t.columns||'').trim(); });
+}
+function serializeSchemaState(){
+  var out={};
+  Object.keys(SCHEMA_STATE).forEach(function(k){ out[k]=SCHEMA_STATE[k].tables; });
+  return out;
+}
+function loadSchemaState(data){
+  Object.keys(data).forEach(function(schemaId){
+    var tbody=document.getElementById('schemarows-'+schemaId);
+    if(!tbody)return;
+    tbody.innerHTML='';
+    SCHEMA_STATE[schemaId] = {tables:[], seq:0};
+    var state=SCHEMA_STATE[schemaId];
+    (data[schemaId]||[]).forEach(function(table){
+      state.tables.push(table);
+      renderTableRow(schemaId, table);
+    });
+    state.seq = state.tables.length;
+    if(state.tables.length===0){
+      for(var i=0;i<4;i++){ addTable(schemaId, true); }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════
+// NAV / PROGRESS
+// ═══════════════════════════════════════════════
+function goTo(i){
+  currentEx=i;
+  document.querySelectorAll('.exercise-card').forEach(function(c,ci){c.classList.toggle('visible',ci===i);});
+  document.querySelectorAll('.nav-item').forEach(function(n,ni){n.classList.toggle('active',ni===i);});
+  document.getElementById('completionCard').classList.remove('visible');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function finish(){
+  document.querySelectorAll('.exercise-card').forEach(function(c){c.classList.remove('visible');});
+  document.getElementById('completionCard').classList.add('visible');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function autoResize(el){ el.style.height='auto'; el.style.height=(el.scrollHeight+2)+'px'; }
+
+function getAllFields(){
+  var out={};
+  EXERCISES.forEach(function(ex){
+    ex.questions.forEach(function(q){ var el=document.getElementById(q.id); if(el)out[q.id]=el; });
+    if(ex.compareQ){ var el2=document.getElementById(ex.compareQ.id); if(el2)out[ex.compareQ.id]=el2; }
+  });
+  return out;
+}
+function countAnswered(fields){
+  var total=0,done=0;
+  Object.keys(fields).forEach(function(id){
+    var el=fields[id]; total++;
+    var val=(el.value||'').trim();
+    if(val&&val!=='')done++;
+  });
+  return{total:total,done:done};
+}
+function updateProgress(){
+  var fields=getAllFields();
+  var counts=countAnswered(fields);
+
+  var schemaTotal=0, schemaDone=0;
+  Object.keys(SCHEMA_STATE).forEach(function(k){
+    schemaTotal++;
+    if(schemaHasContent(k)) schemaDone++;
+  });
+
+  var totalAll=counts.total+schemaTotal, doneAll=counts.done+schemaDone;
+  var pct=totalAll>0?Math.round(doneAll/totalAll*100):0;
+  document.getElementById('progFill').style.width=pct+'%';
+  document.getElementById('progPct').textContent=pct+'%';
+
+  EXERCISES.forEach(function(ex,i){
+    var exFields={};
+    var card=document.getElementById('card-'+i);
+    Object.keys(fields).forEach(function(id){
+      if(card&&card.contains(fields[id]))exFields[id]=fields[id];
+    });
+    var ec=countAnswered(exFields);
+    var exTotal=ec.total, exDone=ec.done;
+    if(!ex.hideSchema){
+      exTotal+=1;
+      exDone+=(schemaHasContent(ex.tableBuilderId))?1:0;
+    }
+    var epct=exTotal>0?Math.round(exDone/exTotal*100):0;
+    var fill=document.getElementById('exprog-'+i);
+    var lbl=document.getElementById('exprog-lbl-'+i);
+    if(fill)fill.style.width=epct+'%';
+    if(lbl)lbl.textContent=epct+'% answered';
+    var dot=document.getElementById('navdot-'+i);
+    if(dot){
+      if(epct===100){dot.classList.add('done');dot.textContent='✓';}
+      else{dot.classList.remove('done');dot.textContent=i+1;}
+    }
+    var navItem=document.getElementById('nav-'+i);
+    if(navItem)navItem.classList.toggle('done',epct===100);
+  });
+  document.querySelectorAll('textarea').forEach(function(el){
+    el.classList.toggle('answered',(el.value||'').trim().length>0);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// SAVE / LOAD / DOWNLOAD
+// ═══════════════════════════════════════════════
+function gatherAll(){
+  var data={
+    lab:'dbms-960231-normalization-lab',
+    meta:{
+      name:document.getElementById('f-name').value,
+      studentId:document.getElementById('f-id').value,
+      classSection:document.getElementById('f-class').value,
+      date:document.getElementById('f-date').value,
+      savedAt:new Date().toISOString()
+    },
+    answers:{},
+    schemas: serializeSchemaState(),
+    integrityLog:{pasteAttempts:AP.strikes,events:AP.log}
+  };
+  var fields=getAllFields();
+  Object.keys(fields).forEach(function(id){data.answers[id]=fields[id].value;});
+  return data;
+}
+function saveDraft(){
+  try{
+    localStorage.setItem('dbms_normalization_lab_draft',JSON.stringify(gatherAll()));
+    showToast('Draft saved ✓');
+  }catch(e){showToast('Could not save');}
+}
+function loadDraft(){
+  try{
+    var raw=localStorage.getItem('dbms_normalization_lab_draft');
+    if(!raw)return;
+    var data=JSON.parse(raw);
+    if(data.meta){
+      if(data.meta.name)document.getElementById('f-name').value=data.meta.name;
+      if(data.meta.studentId)document.getElementById('f-id').value=data.meta.studentId;
+      if(data.meta.classSection)document.getElementById('f-class').value=data.meta.classSection;
+      if(data.meta.date)document.getElementById('f-date').value=data.meta.date;
+    }
+    if(data.answers){
+      Object.keys(data.answers).forEach(function(id){
+        var el=document.getElementById(id);
+        if(!el)return;
+        el.value=data.answers[id];
+        if(el.tagName==='TEXTAREA')autoResize(el);
+      });
+    }
+    if(data.schemas){ loadSchemaState(data.schemas); }
+    updateProgress();
+  }catch(e){}
+}
+function downloadJSON(){
+  var data=gatherAll();
+  var name=(data.meta.name||'student').replace(/\s+/g,'-').toLowerCase();
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url; a.download='dbms-normalization-lab-'+name+'.json'; a.click();
+  URL.revokeObjectURL(url); showToast('Downloaded ✓');
+}
+function showToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},2200);
+}
+
+// ═══════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded',function(){
+  init(); AP.buildDots(); AP.wireAll();
+  var observer=new MutationObserver(function(){AP.wireAll();});
+  observer.observe(document.getElementById('exerciseContainer'),{childList:true,subtree:true});
+  AP.record('info','Lab initialised — integrity monitoring active');
+});
+document.addEventListener('keydown',function(e){
+  if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();saveDraft();}
+});
+document.addEventListener('visibilitychange',function(){
+  AP.record('info',document.hidden?'Tab hidden':'Tab visible again');
+});
+document.addEventListener('contextmenu',function(e){
+  var el=e.target;
+  if(el&&(el.tagName==='TEXTAREA'||el.tagName==='INPUT')){
+    if(!['f-name','f-id','f-class','f-date'].includes(el.id) && !el.closest('.schema-builder')){e.preventDefault();}
+  }
+});
+</script>
+</body>
+</html>
