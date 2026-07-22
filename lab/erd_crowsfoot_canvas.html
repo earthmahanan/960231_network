@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ERD Builder — Crow's Foot Notation</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F7F1E8;
+  --card:#FFFEFB;
+  --burgundy:#6E1423;
+  --burgundy-light:#8C1D2E;
+  --gold:#C9962C;
+  --gold-light:#E8C46A;
+  --gold-bg:#FBF2DC;
+  --gold-bd:#D9AE4E;
+  --teal:#0F6E56;
+  --teal-bg:#E1F5EE;
+  --teal-bd:#5DCAA5;
+  --red:#791F1F;
+  --red-bd:#F09595;
+  --txt:#2b211c;
+  --txt2:#6b5d52;
+  --txt3:#9a8c7f;
+  --bdr:#e3d5bf;
+  --bdr2:#cbb894;
+  --radius:10px;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+html,body{min-height:100%;background:var(--bg);font-family:var(--sans);color:var(--txt);font-size:15px;line-height:1.6}
+.wrap{max-width:1150px;margin:0 auto;padding:1.75rem 1.5rem 3rem}
+.pagehead{margin-bottom:1.1rem}
+.pagehead h1{font-size:20px;color:var(--burgundy);margin-bottom:.3rem}
+.pagehead p{font-size:13px;color:var(--txt2)}
+.cf-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--txt2);margin-top:.7rem;background:var(--gold-bg);border:1px solid var(--bdr);border-radius:8px;padding:.6rem .9rem}
+.cf-legend-item{display:flex;align-items:center;gap:6px}
+.cf-legend-item b{color:var(--burgundy)}
+
+.er-builder{background:var(--card);border:1.5px solid var(--bdr);border-radius:var(--radius);overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.05);margin-top:1.1rem}
+.er-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:.85rem 1rem;background:var(--gold-bg);border-bottom:1.5px solid var(--bdr)}
+.er-tool{display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:18px;font-size:11.5px;font-weight:600;cursor:grab;user-select:none;border:1.5px solid #85B7EB;background:#E6F1FB;color:#0C447C;transition:transform .1s}
+.er-tool:active{cursor:grabbing;transform:scale(.96)}
+.er-tool-icon{font-size:14px}
+.er-toolbar-hint{font-size:11.5px;color:var(--txt3)}
+
+.er-canvas-wrap{position:relative}
+.er-canvas{position:relative;width:100%;height:1000px;background:
+  linear-gradient(var(--bdr) 1px, transparent 1px),
+  linear-gradient(90deg, var(--bdr) 1px, transparent 1px);
+  background-size:24px 24px;background-color:#fdfbf6;overflow:auto;touch-action:none}
+
+svg.er-lines{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1}
+.er-empty-msg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:13px;color:var(--txt3);text-align:center;pointer-events:none;max-width:300px}
+
+.cf-entity{position:absolute;min-width:170px;background:#fff;border:1.6px solid #0C447C;border-radius:6px;box-shadow:0 2px 6px rgba(0,0,0,.1);z-index:5;font-size:12px}
+.cf-entity.weak{border-style:double;border-width:5px}
+.cf-entity.selected{box-shadow:0 0 0 3px var(--burgundy),0 2px 6px rgba(0,0,0,.1)}
+.cf-head{background:#0C447C;color:#fff;padding:6px 8px;border-radius:4px 4px 0 0;display:flex;align-items:center;gap:6px;cursor:grab}
+.cf-head:active{cursor:grabbing}
+.cf-head input{flex:1;background:transparent;border:none;color:#fff;font-weight:700;font-size:12.5px;font-family:var(--sans);min-width:40px}
+.cf-head input:focus{outline:none}
+.cf-head .delbtn{width:16px;height:16px;background:rgba(255,255,255,.25);color:#fff;border-radius:50%;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.cf-head .delbtn:hover{background:var(--red)}
+.cf-attrs{padding:4px 0}
+.cf-attr-legend{display:flex;gap:6px;padding:2px 8px;font-size:9px;color:var(--txt3)}
+.cf-attr-row{display:flex;align-items:center;flex-wrap:wrap;gap:5px;padding:3px 8px;border-bottom:1px solid #f0ece0}
+.cf-attr-row:last-child{border-bottom:none}
+.cf-attr-row input[type=checkbox]{flex-shrink:0;cursor:pointer}
+.cf-attr-row input[type=text]{flex:1;border:none;background:transparent;font-size:11.5px;font-family:var(--sans);color:var(--txt);min-width:40px}
+.cf-attr-row input[type=text]:focus{outline:none;background:#fffdf0}
+.cf-attr-row.pk input[type=text]{font-weight:700;text-decoration:underline;color:var(--teal)}
+.cf-attr-row.fk input[type=text]{color:#8a6410;font-style:italic}
+.cf-attr-row .attr-del{opacity:0;font-size:10px;color:var(--red);cursor:pointer;flex-shrink:0}
+.cf-attr-row:hover .attr-del{opacity:1}
+.cf-attr-fkref{flex-basis:100%;font-size:10.5px;font-style:italic;color:#8a6410;border:1px dashed var(--gold-bd);border-radius:4px;padding:3px 6px;background:var(--gold-bg);font-family:var(--mono)}
+.cf-addattr{width:100%;background:#faf6ec;border:none;border-top:1px dashed var(--bdr);padding:4px 8px;font-size:11px;color:var(--txt2);text-align:left;cursor:pointer;border-radius:0 0 4px 4px}
+.cf-addattr:hover{background:var(--gold-bg);color:var(--burgundy)}
+
+.er-actions{display:flex;gap:8px;padding:.6rem 1rem;background:#faf6ec;border-top:1.5px solid var(--bdr);flex-wrap:wrap;align-items:center}
+.btn-ghost{background:#fff;border:1.5px solid var(--bdr2);color:var(--txt2);border-radius:7px;padding:7px 13px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s}
+.btn-ghost:hover{background:var(--gold-bg)}
+.btn-primary{background:var(--burgundy);border:1.5px solid var(--burgundy);color:#fff;border-radius:7px;padding:7px 14px;font-size:12.5px;font-weight:700;cursor:pointer}
+.btn-primary:hover{background:var(--burgundy-light)}
+.er-conn-btn.er-connect-active{background:var(--burgundy) !important;color:#fff !important;border-color:var(--burgundy) !important}
+
+.relpicker-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;display:flex;align-items:center;justify-content:center;padding:1rem}
+.relpicker-modal{background:#fff;border-radius:12px;padding:1.5rem 1.75rem;max-width:460px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.relpicker-modal h4{font-size:15px;font-weight:700;color:var(--burgundy);margin-bottom:.35rem;text-align:center}
+.relpicker-modal .rp-sub{font-size:12px;color:var(--txt2);text-align:center;margin-bottom:1rem}
+.rp-label-field{margin-bottom:1rem}
+.rp-label-field label{display:block;font-size:11.5px;font-weight:600;color:var(--txt2);margin-bottom:4px}
+.rp-label-field input{width:100%;border:1.5px solid var(--bdr2);border-radius:6px;padding:8px 10px;font-size:13px;font-family:var(--sans)}
+.rp-sides{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem}
+.rp-side{border:1.5px solid var(--bdr);border-radius:8px;padding:.7rem .8rem}
+.rp-side .rp-entname{font-size:12px;font-weight:700;color:var(--burgundy);margin-bottom:6px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rp-side select{width:100%;border:1.5px solid var(--bdr2);border-radius:6px;padding:6px 8px;font-size:12px;color:var(--txt)}
+.rp-note{font-size:11px;color:var(--txt3);line-height:1.5;text-align:center;margin-bottom:1rem;padding:0 4px}
+.rp-btns{display:flex;gap:8px;justify-content:center}
+.rp-btns button{font-size:13px}
+
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--burgundy);color:#fff;padding:9px 18px;border-radius:8px;font-size:12.5px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s;z-index:3000}
+.toast.show{opacity:1}
+
+@media print{
+  .er-toolbar,.er-actions,.pagehead p,.cf-legend{display:none !important}
+  body{background:#fff}
+  .wrap{max-width:none;padding:0}
+  .er-builder{border:none;box-shadow:none}
+  .er-canvas-wrap,.er-canvas{overflow:visible !important;height:auto !important;min-height:1000px;background-image:none !important;background-color:#fff !important}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="pagehead">
+    <h1>🐦 ER Diagram Builder — Crow's Foot Notation</h1>
+    <p>Drag an Entity box onto the canvas, add attributes inline (tick PK / FK), then turn on Connect mode and click two entities in a row to draw a relationship — pick the Crow's Foot cardinality symbol for each side and give the relationship a verb-phrase label. Click the ✎ badge on any line later to edit or delete it.</p>
+    <div class="cf-legend">
+      <div class="cf-legend-item"><svg width="26" height="18" viewBox="0 0 26 18"><line x1="1" y1="9" x2="25" y2="9" stroke="#6E1423" stroke-width="1.5"/><line x1="6" y1="4" x2="6" y2="14" stroke="#6E1423" stroke-width="1.5"/><line x1="10" y1="4" x2="10" y2="14" stroke="#6E1423" stroke-width="1.5"/></svg><b>||</b> Exactly one (mandatory)</div>
+      <div class="cf-legend-item"><svg width="26" height="18" viewBox="0 0 26 18"><line x1="1" y1="9" x2="25" y2="9" stroke="#6E1423" stroke-width="1.5"/><circle cx="6" cy="9" r="3.4" fill="#fff" stroke="#6E1423" stroke-width="1.5"/><line x1="11" y1="4" x2="11" y2="14" stroke="#6E1423" stroke-width="1.5"/></svg><b>o|</b> Zero or one (optional)</div>
+      <div class="cf-legend-item"><svg width="26" height="18" viewBox="0 0 26 18"><line x1="1" y1="9" x2="25" y2="9" stroke="#6E1423" stroke-width="1.5"/><line x1="19" y1="4" x2="19" y2="14" stroke="#6E1423" stroke-width="1.5"/><line x1="19" y1="9" x2="7" y2="3" stroke="#6E1423" stroke-width="1.5"/><line x1="19" y1="9" x2="7" y2="15" stroke="#6E1423" stroke-width="1.5"/></svg><b>|&lt;</b> One or many (mandatory)</div>
+      <div class="cf-legend-item"><svg width="26" height="18" viewBox="0 0 26 18"><line x1="1" y1="9" x2="25" y2="9" stroke="#6E1423" stroke-width="1.5"/><line x1="19" y1="9" x2="7" y2="3" stroke="#6E1423" stroke-width="1.5"/><line x1="19" y1="9" x2="7" y2="15" stroke="#6E1423" stroke-width="1.5"/><circle cx="4" cy="9" r="3.4" fill="#fff" stroke="#6E1423" stroke-width="1.5"/></svg><b>o&lt;</b> Zero or many (optional)</div>
+    </div>
+  </div>
+
+  <div class="er-builder" data-canvas="main">
+    <div class="er-toolbar">
+      <div class="er-tool" draggable="true" data-weak="0"><span class="er-tool-icon">▭</span> Entity</div>
+      <div class="er-tool" draggable="true" data-weak="1"><span class="er-tool-icon">▭</span> Weak Entity</div>
+      <span class="er-toolbar-hint">Drag a box onto the canvas, then use + Attribute inside it</span>
+    </div>
+    <div class="er-canvas-wrap">
+      <div class="er-canvas" id="ercanvas-main">
+        <div class="er-empty-msg" id="erempty-main">Drag an Entity box from the toolbar above onto this canvas.<br>Click two entities in a row (with Connect mode ON) to draw a relationship line.</div>
+        <svg class="er-lines" id="erlines-main"></svg>
+      </div>
+    </div>
+    <div class="er-actions">
+      <button class="btn-ghost er-conn-btn" id="erconnect-main" onclick="toggleConnectMode('main')">🔗 Connect mode: off</button>
+      <button class="btn-ghost" onclick="clearERCanvas('main')">🗑 Clear canvas</button>
+      <button class="btn-ghost" onclick="saveDiagram('main')">💾 Save draft</button>
+      <button class="btn-ghost" onclick="window.print()">🖨 Export PDF</button>
+      <span style="font-size:11.5px;color:var(--txt3);align-self:center;margin-left:auto">Click the ✎ badge (or the name tag) on any relationship line to edit its cardinality or delete it</span>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+var ER_STATE = {};
+var CF_OPTIONS = [
+  {v:'one',      label:"Exactly one  (mandatory)"},
+  {v:'zero-one', label:"Zero or one  (optional)"},
+  {v:'many',     label:"One or many  (mandatory many)"},
+  {v:'zero-many',label:"Zero or many  (optional many)"}
+];
+
+function toast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._h); t._h=setTimeout(function(){t.classList.remove('show');},1800);
+}
+function escapeHtmlR(s){
+  return (s||'').replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+// ═══════════════════════════════════════════════
+// INIT / DRAG-DROP FROM TOOLBAR
+// ═══════════════════════════════════════════════
+function initERCanvas(canvasId){
+  ER_STATE[canvasId] = ER_STATE[canvasId] || {nodes:[], edges:[], connectMode:false, pendingConnect:null, seq:0, attrSeq:0};
+  var builder = document.querySelector('.er-builder[data-canvas="'+canvasId+'"]');
+  if(!builder) return;
+  var canvas = document.getElementById('ercanvas-'+canvasId);
+  builder.querySelectorAll('.er-tool').forEach(function(tool){
+    tool.addEventListener('dragstart', function(e){
+      e.dataTransfer.setData('text/plain', tool.getAttribute('data-weak'));
+      e.dataTransfer.effectAllowed='copy';
+    });
+  });
+  canvas.addEventListener('dragover', function(e){ e.preventDefault(); });
+  canvas.addEventListener('drop', function(e){
+    e.preventDefault();
+    var weakFlag = e.dataTransfer.getData('text/plain');
+    if(weakFlag===''||weakFlag===null||weakFlag===undefined) return;
+    var rect = canvas.getBoundingClientRect();
+    var x = e.clientX - rect.left + canvas.scrollLeft;
+    var y = e.clientY - rect.top + canvas.scrollTop;
+    addCFEntity(canvasId, weakFlag==='1', x, y);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// ENTITY CRUD
+// ═══════════════════════════════════════════════
+function addCFEntity(canvasId, isWeak, x, y){
+  var state = ER_STATE[canvasId];
+  var id = canvasId+'-ent-'+(state.seq++);
+  var node = {
+    id:id, weak:isWeak, x:Math.max(0,x-85), y:Math.max(0,y-20),
+    name: isWeak ? 'WeakEntity' : 'Entity',
+    attrs:[{id:'a'+(state.attrSeq++), name:'id', pk:true, fk:false, fkref:''}]
+  };
+  state.nodes.push(node);
+  renderCFEntity(canvasId, node);
+  updateERGeometry(canvasId);
+}
+function renderCFEntity(canvasId, node){
+  var canvas = document.getElementById('ercanvas-'+canvasId);
+  var empty = document.getElementById('erempty-'+canvasId);
+  if(empty) empty.style.display='none';
+  var el = document.createElement('div');
+  el.className = 'cf-entity'+(node.weak?' weak':'');
+  el.id = node.id;
+  el.style.left = node.x+'px';
+  el.style.top = node.y+'px';
+  el.innerHTML = renderCFEntityInner(canvasId, node);
+  canvas.appendChild(el);
+  wireCFEntity(canvasId, el, node);
+}
+function renderCFEntityInner(canvasId, node){
+  var h = '<div class="cf-head">'+
+    '<input type="text" value="'+escapeHtmlR(node.name)+'" oninput="renameCFEntity(\''+canvasId+'\',\''+node.id+'\',this.value)">'+
+    '<span class="delbtn" onclick="deleteCFEntity(\''+canvasId+'\',\''+node.id+'\',event)">✕</span>'+
+    '</div>';
+  h += '<div class="cf-attr-legend"><span style="width:14px">PK</span><span style="width:14px">FK</span></div>';
+  h += '<div class="cf-attrs">';
+  node.attrs.forEach(function(a){
+    h += '<div class="cf-attr-row'+(a.pk?' pk':'')+(a.fk?' fk':'')+'">'+
+      '<input type="checkbox" title="Primary key" '+(a.pk?'checked':'')+' onchange="toggleCFAttrPK(\''+canvasId+'\',\''+node.id+'\',\''+a.id+'\',this.checked)">'+
+      '<input type="checkbox" title="Foreign key" '+(a.fk?'checked':'')+' onchange="toggleCFAttrFK(\''+canvasId+'\',\''+node.id+'\',\''+a.id+'\',this.checked)">'+
+      '<input type="text" value="'+escapeHtmlR(a.name)+'" placeholder="attribute" oninput="renameCFAttr(\''+canvasId+'\',\''+node.id+'\',\''+a.id+'\',this.value)">'+
+      '<span class="attr-del" onclick="deleteCFAttr(\''+canvasId+'\',\''+node.id+'\',\''+a.id+'\',event)">✕</span>'+
+      (a.fk ? '<input type="text" class="cf-attr-fkref" value="'+escapeHtmlR(a.fkref||'')+'" placeholder="references Entity.attribute" oninput="setCFAttrFkRef(\''+canvasId+'\',\''+node.id+'\',\''+a.id+'\',this.value)">' : '')+
+      '</div>';
+  });
+  h += '</div>';
+  h += '<button class="cf-addattr" onclick="addCFAttr(\''+canvasId+'\',\''+node.id+'\',event)">+ Attribute</button>';
+  return h;
+}
+function refreshCFEntity(canvasId, node){
+  var el = document.getElementById(node.id);
+  if(!el) return;
+  el.innerHTML = renderCFEntityInner(canvasId, node);
+  wireCFEntity(canvasId, el, node);
+  updateERGeometry(canvasId);
+}
+function wireCFEntity(canvasId, el, node){
+  var head = el.querySelector('.cf-head');
+  var canvas = document.getElementById('ercanvas-'+canvasId);
+  var dragging=false, offX=0, offY=0;
+  function startDrag(clientX, clientY){
+    var elRect = el.getBoundingClientRect();
+    offX = clientX - elRect.left;
+    offY = clientY - elRect.top;
+    dragging = true;
+    el.style.zIndex = 10;
+  }
+  function moveDrag(clientX, clientY){
+    if(!dragging) return;
+    var rect = canvas.getBoundingClientRect();
+    var x = clientX - rect.left - offX + canvas.scrollLeft;
+    var y = clientY - rect.top - offY + canvas.scrollTop;
+    x = Math.max(0, x); y = Math.max(0, y);
+    el.style.left = x+'px';
+    el.style.top = y+'px';
+    var n = ER_STATE[canvasId].nodes.find(function(n){return n.id===el.id;});
+    if(n){ n.x=x; n.y=y; }
+    updateERGeometry(canvasId);
+  }
+  function endDrag(){ dragging=false; }
+  head.addEventListener('mousedown', function(e){
+    if(e.target.tagName==='INPUT'||e.target.classList.contains('delbtn')) return;
+    startDrag(e.clientX, e.clientY);
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', function(e){ moveDrag(e.clientX, e.clientY); });
+  document.addEventListener('mouseup', endDrag);
+  head.addEventListener('touchstart', function(e){
+    if(e.target.tagName==='INPUT'||e.target.classList.contains('delbtn')) return;
+    var t=e.touches[0]; startDrag(t.clientX,t.clientY);
+  }, {passive:true});
+  head.addEventListener('touchmove', function(e){
+    var t=e.touches[0]; moveDrag(t.clientX,t.clientY);
+  }, {passive:true});
+  head.addEventListener('touchend', endDrag);
+  el.addEventListener('click', function(e){
+    if(e.target.tagName==='INPUT'||e.target.classList.contains('delbtn')||e.target.classList.contains('attr-del')||e.target.classList.contains('cf-addattr')) return;
+    handleEntityClickForConnect(canvasId, node.id);
+  });
+}
+function renameCFEntity(canvasId, nodeId, val){
+  var n = ER_STATE[canvasId].nodes.find(function(n){return n.id===nodeId;});
+  if(n){ n.name = val; updateERGeometry(canvasId); }
+}
+function addCFAttr(canvasId, nodeId, evt){
+  if(evt) evt.stopPropagation();
+  var state = ER_STATE[canvasId];
+  var n = state.nodes.find(function(n){return n.id===nodeId;});
+  if(!n) return;
+  n.attrs.push({id:'a'+(state.attrSeq++), name:'', pk:false, fk:false, fkref:''});
+  refreshCFEntity(canvasId, n);
+}
+function renameCFAttr(canvasId, nodeId, attrId, val){
+  var n = ER_STATE[canvasId].nodes.find(function(n){return n.id===nodeId;});
+  if(!n) return;
+  var a = n.attrs.find(function(a){return a.id===attrId;});
+  if(a){ a.name = val; }
+}
+function toggleCFAttrPK(canvasId, nodeId, attrId, checked){
+  var n = ER_STATE[canvasId].nodes.find(function(n){return n.id===nodeId;});
+  if(!n) return;
+  var a = n.attrs.find(function(a){return a.id===attrId;});
+  if(a){ a.pk = checked; }
+  refreshCFEntity(canvasId, n);
+}
+function toggleCFAttrFK(canvasId, nodeId, attrId, checked){
+  var n = ER_STATE[canvasId].nodes.find(function(n){return n.id===nodeId;});
+  if(!n) return;
+  var a = n.attrs.find(function(a){return a.id===attrId;});
+  if(a){ a.fk = checked; if(!checked) a.fkref=''; }
+  refreshCFEntity(canvasId, n);
+}
+function setCFAttrFkRef(canvasId, nodeId, attrId, val){
+  var n = ER_STATE[canvasId].nodes.find(function(n){return n.id===nodeId;});
+  if(!n) return;
+  var a = n.attrs.find(function(a){return a.id===attrId;});
+  if(a){ a.fkref = val; }
+}
+function deleteCFAttr(canvasId, nodeId, attrId, evt){
+  if(evt) evt.stopPropagation();
+  var n = ER_STATE[canvasId].nodes.find(function(n){return n.id===nodeId;});
+  if(!n) return;
+  n.attrs = n.attrs.filter(function(a){return a.id!==attrId;});
+  refreshCFEntity(canvasId, n);
+}
+function deleteCFEntity(canvasId, nodeId, evt){
+  if(evt) evt.stopPropagation();
+  var state = ER_STATE[canvasId];
+  state.nodes = state.nodes.filter(function(n){return n.id!==nodeId;});
+  state.edges = state.edges.filter(function(e){return e.from!==nodeId && e.to!==nodeId;});
+  var el = document.getElementById(nodeId);
+  if(el) el.remove();
+  updateERGeometry(canvasId);
+  if(state.nodes.length===0){
+    var empty = document.getElementById('erempty-'+canvasId);
+    if(empty) empty.style.display='block';
+  }
+}
+
+// ═══════════════════════════════════════════════
+// CONNECT MODE / RELATIONSHIP PICKER
+// ═══════════════════════════════════════════════
+function toggleConnectMode(canvasId){
+  var state = ER_STATE[canvasId];
+  state.connectMode = !state.connectMode;
+  if(state.pendingConnect){
+    var prevEl=document.getElementById(state.pendingConnect);
+    if(prevEl) prevEl.classList.remove('selected');
+  }
+  state.pendingConnect = null;
+  var btn = document.getElementById('erconnect-'+canvasId);
+  btn.textContent = state.connectMode ? '🔗 Connect mode: ON — click two entities' : '🔗 Connect mode: off';
+  btn.classList.toggle('er-connect-active', state.connectMode);
+}
+function handleEntityClickForConnect(canvasId, nodeId){
+  var state = ER_STATE[canvasId];
+  if(!state.connectMode) return;
+  if(!state.pendingConnect){
+    state.pendingConnect = nodeId;
+    var el = document.getElementById(nodeId);
+    if(el) el.classList.add('selected');
+  } else {
+    if(state.pendingConnect !== nodeId){
+      openRelationshipPicker(canvasId, state.pendingConnect, nodeId);
+    }
+    var prevEl = document.getElementById(state.pendingConnect);
+    if(prevEl) prevEl.classList.remove('selected');
+    state.pendingConnect = null;
+  }
+}
+function cfOptionsHTML(sel){
+  return CF_OPTIONS.map(function(o){return '<option value="'+o.v+'"'+(o.v===sel?' selected':'')+'>'+o.label+'</option>';}).join('');
+}
+function openRelationshipPicker(canvasId, fromId, toId){
+  var state = ER_STATE[canvasId];
+  var fromN = state.nodes.find(function(n){return n.id===fromId;});
+  var toN = state.nodes.find(function(n){return n.id===toId;});
+  showRelModal({
+    mode:'create', canvasId:canvasId, fromId:fromId, toId:toId,
+    fromLabel: fromN?fromN.name:'', toLabel: toN?toN.name:'',
+    label:'', fromCard:'one', toCard:'many'
+  });
+}
+function editRelationshipUI(canvasId, idx){
+  var state = ER_STATE[canvasId];
+  var edge = state.edges[idx];
+  if(!edge) return;
+  var fromN = state.nodes.find(function(n){return n.id===edge.from;});
+  var toN = state.nodes.find(function(n){return n.id===edge.to;});
+  showRelModal({
+    mode:'edit', canvasId:canvasId, edgeIdx:idx,
+    fromLabel: fromN?fromN.name:'', toLabel: toN?toN.name:'',
+    label: edge.label||'', fromCard: edge.fromCard||'one', toCard: edge.toCard||'many'
+  });
+}
+function showRelModal(cfg){
+  var existing = document.getElementById('relpicker-overlay');
+  if(existing) existing.remove();
+  var overlay = document.createElement('div');
+  overlay.id = 'relpicker-overlay';
+  overlay.className = 'relpicker-overlay';
+  overlay.innerHTML =
+    '<div class="relpicker-modal">'+
+      '<h4>'+(cfg.mode==='edit'?'Edit relationship':'Define the relationship')+'</h4>'+
+      '<p class="rp-sub">'+escapeHtmlR(cfg.fromLabel)+' &#8596; '+escapeHtmlR(cfg.toLabel)+'</p>'+
+      '<div class="rp-label-field"><label>Relationship name (verb phrase, e.g. "sold in")</label><input type="text" id="rp-label" placeholder="e.g. sold in / belongs to / issued to" value="'+escapeHtmlR(cfg.label)+'"></div>'+
+      '<div class="rp-sides">'+
+        '<div class="rp-side"><div class="rp-entname">'+escapeHtmlR(cfg.fromLabel)+' side</div><select id="rp-from">'+cfOptionsHTML(cfg.fromCard)+'</select></div>'+
+        '<div class="rp-side"><div class="rp-entname">'+escapeHtmlR(cfg.toLabel)+' side</div><select id="rp-to">'+cfOptionsHTML(cfg.toCard)+'</select></div>'+
+      '</div>'+
+      '<p class="rp-note">Pick the symbol that sits <strong>next to each entity</strong>. E.g. for "one Department has many Products": Department side = Exactly one, Product side = One or many.</p>'+
+      '<div class="rp-btns">'+
+        (cfg.mode==='edit' ? '<button class="btn-ghost" style="color:var(--red);border-color:var(--red-bd)" onclick="deleteRelationshipFromModal(\''+cfg.canvasId+'\','+cfg.edgeIdx+')">🗑 Delete</button>' : '')+
+        '<button class="btn-ghost" onclick="cancelRelationshipPicker()">Cancel</button>'+
+        '<button class="btn-primary" onclick="'+(cfg.mode==='edit'
+          ? 'confirmEditRelationship(\''+cfg.canvasId+'\','+cfg.edgeIdx+')'
+          : 'confirmRelationshipPicker(\''+cfg.canvasId+'\',\''+cfg.fromId+'\',\''+cfg.toId+'\')')+'">'+(cfg.mode==='edit'?'Save changes':'Add relationship')+'</button>'+
+      '</div>'+
+    '</div>';
+  document.body.appendChild(overlay);
+}
+function cancelRelationshipPicker(){
+  var overlay = document.getElementById('relpicker-overlay');
+  if(overlay) overlay.remove();
+}
+function confirmRelationshipPicker(canvasId, fromId, toId){
+  var label = document.getElementById('rp-label').value || '';
+  var fromCard = document.getElementById('rp-from').value;
+  var toCard = document.getElementById('rp-to').value;
+  var state = ER_STATE[canvasId];
+  state.edges.push({from:fromId, to:toId, fromCard:fromCard, toCard:toCard, label:label});
+  cancelRelationshipPicker();
+  updateERGeometry(canvasId);
+}
+function confirmEditRelationship(canvasId, idx){
+  var label = document.getElementById('rp-label').value || '';
+  var fromCard = document.getElementById('rp-from').value;
+  var toCard = document.getElementById('rp-to').value;
+  var state = ER_STATE[canvasId];
+  var edge = state.edges[idx];
+  if(edge){ edge.label=label; edge.fromCard=fromCard; edge.toCard=toCard; }
+  cancelRelationshipPicker();
+  updateERGeometry(canvasId);
+}
+function deleteRelationshipFromModal(canvasId, idx){
+  cancelRelationshipPicker();
+  deleteEdge(canvasId, idx);
+}
+function deleteEdge(canvasId, idx){
+  var state = ER_STATE[canvasId];
+  state.edges.splice(idx,1);
+  updateERGeometry(canvasId);
+}
+
+// ═══════════════════════════════════════════════
+// GEOMETRY / DRAWING
+// ═══════════════════════════════════════════════
+function clipToRect(rect, cx, cy, tx, ty){
+  var dx = tx-cx, dy = ty-cy;
+  if(dx===0 && dy===0) return {x:cx,y:cy};
+  var hw = rect.width/2, hh = rect.height/2;
+  var tMin = Infinity;
+  if(dx!==0){ tMin = Math.min(tMin, hw/Math.abs(dx)); }
+  if(dy!==0){ tMin = Math.min(tMin, hh/Math.abs(dy)); }
+  if(tMin===Infinity) tMin=0;
+  return {x: cx+dx*tMin, y: cy+dy*tMin};
+}
+function drawCFEnd(svg, x, y, ux, uy, card){
+  var px = -uy, py = ux;
+  var barHalf = 6;
+  function drawBar(dist){
+    var cx=x+ux*dist, cy=y+uy*dist;
+    var l=document.createElementNS('http://www.w3.org/2000/svg','line');
+    l.setAttribute('x1',cx-px*barHalf); l.setAttribute('y1',cy-py*barHalf);
+    l.setAttribute('x2',cx+px*barHalf); l.setAttribute('y2',cy+py*barHalf);
+    l.setAttribute('stroke','#6E1423'); l.setAttribute('stroke-width','1.6');
+    svg.appendChild(l);
+  }
+  function drawCircle(dist){
+    var cx=x+ux*dist, cy=y+uy*dist;
+    var c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx',cx); c.setAttribute('cy',cy); c.setAttribute('r',4.2);
+    c.setAttribute('fill','#fdfbf6'); c.setAttribute('stroke','#6E1423'); c.setAttribute('stroke-width','1.6');
+    svg.appendChild(c);
+  }
+  function drawCrowfoot(toeDist, tipDist){
+    var toex=x+ux*toeDist, toey=y+uy*toeDist;
+    var tipx=x+ux*tipDist, tipy=y+uy*tipDist;
+    [-1,1].forEach(function(dir){
+      var l=document.createElementNS('http://www.w3.org/2000/svg','line');
+      l.setAttribute('x1',toex+px*barHalf*dir); l.setAttribute('y1',toey+py*barHalf*dir);
+      l.setAttribute('x2',tipx); l.setAttribute('y2',tipy);
+      l.setAttribute('stroke','#6E1423'); l.setAttribute('stroke-width','1.6');
+      svg.appendChild(l);
+    });
+    var l2=document.createElementNS('http://www.w3.org/2000/svg','line');
+    l2.setAttribute('x1',toex); l2.setAttribute('y1',toey);
+    l2.setAttribute('x2',tipx); l2.setAttribute('y2',tipy);
+    l2.setAttribute('stroke','#6E1423'); l2.setAttribute('stroke-width','1.6');
+    svg.appendChild(l2);
+  }
+  if(card==='one'){ drawBar(3); drawBar(8); }
+  else if(card==='zero-one'){ drawBar(3); drawCircle(13); }
+  else if(card==='many'){ drawCrowfoot(3,16); drawBar(16); }
+  else if(card==='zero-many'){ drawCrowfoot(3,16); drawCircle(23); }
+}
+function updateERGeometry(canvasId){
+  var state = ER_STATE[canvasId];
+  var svg = document.getElementById('erlines-'+canvasId);
+  if(!svg) return;
+  svg.innerHTML='';
+  var canvas = document.getElementById('ercanvas-'+canvasId);
+  if(!canvas) return;
+  var cRect = canvas.getBoundingClientRect();
+  state.edges.forEach(function(edge, idx){
+    var a = document.getElementById(edge.from);
+    var b = document.getElementById(edge.to);
+    if(!a||!b) return;
+    var aRect = a.getBoundingClientRect();
+    var bRect = b.getBoundingClientRect();
+    var acx = aRect.left+aRect.width/2-cRect.left+canvas.scrollLeft, acy = aRect.top+aRect.height/2-cRect.top+canvas.scrollTop;
+    var bcx = bRect.left+bRect.width/2-cRect.left+canvas.scrollLeft, bcy = bRect.top+bRect.height/2-cRect.top+canvas.scrollTop;
+    var aRectLocal = {width:aRect.width, height:aRect.height};
+    var bRectLocal = {width:bRect.width, height:bRect.height};
+    var p1 = clipToRect(aRectLocal, acx, acy, bcx, bcy);
+    var p2 = clipToRect(bRectLocal, bcx, bcy, acx, acy);
+    var line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',p1.x); line.setAttribute('y1',p1.y);
+    line.setAttribute('x2',p2.x); line.setAttribute('y2',p2.y);
+    line.setAttribute('stroke','#6E1423'); line.setAttribute('stroke-width','1.5');
+    svg.appendChild(line);
+    var dx=p2.x-p1.x, dy=p2.y-p1.y, len=Math.sqrt(dx*dx+dy*dy)||1;
+    var ux=dx/len, uy=dy/len;
+    drawCFEnd(svg, p1.x, p1.y, ux, uy, edge.fromCard||'one');
+    drawCFEnd(svg, p2.x, p2.y, -ux, -uy, edge.toCard||'many');
+    var mx=(p1.x+p2.x)/2, my=(p1.y+p2.y)/2;
+    if(edge.label){
+      var rectW = Math.max(24, edge.label.length*6+10);
+      var rect=document.createElementNS('http://www.w3.org/2000/svg','rect');
+      rect.setAttribute('x',mx-rectW/2); rect.setAttribute('y',my-9);
+      rect.setAttribute('width',rectW); rect.setAttribute('height',18);
+      rect.setAttribute('rx',4); rect.setAttribute('fill','#FBF2DC');
+      rect.setAttribute('stroke','#D9AE4E'); rect.setAttribute('stroke-width','1');
+      rect.setAttribute('style','pointer-events:auto;cursor:pointer');
+      rect.addEventListener('click', (function(i){return function(){ editRelationshipUI(canvasId, i); };})(idx));
+      svg.appendChild(rect);
+      var text=document.createElementNS('http://www.w3.org/2000/svg','text');
+      text.setAttribute('x',mx); text.setAttribute('y',my+3.5);
+      text.setAttribute('text-anchor','middle'); text.setAttribute('font-size','10');
+      text.setAttribute('font-weight','600'); text.setAttribute('fill','#8a6410');
+      text.setAttribute('font-family','-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif');
+      text.setAttribute('style','pointer-events:auto;cursor:pointer');
+      text.textContent = edge.label;
+      text.addEventListener('click', (function(i){return function(){ editRelationshipUI(canvasId, i); };})(idx));
+      svg.appendChild(text);
+    } else {
+      var handle=document.createElementNS('http://www.w3.org/2000/svg','circle');
+      handle.setAttribute('cx',mx); handle.setAttribute('cy',my); handle.setAttribute('r',9);
+      handle.setAttribute('fill','#FBF2DC'); handle.setAttribute('stroke','#D9AE4E'); handle.setAttribute('stroke-width','1.2');
+      handle.setAttribute('style','pointer-events:auto;cursor:pointer');
+      handle.addEventListener('click', (function(i){return function(){ editRelationshipUI(canvasId, i); };})(idx));
+      svg.appendChild(handle);
+      var htext=document.createElementNS('http://www.w3.org/2000/svg','text');
+      htext.setAttribute('x',mx); htext.setAttribute('y',my+3.2);
+      htext.setAttribute('text-anchor','middle'); htext.setAttribute('font-size','10');
+      htext.setAttribute('fill','#8a6410'); htext.setAttribute('style','pointer-events:none;user-select:none');
+      htext.textContent = '✎';
+      svg.appendChild(htext);
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════
+// CLEAR / SAVE DRAFT (auto-restored, no explicit load button)
+// ═══════════════════════════════════════════════
+function clearERCanvas(canvasId){
+  if(!confirm('Clear the whole canvas?')) return;
+  var state = ER_STATE[canvasId];
+  state.nodes=[]; state.edges=[]; state.pendingConnect=null;
+  var canvas = document.getElementById('ercanvas-'+canvasId);
+  canvas.querySelectorAll('.cf-entity').forEach(function(n){n.remove();});
+  var svg = document.getElementById('erlines-'+canvasId);
+  if(svg) svg.innerHTML='';
+  var empty = document.getElementById('erempty-'+canvasId);
+  if(empty) empty.style.display='block';
+}
+function clearERCanvasSilent(canvasId){
+  var state = ER_STATE[canvasId];
+  state.nodes=[]; state.edges=[]; state.pendingConnect=null;
+  var canvas = document.getElementById('ercanvas-'+canvasId);
+  canvas.querySelectorAll('.cf-entity').forEach(function(n){n.remove();});
+  var svg = document.getElementById('erlines-'+canvasId);
+  if(svg) svg.innerHTML='';
+  var empty = document.getElementById('erempty-'+canvasId);
+  if(empty) empty.style.display='none';
+}
+function saveDiagram(canvasId){
+  var state = ER_STATE[canvasId];
+  try{
+    localStorage.setItem('erd_cf_'+canvasId, JSON.stringify({nodes:state.nodes, edges:state.edges}));
+    toast('Draft saved ✓');
+  }catch(e){ toast('Could not save'); }
+}
+function restoreDraft(canvasId){
+  var raw;
+  try{ raw = localStorage.getItem('erd_cf_'+canvasId); }catch(e){}
+  if(!raw) return;
+  var data = JSON.parse(raw);
+  if(!data.nodes || !data.nodes.length) return;
+  clearERCanvasSilent(canvasId);
+  var state = ER_STATE[canvasId];
+  var maxSeq=0, maxAttrSeq=0;
+  data.nodes.forEach(function(n){
+    state.nodes.push(n);
+    renderCFEntity(canvasId, n);
+    var m = n.id.match(/-ent-(\d+)$/);
+    if(m) maxSeq = Math.max(maxSeq, parseInt(m[1],10)+1);
+    (n.attrs||[]).forEach(function(a){
+      var am = (a.id||'').match(/^a(\d+)$/);
+      if(am) maxAttrSeq = Math.max(maxAttrSeq, parseInt(am[1],10)+1);
+    });
+  });
+  state.edges = data.edges || [];
+  state.seq = maxSeq; state.attrSeq = maxAttrSeq;
+  setTimeout(function(){ updateERGeometry(canvasId); toast('Restored your last saved draft ✓'); }, 50);
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  initERCanvas('main');
+  restoreDraft('main');
+});
+</script>
+</body>
+</html>
