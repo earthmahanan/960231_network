@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ERD Builder — Chen Notation Canvas</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F7F1E8;
+  --card:#FFFEFB;
+  --burgundy:#6E1423;
+  --burgundy-light:#8C1D2E;
+  --gold:#C9962C;
+  --gold-light:#E8C46A;
+  --gold-bg:#FBF2DC;
+  --gold-bd:#D9AE4E;
+  --teal:#0F6E56;
+  --teal-bg:#E1F5EE;
+  --teal-bd:#5DCAA5;
+  --red:#791F1F;
+  --txt:#2b211c;
+  --txt2:#6b5d52;
+  --txt3:#9a8c7f;
+  --bdr:#e3d5bf;
+  --bdr2:#cbb894;
+  --radius:10px;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+}
+html,body{min-height:100%;background:var(--bg);font-family:var(--sans);color:var(--txt);font-size:15px;line-height:1.6}
+.wrap{max-width:1100px;margin:0 auto;padding:1.75rem 1.5rem 3rem}
+.pagehead{margin-bottom:1.1rem}
+.pagehead h1{font-size:20px;color:var(--burgundy);margin-bottom:.3rem}
+.pagehead p{font-size:13px;color:var(--txt2)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--txt2);margin-top:.6rem}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend i{width:12px;height:12px;border-radius:50%;display:inline-block;border:1.5px solid}
+
+.er-builder{background:var(--card);border:1.5px solid var(--bdr);border-radius:var(--radius);overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.er-toolbar{display:flex;gap:8px;flex-wrap:wrap;padding:.85rem 1rem;background:var(--gold-bg);border-bottom:1.5px solid var(--bdr)}
+.er-tool{display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:18px;font-size:11.5px;font-weight:600;cursor:grab;user-select:none;border:1.5px solid;transition:transform .1s}
+.er-tool:active{cursor:grabbing;transform:scale(.96)}
+.er-tool.entity{background:#E6F1FB;border-color:#85B7EB;color:#0C447C}
+.er-tool.weak-entity{background:#E6F1FB;border-color:#0C447C;color:#0C447C}
+.er-tool.attribute{background:var(--teal-bg);border-color:var(--teal-bd);color:var(--teal)}
+.er-tool.pk-attribute{background:var(--teal-bg);border-color:var(--teal);color:var(--teal);text-decoration:underline}
+.er-tool.derived-attribute{background:var(--teal-bg);border-color:var(--teal-bd);color:var(--teal);border-style:dashed}
+.er-tool.multi-attribute{background:var(--teal-bg);border:3px double var(--teal-bd);color:var(--teal)}
+.er-tool.relationship{background:var(--gold-bg);border-color:var(--gold-bd);color:#8a6410}
+.er-tool-icon{font-size:14px}
+
+.er-canvas-wrap{position:relative}
+.er-canvas{position:relative;width:100%;height:1000px;background:
+  linear-gradient(var(--bdr) 1px, transparent 1px),
+  linear-gradient(90deg, var(--bdr) 1px, transparent 1px);
+  background-size:24px 24px;background-color:#fdfbf6;overflow:auto;touch-action:none}
+
+.er-node{position:absolute;padding:6px 10px;border-radius:8px;font-size:11px;font-weight:600;cursor:grab;user-select:none;border:1.5px solid;box-shadow:0 2px 4px rgba(0,0,0,.08);white-space:nowrap;z-index:5;transform:translate(-50%,-50%)}
+.er-node:active{cursor:grabbing;z-index:10}
+.er-node.entity-node{background:#E6F1FB;border-color:#85B7EB;color:#0C447C;border-radius:6px;min-width:60px;text-align:center}
+.er-node.weak-entity-node{background:#E6F1FB;border-color:#0C447C;color:#0C447C;border-radius:6px;min-width:60px;text-align:center;box-shadow:0 2px 4px rgba(0,0,0,.08), inset 0 0 0 2px #fff, inset 0 0 0 3px #0C447C}
+.er-node.attribute-node{background:var(--teal-bg);border-color:var(--teal-bd);color:var(--teal);border-radius:50%/50%;padding:9px 15px;min-width:56px;text-align:center}
+.er-node.pk-attribute-node{background:var(--teal-bg);border-color:var(--teal);color:var(--teal);border-radius:50%/50%;padding:9px 15px;min-width:56px;text-align:center}
+.er-node.pk-attribute-node input{text-decoration:underline}
+.er-node.derived-attribute-node{background:var(--teal-bg);border-color:var(--teal-bd);color:var(--teal);border-radius:50%/50%;padding:9px 15px;min-width:56px;text-align:center;border-style:dashed}
+.er-node.multi-attribute-node{background:transparent;border:none;box-shadow:none;padding:3px !important;min-width:0;width:auto;text-align:center;display:inline-block}
+.er-node.multi-attribute-node::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;border:1.5px solid var(--teal-bd);border-radius:50%/50%;z-index:0}
+.er-node.multi-attribute-node .mlabel{position:relative;z-index:1;display:inline-block;background:var(--teal-bg);border:1.5px solid var(--teal-bd);border-radius:50%/50%;padding:9px 15px;color:var(--teal);white-space:nowrap}
+.er-node.relationship-node{background:transparent !important;border:none !important;border-radius:0 !important;box-shadow:none !important;padding:0;width:92px;height:60px;display:flex;align-items:center;justify-content:center}
+.er-node.relationship-node::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:var(--gold-bg);border:2px solid #8a6410;clip-path:polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);z-index:0;box-shadow:0 2px 4px rgba(0,0,0,.08)}
+.er-node.relationship-node .rlabel{position:relative;z-index:1;padding:0 16px;text-align:center;font-size:10.5px;line-height:1.15}
+.er-node input{background:transparent;border:none;outline:none;font:inherit;color:inherit;text-align:center;width:100%;min-width:40px}
+.er-node .delbtn{position:absolute;top:-8px;right:-8px;width:16px;height:16px;background:var(--red);color:#fff;border-radius:50%;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .15s;z-index:20}
+.er-node:hover .delbtn{opacity:1}
+
+.er-empty-msg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:13px;color:var(--txt3);text-align:center;pointer-events:none;max-width:280px}
+svg.er-lines{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1}
+
+.er-actions{display:flex;gap:8px;padding:.6rem 1rem;background:#faf6ec;border-top:1.5px solid var(--bdr);flex-wrap:wrap;align-items:center}
+.btn-ghost{background:#fff;border:1.5px solid var(--bdr2);color:var(--txt2);border-radius:7px;padding:7px 13px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s}
+.btn-ghost:hover{background:var(--gold-bg)}
+.btn-primary{background:var(--burgundy);border:1.5px solid var(--burgundy);color:#fff;border-radius:7px;padding:7px 14px;font-size:12.5px;font-weight:700;cursor:pointer}
+.btn-primary:hover{background:var(--burgundy-light)}
+.er-conn-btn.er-connect-active{background:var(--burgundy) !important;color:#fff !important;border-color:var(--burgundy) !important}
+
+.cardpicker-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;display:flex;align-items:center;justify-content:center}
+.cardpicker-modal{background:#fff;border-radius:12px;padding:1.5rem 1.75rem;max-width:340px;width:90%;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.cardpicker-modal h4{font-size:15px;font-weight:700;color:var(--burgundy);margin-bottom:1rem;text-align:center}
+.cardpicker-row{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:1.25rem}
+.cardpicker-sub{font-size:12.5px;color:var(--txt2);text-align:center;margin-bottom:1rem;line-height:1.5}
+.cardpicker-sub strong{color:var(--burgundy)}
+.cardpicker-side{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;min-width:0}
+.cardpicker-entname{font-size:11.5px;font-weight:600;color:var(--txt2);text-align:center;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cardpicker-side select{border:1.5px solid var(--bdr2);border-radius:6px;padding:6px 14px;font-size:15px;font-weight:700;color:var(--burgundy);background:var(--gold-bg);text-align:center}
+.cardpicker-total{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--txt2);cursor:pointer;user-select:none}
+.cardpicker-total input{cursor:pointer}
+.cardpicker-note{font-size:11px;color:var(--txt3);line-height:1.5;text-align:center;margin-bottom:1rem;padding:0 4px}
+.cardpicker-btns{display:flex;gap:8px;justify-content:center}
+.cardpicker-btns button{font-size:13px}
+
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--burgundy);color:#fff;padding:9px 18px;border-radius:8px;font-size:12.5px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s;z-index:3000}
+.toast.show{opacity:1}
+
+@media print{
+  .er-toolbar,.er-actions{display:none !important}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="pagehead">
+    <h1>🗂 ER Diagram Builder — Chen Notation</h1>
+    <p>Drag shapes onto the canvas below to build your ER diagram. Click two shapes in a row to connect them — entity/relationship links let you set cardinality (1, N, M) and total/partial participation.</p>
+    <div class="legend">
+      <span><i style="background:#E6F1FB;border-color:#85B7EB"></i>Entity (rectangle)</span>
+      <span><i style="background:#E6F1FB;border-color:#0C447C;box-shadow:inset 0 0 0 2px #fff, inset 0 0 0 3px #0C447C"></i>Weak entity (double rectangle)</span>
+      <span><i style="background:#E1F5EE;border-color:#5DCAA5;border-radius:50%"></i>Attribute (oval)</span>
+      <span><i style="background:#E1F5EE;border-color:#0F6E56;border-radius:50%"></i>PK attribute (underlined oval)</span>
+      <span><i style="background:#E1F5EE;border-color:#5DCAA5;border-style:dashed;border-radius:50%"></i>Derived attribute (dashed oval)</span>
+      <span><i style="background:#E1F5EE;border:3px double #5DCAA5;border-radius:50%"></i>Multivalued attribute (double oval)</span>
+      <span><i style="background:#FBF2DC;border-color:#D9AE4E;clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);border-radius:0"></i>Relationship (diamond)</span>
+    </div>
+  </div>
+
+  <div class="er-builder" data-canvas="main">
+    <div class="er-toolbar">
+      <div class="er-tool entity" draggable="true" data-type="entity"><span class="er-tool-icon">▭</span> Entity</div>
+      <div class="er-tool weak-entity" draggable="true" data-type="weak-entity"><span class="er-tool-icon">▭</span> Weak Entity</div>
+      <div class="er-tool attribute" draggable="true" data-type="attribute"><span class="er-tool-icon">◯</span> Attribute</div>
+      <div class="er-tool pk-attribute" draggable="true" data-type="pk-attribute"><span class="er-tool-icon">◯</span> PK Attribute</div>
+      <div class="er-tool derived-attribute" draggable="true" data-type="derived-attribute"><span class="er-tool-icon">◌</span> Derived Attr</div>
+      <div class="er-tool multi-attribute" draggable="true" data-type="multi-attribute"><span class="er-tool-icon">◎</span> Multivalued Attr</div>
+      <div class="er-tool relationship" draggable="true" data-type="relationship"><span class="er-tool-icon">◇</span> Relationship</div>
+    </div>
+    <div class="er-canvas-wrap">
+      <div class="er-canvas" id="ercanvas-main">
+        <div class="er-empty-msg" id="erempty-main">Drag shapes from the toolbar above onto this canvas.<br>Click two shapes in a row to connect them with a line.</div>
+        <svg class="er-lines" id="erlines-main"></svg>
+      </div>
+    </div>
+    <div class="er-actions">
+      <button class="btn-ghost er-conn-btn" id="erconnect-main" onclick="toggleConnectMode('main')">🔗 Connect mode: off</button>
+      <button class="btn-ghost" onclick="clearERCanvas('main')">🗑 Clear canvas</button>
+      <button class="btn-ghost" onclick="downloadPNG('main')">⬇ Export PNG</button>
+      <button class="btn-ghost" onclick="saveDiagram('main')">💾 Save draft</button>
+      <span style="font-size:11.5px;color:var(--txt3);align-self:center;margin-left:auto">Double-click text to rename a shape</span>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+// ER STATE
+// ═══════════════════════════════════════════════
+var ER_STATE = {};
+
+function toast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._h); t._h=setTimeout(function(){t.classList.remove('show');},1800);
+}
+
+function initERCanvas(canvasId){
+  ER_STATE[canvasId] = ER_STATE[canvasId] || {nodes:[], edges:[], connectMode:false, pendingConnect:null, seq:0};
+  var builder = document.querySelector('.er-builder[data-canvas="'+canvasId+'"]');
+  if(!builder) return;
+  var canvas = document.getElementById('ercanvas-'+canvasId);
+
+  builder.querySelectorAll('.er-tool').forEach(function(tool){
+    tool.addEventListener('dragstart', function(e){
+      e.dataTransfer.setData('text/plain', tool.getAttribute('data-type'));
+      e.dataTransfer.effectAllowed='copy';
+    });
+  });
+
+  canvas.addEventListener('dragover', function(e){ e.preventDefault(); });
+  canvas.addEventListener('drop', function(e){
+    e.preventDefault();
+    var type = e.dataTransfer.getData('text/plain');
+    if(!type) return;
+    var rect = canvas.getBoundingClientRect();
+    var x = e.clientX - rect.left + canvas.scrollLeft;
+    var y = e.clientY - rect.top + canvas.scrollTop;
+    addERNode(canvasId, type, x, y);
+  });
+}
+
+function labelForType(type){
+  if(type==='entity') return 'Entity';
+  if(type==='weak-entity') return 'WeakEntity';
+  if(type==='attribute') return 'attribute';
+  if(type==='pk-attribute') return 'pk_attr';
+  if(type==='derived-attribute') return 'derived_attr';
+  if(type==='multi-attribute') return 'multi_attr';
+  if(type==='relationship') return 'relates';
+  return 'node';
+}
+
+function addERNode(canvasId, type, x, y){
+  var state = ER_STATE[canvasId];
+  var id = canvasId+'-node-'+(state.seq++);
+  var node = {id:id, type:type, x:Math.max(0,x), y:Math.max(0,y), text:labelForType(type)};
+  state.nodes.push(node);
+  renderERNode(canvasId, node);
+  updateERGeometry(canvasId);
+}
+
+function renderERNode(canvasId, node){
+  var canvas = document.getElementById('ercanvas-'+canvasId);
+  var empty = document.getElementById('erempty-'+canvasId);
+  if(empty) empty.style.display='none';
+  var el = document.createElement('div');
+  el.className = 'er-node '+node.type+'-node';
+  el.id = node.id;
+  el.style.left = node.x+'px';
+  el.style.top = node.y+'px';
+  el.innerHTML = '<span class="delbtn" onclick="deleteERNode(\''+canvasId+'\',\''+node.id+'\',event)">✕</span>'+
+    (node.type==='relationship' ? '<span class="rlabel"><input type="text" value="'+node.text+'" oninput="renameERNode(\''+canvasId+'\',\''+node.id+'\',this.value)"></span>' :
+    node.type==='multi-attribute' ? '<span class="mlabel"><input type="text" value="'+node.text+'" oninput="renameERNode(\''+canvasId+'\',\''+node.id+'\',this.value)"></span>' :
+    '<input type="text" value="'+node.text+'" oninput="renameERNode(\''+canvasId+'\',\''+node.id+'\',this.value)">');
+  canvas.appendChild(el);
+  wireNodeDrag(canvasId, el);
+  el.addEventListener('click', function(e){
+    if(e.target.tagName==='INPUT'||e.target.classList.contains('delbtn')) return;
+    handleNodeClickForConnect(canvasId, node.id);
+  });
+}
+
+function renameERNode(canvasId, nodeId, val){
+  var state = ER_STATE[canvasId];
+  var n = state.nodes.find(function(n){return n.id===nodeId;});
+  if(n){ n.text = val; }
+}
+
+function deleteERNode(canvasId, nodeId, evt){
+  if(evt) evt.stopPropagation();
+  var state = ER_STATE[canvasId];
+  state.nodes = state.nodes.filter(function(n){return n.id!==nodeId;});
+  state.edges = state.edges.filter(function(e){return e.from!==nodeId && e.to!==nodeId;});
+  var el = document.getElementById(nodeId);
+  if(el) el.remove();
+  updateERGeometry(canvasId);
+  if(state.nodes.length===0){
+    var empty = document.getElementById('erempty-'+canvasId);
+    if(empty) empty.style.display='block';
+  }
+}
+
+function wireNodeDrag(canvasId, el){
+  var state = ER_STATE[canvasId];
+  var canvas = document.getElementById('ercanvas-'+canvasId);
+  var dragging=false, offX=0, offY=0;
+
+  function startDrag(clientX, clientY){
+    var elRect = el.getBoundingClientRect();
+    var centerX = elRect.left + elRect.width/2;
+    var centerY = elRect.top + elRect.height/2;
+    offX = clientX - centerX;
+    offY = clientY - centerY;
+    dragging = true;
+    el.style.zIndex = 10;
+  }
+  function moveDrag(clientX, clientY){
+    if(!dragging) return;
+    var rect = canvas.getBoundingClientRect();
+    var centerX = clientX - offX;
+    var centerY = clientY - offY;
+    var x = centerX - rect.left + canvas.scrollLeft;
+    var y = centerY - rect.top + canvas.scrollTop;
+    x = Math.max(0, x);
+    y = Math.max(0, y);
+    el.style.left = x+'px';
+    el.style.top = y+'px';
+    var n = state.nodes.find(function(n){return n.id===el.id;});
+    if(n){ n.x=x; n.y=y; }
+    updateERGeometry(canvasId);
+  }
+  function endDrag(){ dragging=false; }
+
+  el.addEventListener('mousedown', function(e){
+    if(e.target.tagName==='INPUT'||e.target.classList.contains('delbtn')) return;
+    startDrag(e.clientX, e.clientY);
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', function(e){ moveDrag(e.clientX, e.clientY); });
+  document.addEventListener('mouseup', endDrag);
+
+  el.addEventListener('touchstart', function(e){
+    if(e.target.tagName==='INPUT'||e.target.classList.contains('delbtn')) return;
+    var t=e.touches[0]; startDrag(t.clientX,t.clientY);
+  }, {passive:true});
+  el.addEventListener('touchmove', function(e){
+    var t=e.touches[0]; moveDrag(t.clientX,t.clientY);
+  }, {passive:true});
+  el.addEventListener('touchend', endDrag);
+}
+
+function toggleConnectMode(canvasId){
+  var state = ER_STATE[canvasId];
+  state.connectMode = !state.connectMode;
+  state.pendingConnect = null;
+  var btn = document.getElementById('erconnect-'+canvasId);
+  btn.textContent = state.connectMode ? '🔗 Connect mode: ON — click two shapes' : '🔗 Connect mode: off';
+  btn.classList.toggle('er-connect-active', state.connectMode);
+}
+
+function handleNodeClickForConnect(canvasId, nodeId){
+  var state = ER_STATE[canvasId];
+  if(!state.connectMode) return;
+  if(!state.pendingConnect){
+    state.pendingConnect = nodeId;
+    var el = document.getElementById(nodeId);
+    if(el) el.style.boxShadow = '0 0 0 3px var(--burgundy)';
+  } else {
+    if(state.pendingConnect !== nodeId){
+      openCardinalityPicker(canvasId, state.pendingConnect, nodeId);
+    }
+    var prevEl = document.getElementById(state.pendingConnect);
+    if(prevEl) prevEl.style.boxShadow = '';
+    state.pendingConnect = null;
+  }
+}
+
+function nodeIsAttributeType(canvasId, nodeId){
+  var state = ER_STATE[canvasId];
+  var n = state.nodes.find(function(n){return n.id===nodeId;});
+  return n && (n.type==='attribute' || n.type==='pk-attribute' || n.type==='derived-attribute' || n.type==='multi-attribute');
+}
+
+function openCardinalityPicker(canvasId, fromId, toId){
+  if(nodeIsAttributeType(canvasId, fromId) || nodeIsAttributeType(canvasId, toId)){
+    var state = ER_STATE[canvasId];
+    state.edges.push({from:fromId, to:toId, connType:'attr'});
+    updateERGeometry(canvasId);
+    return;
+  }
+  var fromEl = document.getElementById(fromId);
+  var fromLabel = fromEl ? (fromEl.querySelector('input')?fromEl.querySelector('input').value:'') : '';
+
+  var existing = document.getElementById('cardpicker-overlay');
+  if(existing) existing.remove();
+
+  var overlay = document.createElement('div');
+  overlay.id = 'cardpicker-overlay';
+  overlay.className = 'cardpicker-overlay';
+  overlay.innerHTML =
+    '<div class="cardpicker-modal">' +
+      '<h4>Set cardinality &amp; participation</h4>' +
+      '<p class="cardpicker-sub">How does <strong>'+escapeHtml(fromLabel)+'</strong> participate in this relationship?</p>' +
+      '<div class="cardpicker-row cardpicker-row-single">' +
+        '<div class="cardpicker-side">' +
+          '<div class="cardpicker-entname">'+escapeHtml(fromLabel)+'</div>' +
+          '<select id="cardpicker-from">'+
+            '<option value="1">1</option>'+
+            '<option value="N">N</option>'+
+            '<option value="M">M</option>'+
+          '</select>' +
+          '<label class="cardpicker-total"><input type="checkbox" id="cardpicker-from-total"> Total</label>' +
+        '</div>' +
+      '</div>' +
+      '<p class="cardpicker-note">"Total" = every '+escapeHtml(fromLabel)+' record must participate (double line). Leave unchecked for optional/partial participation (single line).</p>' +
+      '<div class="cardpicker-btns">' +
+        '<button class="btn-ghost" onclick="cancelCardinalityPicker()">Cancel</button>' +
+        '<button class="btn-primary" onclick="confirmCardinalityPicker(\''+canvasId+'\',\''+fromId+'\',\''+toId+'\')">Add connection</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+}
+
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+function cancelCardinalityPicker(){
+  var overlay = document.getElementById('cardpicker-overlay');
+  if(overlay) overlay.remove();
+}
+
+function confirmCardinalityPicker(canvasId, fromId, toId){
+  var fromVal = document.getElementById('cardpicker-from').value;
+  var fromTotal = document.getElementById('cardpicker-from-total').checked;
+  var state = ER_STATE[canvasId];
+  state.edges.push({from:fromId, to:toId, fromCard:fromVal, fromTotal:fromTotal, connType:'card'});
+  cancelCardinalityPicker();
+  updateERGeometry(canvasId);
+}
+
+function updateERGeometry(canvasId){
+  var state = ER_STATE[canvasId];
+  var svg = document.getElementById('erlines-'+canvasId);
+  if(!svg) return;
+  svg.innerHTML='';
+  state.edges.forEach(function(edge){
+    var a = document.getElementById(edge.from);
+    var b = document.getElementById(edge.to);
+    if(!a||!b) return;
+    var canvas = document.getElementById('ercanvas-'+canvasId);
+    var cRect = canvas.getBoundingClientRect();
+    var aRect = a.getBoundingClientRect();
+    var bRect = b.getBoundingClientRect();
+    var x1 = aRect.left + aRect.width/2 - cRect.left + canvas.scrollLeft;
+    var y1 = aRect.top + aRect.height/2 - cRect.top + canvas.scrollTop;
+    var x2 = bRect.left + bRect.width/2 - cRect.left + canvas.scrollLeft;
+    var y2 = bRect.top + bRect.height/2 - cRect.top + canvas.scrollTop;
+    var connType = edge.connType || 'attr';
+
+    if(connType==='card'){
+      drawParticipationSegment(svg, x1, y1, x2, y2, edge.fromTotal);
+      addCardBadge(svg, x1, y1, x2, y2, 0.5, edge.fromCard);
+    } else {
+      var line = document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1',x1); line.setAttribute('y1',y1);
+      line.setAttribute('x2',x2); line.setAttribute('y2',y2);
+      line.setAttribute('stroke','#6E1423');
+      line.setAttribute('stroke-width','1.5');
+      svg.appendChild(line);
+    }
+  });
+}
+
+function drawParticipationSegment(svg, x1, y1, x2, y2, isTotal){
+  if(!isTotal){
+    var line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',x1); line.setAttribute('y1',y1);
+    line.setAttribute('x2',x2); line.setAttribute('y2',y2);
+    line.setAttribute('stroke','#6E1423'); line.setAttribute('stroke-width','2');
+    svg.appendChild(line);
+    return;
+  }
+  var dx = x2-x1, dy = y2-y1;
+  var len = Math.sqrt(dx*dx+dy*dy) || 1;
+  var nx = -dy/len, ny = dx/len;
+  var offset = 2.5;
+  [-1,1].forEach(function(dir){
+    var line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1', x1+nx*offset*dir); line.setAttribute('y1', y1+ny*offset*dir);
+    line.setAttribute('x2', x2+nx*offset*dir); line.setAttribute('y2', y2+ny*offset*dir);
+    line.setAttribute('stroke','#6E1423'); line.setAttribute('stroke-width','2');
+    svg.appendChild(line);
+  });
+}
+
+function addCardBadge(svg, x1, y1, x2, y2, t, label){
+  var x = x1 + (x2-x1)*t;
+  var y = y1 + (y2-y1)*t;
+  var w = 20;
+  var rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  rect.setAttribute('x', x-w/2); rect.setAttribute('y', y-9);
+  rect.setAttribute('width', w); rect.setAttribute('height', 18);
+  rect.setAttribute('rx', 4);
+  rect.setAttribute('fill', '#FBF2DC');
+  rect.setAttribute('stroke', '#D9AE4E');
+  rect.setAttribute('stroke-width','1');
+  var text = document.createElementNS('http://www.w3.org/2000/svg','text');
+  text.setAttribute('x', x); text.setAttribute('y', y+3.5);
+  text.setAttribute('text-anchor','middle');
+  text.setAttribute('font-size','10.5');
+  text.setAttribute('font-weight','700');
+  text.setAttribute('fill','#8a6410');
+  text.setAttribute('font-family','-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif');
+  text.textContent = label;
+  svg.appendChild(rect);
+  svg.appendChild(text);
+}
+
+function clearERCanvas(canvasId){
+  if(!confirm('Clear the whole canvas?')) return;
+  var state = ER_STATE[canvasId];
+  state.nodes=[]; state.edges=[]; state.pendingConnect=null;
+  var canvas = document.getElementById('ercanvas-'+canvasId);
+  canvas.querySelectorAll('.er-node').forEach(function(n){n.remove();});
+  var svg = document.getElementById('erlines-'+canvasId);
+  if(svg) svg.innerHTML='';
+  var empty = document.getElementById('erempty-'+canvasId);
+  if(empty) empty.style.display='block';
+}
+
+function saveDiagram(canvasId){
+  var state = ER_STATE[canvasId];
+  try{
+    localStorage.setItem('erd_chen_'+canvasId, JSON.stringify({nodes:state.nodes, edges:state.edges}));
+    toast('Diagram saved ✓');
+  }catch(e){ toast('Could not save'); }
+}
+
+function loadDiagram(canvasId, silent){
+  var raw;
+  try{ raw = localStorage.getItem('erd_chen_'+canvasId); }catch(e){}
+  if(!raw){ if(!silent) toast('No saved draft found'); return; }
+  var data = JSON.parse(raw);
+  if(!data.nodes || !data.nodes.length){ return; }
+  clearCanvasSilent(canvasId);
+  var state = ER_STATE[canvasId];
+  data.nodes.forEach(function(n){
+    state.nodes.push(n);
+    renderERNode(canvasId, n);
+    var m = /-node-(\d+)$/.exec(n.id);
+    if(m) state.seq = Math.max(state.seq, parseInt(m[1],10)+1);
+  });
+  state.edges = data.edges || [];
+  updateERGeometry(canvasId);
+  if(!silent) toast('Draft loaded ✓');
+  else toast('Restored your last saved draft ✓');
+}
+
+function clearCanvasSilent(canvasId){
+  var state = ER_STATE[canvasId];
+  state.nodes=[]; state.edges=[]; state.pendingConnect=null;
+  var canvas = document.getElementById('ercanvas-'+canvasId);
+  canvas.querySelectorAll('.er-node').forEach(function(n){n.remove();});
+  var svg = document.getElementById('erlines-'+canvasId);
+  if(svg) svg.innerHTML='';
+  var empty = document.getElementById('erempty-'+canvasId);
+  if(empty) empty.style.display='none';
+}
+
+function downloadPNG(canvasId){
+  toast('Tip: use your browser\'s screenshot / print-to-PDF for now');
+  window.print();
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  initERCanvas('main');
+  loadDiagram('main', true);
+});
+</script>
+</body>
+</html>
