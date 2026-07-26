@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DBMS Lab — SQL Fundamentals for Backend Developers</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F7F1E8;
+  --card:#FFFEFB;
+  --burgundy:#6E1423;
+  --burgundy-light:#8C1D2E;
+  --burgundy-dark:#4A0E18;
+  --gold:#C9962C;
+  --gold-light:#E8C46A;
+  --gold-bg:#FBF2DC;
+  --gold-bd:#D9AE4E;
+  --teal:#0F6E56;
+  --teal-bg:#E1F5EE;
+  --teal-bd:#5DCAA5;
+  --red:#791F1F;
+  --red-bg:#FCEBEB;
+  --red-bd:#F09595;
+  --purple:#6E2A6E;
+  --purple-bg:#EFE4F0;
+  --purple-bd:#C9A8CC;
+  --green:#1F6E3D;
+  --green-bg:#E6F5EA;
+  --green-bd:#8FCBA3;
+  --txt:#2b211c;
+  --txt2:#6b5d52;
+  --txt3:#9a8c7f;
+  --bdr:#e3d5bf;
+  --bdr2:#cbb894;
+  --radius:10px;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+html,body{min-height:100%;background:var(--bg);font-family:var(--sans);color:var(--txt);font-size:15px;line-height:1.6}
+.shell{display:flex;min-height:100vh}
+.sidebar{width:260px;flex-shrink:0;background:var(--burgundy);position:sticky;top:0;height:100vh;overflow-y:auto;padding:1.5rem 0}
+.main{flex:1;max-width:960px;padding:2rem 2.5rem 4rem;min-width:0}
+@media(max-width:768px){.sidebar{display:none}.main{padding:1.25rem 1rem 3rem}}
+
+.sidebar-logo{font-size:17px;font-weight:700;color:#fff;padding:0 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:8px;line-height:1.3;flex-wrap:wrap}
+.sidebar-logo .mod-badge{font-size:11px;font-weight:600;background:rgba(201,150,44,.28);color:var(--gold-light);border-radius:4px;padding:2px 7px;letter-spacing:.05em}
+.sidebar-title{font-size:11px;font-weight:600;color:rgba(255,255,255,.5);letter-spacing:.08em;text-transform:uppercase;padding:0 1.25rem;margin-bottom:.75rem}
+.nav-item{display:flex;align-items:center;gap:10px;padding:.6rem 1.25rem;cursor:pointer;transition:background .15s;font-size:13px;color:rgba(255,255,255,.8);border-left:3px solid transparent}
+.nav-item:hover{background:rgba(255,255,255,.08)}
+.nav-item.active{background:rgba(255,255,255,.12);color:#fff;border-left-color:var(--gold-light)}
+.nav-item.done{color:rgba(255,255,255,.9)}
+.nav-dot{width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;transition:all .2s}
+.nav-dot.done{background:var(--gold-light);border-color:var(--gold-light);color:var(--burgundy-dark)}
+.nav-dot.active{border-color:#fff;color:#fff}
+.progress-bar-wrap{padding:1rem 1.25rem .5rem;margin-top:.5rem}
+.progress-bar-label{font-size:11px;color:rgba(255,255,255,.55);margin-bottom:6px;display:flex;justify-content:space-between}
+.progress-bar{height:4px;background:rgba(255,255,255,.18);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:var(--gold-light);border-radius:2px;transition:width .4s ease}
+.timer-chip{margin:0 1.25rem;padding:8px 10px;background:rgba(255,255,255,.08);border-radius:8px;font-size:11px;color:rgba(255,255,255,.7);display:flex;justify-content:space-between}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.75rem;flex-wrap:wrap;gap:12px}
+.topbar-left h1{font-size:22px;font-weight:700;color:var(--burgundy);margin-bottom:2px}
+.topbar-left p{font-size:13px;color:var(--txt2)}
+.topbar-right{display:flex;gap:8px;align-items:center}
+button{font-family:var(--sans);cursor:pointer;border:none;border-radius:8px;font-size:13px;font-weight:500;padding:8px 16px;transition:all .15s}
+button:disabled{opacity:.4;cursor:not-allowed}
+.btn-ghost{background:transparent;border:1.5px solid var(--bdr2);color:var(--txt2)}
+.btn-ghost:hover:not(:disabled){background:var(--card);border-color:var(--burgundy);color:var(--burgundy)}
+.btn-primary{background:var(--burgundy);color:#fff}
+.btn-primary:hover:not(:disabled){background:var(--burgundy-light)}
+.btn-success{background:var(--gold);color:#3b2a08}
+.btn-success:hover:not(:disabled){background:var(--gold-light)}
+.btn-run{background:var(--teal);color:#fff}
+.btn-run:hover:not(:disabled){background:#12876a}
+
+.student-banner{background:var(--card);border:1.5px solid var(--bdr);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1.75rem;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.student-banner h3{font-size:12px;font-weight:600;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.75rem}
+.student-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:520px){.student-grid{grid-template-columns:1fr}}
+.field-group{display:flex;flex-direction:column;gap:4px}
+.field-group label{font-size:12px;font-weight:600;color:var(--txt2)}
+.field-group input{border:1.5px solid var(--bdr);border-radius:6px;padding:7px 10px;font-size:14px;font-family:var(--sans);color:var(--txt);background:var(--bg);transition:border .15s}
+.field-group input:focus{outline:none;border-color:var(--burgundy);background:#fff}
+
+.exercise-card{background:var(--card);border:1.5px solid var(--bdr);border-radius:var(--radius);margin-bottom:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden;display:none}
+.exercise-card.visible{display:block}
+.exercise-header{padding:1.25rem 1.5rem 1rem;border-bottom:1.5px solid var(--bdr)}
+.exercise-tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;display:inline-block;padding:2px 8px;border-radius:4px;margin-bottom:6px}
+.exercise-title{font-size:19px;font-weight:700;color:var(--burgundy);margin-bottom:3px}
+.exercise-desc{font-size:13px;color:var(--txt2)}
+.exercise-body{padding:1.25rem 1.5rem}
+.exercise-progress{display:flex;align-items:center;gap:8px;margin-top:.75rem}
+.ex-prog-bar{flex:1;height:5px;background:var(--bg);border-radius:3px;overflow:hidden}
+.ex-prog-fill{height:100%;background:var(--gold-bd);border-radius:3px;transition:width .3s}
+.ex-prog-label{font-size:11px;color:var(--txt3);white-space:nowrap}
+
+.info-box{border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem;border:.5px solid}
+.info-box h4{font-size:13px;font-weight:700;margin-bottom:.4rem}
+.info-box p,.info-box ul,.info-box ol{font-size:13.5px;line-height:1.7}
+.info-box ul,.info-box ol{padding-left:1.25rem}
+.info-box.gold{background:var(--gold-bg);border-color:var(--gold-bd)}.info-box.gold h4{color:#8a6410}
+.info-box.teal{background:var(--teal-bg);border-color:var(--teal-bd)}.info-box.teal h4{color:var(--teal)}
+.info-box.red{background:var(--red-bg);border-color:var(--red-bd)}.info-box.red h4{color:var(--red)}
+.info-box.green{background:var(--green-bg);border-color:var(--green-bd)}.info-box.green h4{color:var(--green)}
+.info-box.gray{background:#f4f0e6;border-color:var(--bdr)}.info-box.gray h4{color:var(--txt2)}
+.info-box code{font-family:var(--mono);background:rgba(0,0,0,.06);padding:1px 5px;border-radius:4px;font-size:12px}
+
+.section-heading{font-size:15px;font-weight:700;color:var(--burgundy);margin:1.5rem 0 .75rem;padding-bottom:.4rem;border-bottom:2px solid var(--gold-bg)}
+.step-label{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--burgundy);background:var(--gold-bg);border-radius:4px;padding:3px 10px;margin-bottom:.6rem}
+
+.fun-fact{display:flex;gap:10px;align-items:flex-start;background:var(--purple-bg);border:.5px solid var(--purple-bd);border-radius:8px;padding:.85rem 1rem;margin-bottom:1.25rem}
+.fun-fact .ff-icon{font-size:22px;line-height:1}
+.fun-fact .ff-text{font-size:13px;color:var(--purple);line-height:1.6}
+.fun-fact .ff-text strong{color:var(--purple)}
+
+.scenario-box{background:var(--gold-bg);border:1px solid var(--gold-bd);border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem;font-size:13.5px;line-height:1.8;color:#3b2a08}
+.scenario-box strong{color:var(--burgundy)}
+
+.table-wrap{overflow-x:auto;margin-bottom:1rem;border-radius:8px;border:1.5px solid var(--bdr)}
+.lab-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.lab-table th{background:var(--burgundy);color:#fff;padding:7px 9px;text-align:left;font-weight:600;font-size:11.5px;white-space:nowrap}
+.lab-table td{border-bottom:1px solid var(--bdr);padding:5px 9px;vertical-align:top;font-family:var(--mono)}
+.lab-table tr:last-child td{border-bottom:none}
+.lab-table tr:nth-child(even) td{background:#faf6ec}
+.schema-caption{font-size:11px;color:var(--txt3);padding:6px 9px;font-family:var(--sans);font-style:italic;border-top:1px solid var(--bdr)}
+
+.query-block{border:1.5px solid var(--bdr);border-radius:8px;overflow:hidden;margin-bottom:.5rem;background:#fff}
+.query-editor{width:100%;min-height:88px;border:none;padding:10px 12px;font-family:var(--mono);font-size:13px;color:#eae3d6;background:#2b211c;resize:vertical;line-height:1.6}
+.query-editor:focus{outline:none}
+.query-toolbar{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg);border-top:1px solid var(--bdr)}
+.query-toolbar-left{font-size:11px;color:var(--txt3)}
+.query-status{font-size:12px;font-weight:600}
+.query-status.ok{color:var(--teal)}
+.query-status.err{color:var(--red)}
+.query-status.pending{color:var(--txt3)}
+.result-wrap{margin-top:.5rem;max-height:260px;overflow:auto;border-radius:8px;border:1.5px solid var(--bdr);display:none}
+.result-wrap.show{display:block}
+.result-table{width:100%;border-collapse:collapse;font-size:12px}
+.result-table th{background:var(--teal);color:#fff;padding:6px 8px;text-align:left;position:sticky;top:0}
+.result-table td{border-bottom:1px solid var(--bdr);padding:5px 8px;font-family:var(--mono)}
+.result-table tr:nth-child(even) td{background:#f7f9f8}
+.result-meta{font-size:11px;color:var(--txt3);padding:6px 8px}
+
+.question-block{margin-bottom:1.75rem}
+.question-text{font-size:14px;font-weight:600;color:var(--txt);margin-bottom:.5rem;line-height:1.5}
+.question-text .qnum{color:var(--burgundy);margin-right:4px}
+textarea.reflect{width:100%;border:1.5px solid var(--bdr);border-radius:8px;padding:10px 12px;font-size:13.5px;font-family:var(--sans);color:var(--txt);background:var(--bg);resize:vertical;transition:border .15s;line-height:1.6;min-height:72px;box-sizing:border-box}
+textarea.reflect:focus{outline:none;border-color:var(--burgundy);background:#fff}
+textarea.reflect.answered{border-color:var(--gold-bd);background:#fffdf6}
+
+.checklist{list-style:none;margin-bottom:1rem}
+.checklist li{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--txt2);padding:5px 0}
+.checklist li input{margin-top:3px;accent-color:var(--burgundy)}
+
+.nav-btns{display:flex;justify-content:space-between;align-items:center;margin-top:1.75rem;padding-top:1.25rem;border-top:1.5px solid var(--bdr)}
+.nav-btns-right{display:flex;gap:8px}
+
+.completion-card{background:var(--card);border:2px solid var(--gold-bd);border-radius:var(--radius);padding:2rem;text-align:center;box-shadow:0 4px 16px rgba(110,20,35,.12);display:none}
+.completion-card.visible{display:block}
+.completion-card .check{font-size:52px;margin-bottom:.75rem}
+.completion-card h2{font-size:24px;font-weight:700;color:var(--burgundy);margin-bottom:.5rem}
+.completion-card p{font-size:15px;color:var(--txt2);margin-bottom:1.5rem}
+.completion-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+.toast{position:fixed;bottom:1.25rem;right:1.25rem;background:var(--burgundy);color:#fff;font-size:13px;padding:9px 16px;border-radius:8px;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;z-index:100}
+.toast.show{opacity:1;transform:translateY(0)}
+
+.engine-banner{display:flex;align-items:center;gap:10px;background:var(--card);border:1.5px dashed var(--bdr2);border-radius:8px;padding:.6rem .9rem;margin-bottom:1.25rem;font-size:12px;color:var(--txt3)}
+.engine-dot{width:9px;height:9px;border-radius:50%;background:var(--txt3);flex-shrink:0}
+.engine-dot.ready{background:var(--teal)}
+.engine-dot.loading{background:var(--gold);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.bug-line{font-family:var(--mono);background:#2b211c;color:#f3d2d2;padding:8px 10px;border-radius:6px;font-size:12.5px;margin-bottom:6px;overflow-x:auto}
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    SQL Fundamentals
+    <span class="mod-badge">DBMS · 960231</span>
+  </div>
+  <div class="sidebar-title">Lab Sections</div>
+  <div id="navItems"></div>
+  <div class="timer-chip"><span>⏱ Suggested time</span><span>3 hrs</span></div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-label"><span>Overall progress</span><span id="progPct">0%</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+  </div>
+</nav>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>DBMS Lab — SQL Fundamentals for Backend Developers</h1>
+      <p>960231 Database Management System · Developer Track</p>
+    </div>
+    <div class="topbar-right">
+      <button class="btn-ghost" onclick="saveDraft()">💾 Save draft</button>
+      <button class="btn-ghost" onclick="window.print()">🖨 Print / PDF</button>
+    </div>
+  </div>
+
+  <div class="student-banner">
+    <h3>Student information</h3>
+    <div class="student-grid">
+      <div class="field-group"><label for="f-name">Full name</label><input type="text" id="f-name" placeholder="Your name" oninput="updateProgress()"></div>
+      <div class="field-group"><label for="f-id">Student ID</label><input type="text" id="f-id" placeholder="e.g. s1234567" oninput="updateProgress()"></div>
+      <div class="field-group"><label for="f-class">Class / section</label><input type="text" id="f-class" placeholder="e.g. COMP201-A" oninput="updateProgress()"></div>
+      <div class="field-group"><label for="f-date">Date</label><input type="date" id="f-date" oninput="updateProgress()"></div>
+    </div>
+  </div>
+
+  <div class="engine-banner">
+    <span class="engine-dot" id="engineDot"></span>
+    <span id="engineMsg">Starting the in-browser SQL engine (PostgreSQL via WebAssembly — PGlite)…</span>
+  </div>
+
+  <div id="exerciseContainer"></div>
+
+  <div class="completion-card" id="completionCard">
+    <div class="check">✅</div>
+    <h2>Lab complete!</h2>
+    <p>Great work — you can now read, write, and debug real SQL. Save as PDF and submit to the course portal.</p>
+    <div class="completion-actions">
+      <button class="btn-primary" onclick="window.print()">🖨 Save as PDF</button>
+      <button class="btn-ghost" onclick="goTo(0)">↺ Review from start</button>
+    </div>
+  </div>
+</main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+// ═══════════════════════════════════════════════
+// SQL ENGINE (PGlite — real Postgres compiled to WASM)
+// ═══════════════════════════════════════════════
+import { PGlite } from 'https://cdn.jsdelivr.net/npm/@electric-sql/pglite/dist/index.js';
+
+var DB = null;
+var ENGINE_READY = false;
+
+var SEED_SQL = `
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  fname TEXT NOT NULL,
+  lname TEXT NOT NULL,
+  email TEXT NOT NULL,
+  status TEXT NOT NULL,
+  city TEXT,
+  created_at TEXT
+);
+CREATE TABLE products (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  category TEXT NOT NULL,
+  price NUMERIC NOT NULL,
+  stock INTEGER NOT NULL
+);
+CREATE TABLE orders (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  product_id INTEGER NOT NULL REFERENCES products(id),
+  quantity INTEGER NOT NULL,
+  order_date TEXT NOT NULL,
+  status TEXT NOT NULL
+);
+
+INSERT INTO users (id,fname,lname,email,status,city,created_at) VALUES
+(1,'Now','Suphanat','now@mail.com','active','Bangkok','2024-01-15'),
+(2,'Ploy','Kanjanaporn','ploy@mail.com','active','Chiang Mai','2024-02-03'),
+(3,'Field','Anuwat','field@mail.com','inactive','Bangkok','2024-02-20'),
+(4,'Yoyo','Ratchanok','yoyo@mail.com','active','Khon Kaen','2024-03-11'),
+(5,'Toey','Kamonwan','toey@mail.com','banned','Bangkok','2024-03-30'),
+(6,'Boss','Krittin','boss@mail.com','active','Phuket','2024-04-02'),
+(7,'Milk','Waraporn','milk@mail.com','active','Chiang Mai','2024-04-19'),
+(8,'Kim','Napassorn','kim@mail.com','inactive','Bangkok','2024-05-05');
+
+INSERT INTO products (id,name,category,price,stock) VALUES
+(1,'Mechanical Keyboard','Electronics',1590.00,25),
+(2,'Wireless Mouse','Electronics',590.00,60),
+(3,'Standing Desk','Furniture',6900.00,5),
+(4,'Office Chair','Furniture',3200.00,12),
+(5,'USB-C Hub','Electronics',790.00,0),
+(6,'Desk Lamp','Furniture',450.00,30),
+(7,'Monitor 27in','Electronics',5200.00,8);
+
+INSERT INTO orders (id,user_id,product_id,quantity,order_date,status) VALUES
+(1,1,1,1,'2024-05-01','completed'),
+(2,1,2,2,'2024-05-01','completed'),
+(3,2,3,1,'2024-05-03','completed'),
+(4,3,4,1,'2024-05-04','cancelled'),
+(5,4,1,1,'2024-05-05','completed'),
+(6,4,7,1,'2024-05-05','completed'),
+(7,6,2,3,'2024-05-07','completed'),
+(8,1,7,1,'2024-05-10','pending'),
+(9,7,6,2,'2024-05-11','completed'),
+(10,2,1,1,'2024-05-12','completed'),
+(11,4,4,1,'2024-05-13','pending'),
+(12,6,5,1,'2024-05-14','cancelled');
+
+SELECT setval('users_id_seq', (SELECT MAX(id) FROM users));
+SELECT setval('products_id_seq', (SELECT MAX(id) FROM products));
+SELECT setval('orders_id_seq', (SELECT MAX(id) FROM orders));
+`;
+
+var IDB_NAME = 'sql-lab-db';
+
+async function tablesExist(){
+  try{
+    var res = await DB.query("SELECT to_regclass('public.users') AS t;");
+    return !!(res.rows[0] && res.rows[0].t);
+  }catch(e){ return false; }
+}
+
+async function initEngine(){
+  document.getElementById('engineDot').classList.add('loading');
+  try{
+    DB = new PGlite('idb://' + IDB_NAME);
+    await DB.waitReady;
+    if(!(await tablesExist())){
+      await DB.exec(SEED_SQL);
+    }
+    ENGINE_READY = true;
+    document.getElementById('engineDot').classList.add('ready');
+    document.getElementById('engineDot').classList.remove('loading');
+    document.getElementById('engineMsg').textContent = 'SQL engine ready — your data is saved in this browser and will still be here next time you open this page.';
+    document.querySelectorAll('.run-btn').forEach(function(b){ b.disabled = false; });
+  }catch(err){
+    document.getElementById('engineMsg').textContent = 'Engine failed to load (' + err.message + '). Check your connection and reload.';
+  }
+}
+
+async function resetEngine(){
+  if(!ENGINE_READY) return;
+  if(!window.confirm('This will permanently erase everything you inserted/updated/deleted and restore the original seed data. Continue?')) return;
+  await DB.exec('DROP TABLE IF EXISTS orders; DROP TABLE IF EXISTS products; DROP TABLE IF EXISTS users;');
+  await DB.exec(SEED_SQL);
+  showToast('Database reset to original seed data ✓');
+}
+
+async function runQuery(id){
+  var editor = document.getElementById('editor-'+id);
+  var statusEl = document.getElementById('status-'+id);
+  var resultWrap = document.getElementById('result-'+id);
+  if(!ENGINE_READY){ statusEl.textContent='Engine still loading…'; statusEl.className='query-status pending'; return; }
+  var sql = editor.value.trim();
+  if(!sql){ statusEl.textContent='Write a query first'; statusEl.className='query-status pending'; return; }
+  try{
+    var res = await DB.query(sql);
+    var cols = (res.fields || []).map(function(f){ return f.name; });
+    var rows = res.rows || [];
+    if(cols.length === 0){
+      statusEl.textContent = '✓ Statement executed' + (typeof res.affectedRows === 'number' ? '. Changed rows: ' + res.affectedRows : '');
+      statusEl.className = 'query-status ok';
+      resultWrap.classList.remove('show');
+      resultWrap.innerHTML = '';
+    } else {
+      var html = '<table class="result-table"><thead><tr>' + cols.map(function(c){return '<th>'+c+'</th>';}).join('') + '</tr></thead><tbody>';
+      rows.forEach(function(r){
+        html += '<tr>' + cols.map(function(c){ var v=r[c]; return '<td>'+(v===null||v===undefined?'<i>NULL</i>':v)+'</td>'; }).join('') + '</tr>';
+      });
+      html += '</tbody></table><div class="result-meta">' + rows.length + ' row(s) returned</div>';
+      resultWrap.innerHTML = html;
+      resultWrap.classList.add('show');
+      statusEl.textContent = '✓ Success';
+      statusEl.className = 'query-status ok';
+    }
+    markQueryAnswered(id);
+  }catch(e){
+    statusEl.textContent = '✗ ' + e.message;
+    statusEl.className = 'query-status err';
+    resultWrap.classList.remove('show');
+
+  }
+  updateProgress();
+}
+
+var QUERY_ANSWERED = {};
+function markQueryAnswered(id){ QUERY_ANSWERED[id] = true; }
+
+// ═══════════════════════════════════════════════
+// EXERCISE CONTENT
+// ═══════════════════════════════════════════════
+var USERS_DATA = [
+  [1,'Now','Suphanat','now@mail.com','active','Bangkok','2024-01-15'],
+  [2,'Ploy','Kanjanaporn','ploy@mail.com','active','Chiang Mai','2024-02-03'],
+  [3,'Field','Anuwat','field@mail.com','inactive','Bangkok','2024-02-20'],
+  [4,'Yoyo','Ratchanok','yoyo@mail.com','active','Khon Kaen','2024-03-11'],
+  [5,'Toey','Kamonwan','toey@mail.com','banned','Bangkok','2024-03-30'],
+  [6,'Boss','Krittin','boss@mail.com','active','Phuket','2024-04-02'],
+  [7,'Milk','Waraporn','milk@mail.com','active','Chiang Mai','2024-04-19'],
+  [8,'Kim','Napassorn','kim@mail.com','inactive','Bangkok','2024-05-05']
+];
+var PRODUCTS_DATA = [
+  [1,'Mechanical Keyboard','Electronics',1590.00,25],
+  [2,'Wireless Mouse','Electronics',590.00,60],
+  [3,'Standing Desk','Furniture',6900.00,5],
+  [4,'Office Chair','Furniture',3200.00,12],
+  [5,'USB-C Hub','Electronics',790.00,0],
+  [6,'Desk Lamp','Furniture',450.00,30],
+  [7,'Monitor 27in','Electronics',5200.00,8]
+];
+var ORDERS_DATA = [
+  [1,1,1,1,'2024-05-01','completed'],
+  [2,1,2,2,'2024-05-01','completed'],
+  [3,2,3,1,'2024-05-03','completed'],
+  [4,3,4,1,'2024-05-04','cancelled'],
+  [5,4,1,1,'2024-05-05','completed'],
+  [6,4,7,1,'2024-05-05','completed'],
+  [7,6,2,3,'2024-05-07','completed'],
+  [8,1,7,1,'2024-05-10','pending'],
+  [9,7,6,2,'2024-05-11','completed'],
+  [10,2,1,1,'2024-05-12','completed'],
+  [11,4,4,1,'2024-05-13','pending'],
+  [12,6,5,1,'2024-05-14','cancelled']
+];
+
+function dataTableHTML(title, colNames, rows, caption){
+  var thead = '<tr>' + colNames.map(function(c){return '<th>'+c+'</th>';}).join('') + '</tr>';
+  var tbody = rows.map(function(r){ return '<tr>' + r.map(function(v){return '<td>'+v+'</td>';}).join('') + '</tr>'; }).join('');
+  return '<div class="table-wrap"><table class="lab-table"><thead>'+thead+'</thead><tbody>'+tbody+'</tbody></table>' +
+    '<div class="schema-caption">'+caption+'</div></div>';
+}
+
+var SCHEMA_HTML =
+  '<div class="section-heading">Table: users</div>' +
+  dataTableHTML('users', ['id','fname','lname','email','status','city','created_at'], USERS_DATA, '8 rows &middot; status is one of active / inactive / banned') +
+  '<div class="section-heading">Table: products</div>' +
+  dataTableHTML('products', ['id','name','category','price','stock'], PRODUCTS_DATA, '7 rows &middot; stock = 0 means out of stock') +
+  '<div class="section-heading">Table: orders</div>' +
+  dataTableHTML('orders', ['id','user_id','product_id','quantity','order_date','status'], ORDERS_DATA, '12 rows &middot; user_id references users.id, product_id references products.id &middot; status is one of completed / pending / cancelled') +
+  '<div class="schema-caption" style="border-top:none;padding-left:0;font-size:12px">This is the exact seed data every exercise below runs against. Reset anytime with the button in the toolbar.</div>';
+
+function queryBlock(id, placeholder){
+  return '<div class="query-block">' +
+    '<textarea class="query-editor" id="editor-'+id+'" placeholder="'+placeholder+'" spellcheck="false"></textarea>' +
+    '<div class="query-toolbar">' +
+      '<span class="query-toolbar-left">PostgreSQL dialect · runs live in your browser</span>' +
+      '<div style="display:flex;align-items:center;gap:10px">' +
+        '<span class="query-status pending" id="status-'+id+'">Not run yet</span>' +
+        '<button class="btn-run run-btn" disabled onclick="runQuery(\''+id+'\')">▶ Run query</button>' +
+      '</div>' +
+    '</div></div>' +
+    '<div class="result-wrap" id="result-'+id+'"></div>';
+}
+
+var EXERCISES = [
+  {
+    id:'intro', tag:'Start Here', tagColor:'#3F5B45', tagBg:'#E7EFE8',
+    title:'Why SQL, Right Before Backend?',
+    desc:'Every ORM you will ever use — Prisma, Sequelize, SQLAlchemy, TypeORM — is a translator that turns your code into SQL like this. When it generates a slow or wrong query, you are the only one who can catch it.',
+    body: function(){
+      return '<div class="scenario-box"><strong>Scenario:</strong> It is your first day on a backend team. A ticket says the "user list" endpoint takes 8 seconds to load. Your teammate says "just look at the query." Today, by the end of this lab, you will be able to.</div>' +
+      '<div class="fun-fact"><div class="ff-icon">🧩</div><div class="ff-text"><strong>Why this matters:</strong> An API call like <code>GET /users?status=active&sort=name&limit=20</code> is, underneath, a SQL query with WHERE, ORDER BY and LIMIT. Learn to read/write these by hand once, and generated queries will never be a black box again.</div></div>' +
+      SCHEMA_HTML +
+      '<div class="info-box gold"><h4>📌 How this lab works</h4><ul><li>Every exercise has a real, runnable SQL editor — the database is a genuine PostgreSQL engine running in your browser via PGlite (no server, nothing to install).</li><li>Write your query, click <strong>Run query</strong>, and see actual results.</li><li>Your data is saved in this browser (IndexedDB) — close the tab, come back tomorrow, and everything you inserted/updated/deleted is still there.</li><li>Some questions ask you to also explain your reasoning in a text box — those count toward your progress too.</li><li>Made a mess? Use <strong>Reset database</strong> at any time to permanently wipe your data and restore the original seed data.</li></ul></div>';
+    }
+  },
+  {
+    id:'ex1', tag:'Exercise 1', tagColor:'#2A4A6B', tagBg:'#EAF0F6',
+    title:'SELECT, WHERE, ORDER BY, LIMIT',
+    desc:'The four building blocks behind almost every "list" or "search" API endpoint you will ever write.',
+    body: function(){
+      var out = '<div class="fun-fact"><div class="ff-icon">🔌</div><div class="ff-text"><strong>Backend framing:</strong> think of each question below as a real API endpoint someone asked your team to build. Your query <em>is</em> the endpoint\'s logic.</div></div>';
+
+      out += '<div class="step-label">Q1</div><div class="question-block"><div class="question-text"><span class="qnum">1.</span> Endpoint: <code>GET /users</code> — return every user, all columns.</div>' +
+        queryBlock('q1a','SELECT * FROM users;') + '</div>';
+
+      out += '<div class="step-label">Q2</div><div class="question-block"><div class="question-text"><span class="qnum">2.</span> Endpoint: <code>GET /users?status=active</code> — return only active users, and only their <code>fname</code>, <code>lname</code> and <code>email</code> (never leak internal columns you don\'t need).</div>' +
+        queryBlock('q1b','SELECT fname, lname, email FROM users WHERE ...;') + '</div>';
+
+      out += '<div class="step-label">Q3</div><div class="question-block"><div class="question-text"><span class="qnum">3.</span> Endpoint: <code>GET /users?city=Bangkok&status=active</code> — combine two conditions with <code>AND</code>.</div>' +
+        queryBlock('q1c','') + '</div>';
+
+      out += '<div class="step-label">Q4</div><div class="question-block"><div class="question-text"><span class="qnum">4.</span> Endpoint: <code>GET /products?sort=price_desc&limit=3</code> — the 3 most expensive products.</div>' +
+        queryBlock('q1d','') + '</div>';
+
+      out += '<div class="step-label">Q5</div><div class="question-block"><div class="question-text"><span class="qnum">5.</span> Endpoint: <code>GET /products/out-of-stock</code> — products where <code>stock = 0</code>.</div>' +
+        queryBlock('q1e','') + '</div>';
+
+      out += '<div class="step-label">Reflection</div><div class="question-block"><div class="question-text"><span class="qnum">R1.</span> If a frontend developer asks you to add pagination (page 2 of 20 results) to an endpoint, which two SQL keywords would you reach for, and how would the numbers change between page 1 and page 2?</div>' +
+        '<textarea class="reflect" id="r-q1" rows="3" oninput="onReflectInput(this)"></textarea></div>';
+
+      return out;
+    }
+  },
+  {
+    id:'ex2', tag:'Exercise 2', tagColor:'#B8860B', tagBg:'#FBF1D8',
+    title:'Aggregates — COUNT, SUM, AVG, GROUP BY, HAVING',
+    desc:'These are the queries behind every dashboard, analytics page, and "top sellers" widget you will build.',
+    body: function(){
+      var out = '<div class="fun-fact"><div class="ff-icon">📊</div><div class="ff-text"><strong>Backend framing:</strong> product managers love asking "can we get a number for X on the dashboard?" — this is almost always a GROUP BY query.</div></div>';
+
+      out += '<div class="step-label">Q1</div><div class="question-block"><div class="question-text"><span class="qnum">1.</span> How many users are in the system in total?</div>' +
+        queryBlock('q2a','') + '</div>';
+
+      out += '<div class="step-label">Q2</div><div class="question-block"><div class="question-text"><span class="qnum">2.</span> Dashboard metric: total revenue from <code>completed</code> orders (quantity × product price, summed). You will need a JOIN — go ahead and try it even though we cover JOIN properly next lecture.</div>' +
+        queryBlock('q2b','') + '</div>';
+
+      out += '<div class="step-label">Q3</div><div class="question-block"><div class="question-text"><span class="qnum">3.</span> Average product price, grouped by category.</div>' +
+        queryBlock('q2c','') + '</div>';
+
+      out += '<div class="step-label">Q4</div><div class="question-block"><div class="question-text"><span class="qnum">4.</span> How many orders does each <code>status</code> have? (completed / pending / cancelled)</div>' +
+        queryBlock('q2d','') + '</div>';
+
+      out += '<div class="step-label">Q5 — the tricky one</div><div class="question-block"><div class="question-text"><span class="qnum">5.</span> Product categories where the number of products is <strong>more than 3</strong>. (Hint: WHERE cannot filter on an aggregate — that\'s what HAVING is for.)</div>' +
+        queryBlock('q2e','') + '</div>';
+
+      out += '<div class="step-label">Reflection</div><div class="question-block"><div class="question-text"><span class="qnum">R2.</span> In your own words: why does <code>WHERE COUNT(*) > 3</code> fail, but <code>HAVING COUNT(*) > 3</code> works? What is different about when each one runs?</div>' +
+        '<textarea class="reflect" id="r-q2" rows="3" oninput="onReflectInput(this)"></textarea></div>';
+
+      return out;
+    }
+  },
+  {
+    id:'ex3', tag:'Exercise 3', tagColor:'#791F1F', tagBg:'#FCEBEB',
+    title:'INSERT, UPDATE, DELETE — and the danger zone',
+    desc:'The exact statements that run when a user signs up, edits their profile, or an admin removes a product. Also: how these go wrong in production.',
+    body: function(){
+      var out = '<div class="fun-fact"><div class="ff-icon">⚠️</div><div class="ff-text"><strong>Backend framing:</strong> a bug in a SELECT shows you wrong data. A bug in an UPDATE or DELETE can <em>destroy</em> data. Every write query deserves extra care — always check with a SELECT first.</div></div>';
+
+      out += '<div class="step-label">Q1</div><div class="question-block"><div class="question-text"><span class="qnum">1.</span> New signup: insert a user with <code>fname</code> = <code>Nadia</code>, <code>lname</code> = <code>Kanya</code>, email <code>nadia@mail.com</code>, status <code>active</code>, city <code>Bangkok</code>, created_at <code>2024-06-01</code>.</div>' +
+        queryBlock('q3a','INSERT INTO users (fname, lname, email, status, city, created_at) VALUES (...);') + '</div>';
+
+      out += '<div class="step-label">Q2</div><div class="question-block"><div class="question-text"><span class="qnum">2.</span> Restock: product id 5 (USB-C Hub) just got 20 more units delivered. Update its stock (don\'t just set it to 20 — add to the existing value).</div>' +
+        queryBlock('q3b','') + '</div>';
+
+      out += '<div class="step-label">Q3</div><div class="question-block"><div class="question-text"><span class="qnum">3.</span> Moderation: ban user id 8 (set their status to <code>banned</code>).</div>' +
+        queryBlock('q3c','') + '</div>';
+
+      out += '<div class="step-label">Q4</div><div class="question-block"><div class="question-text"><span class="qnum">4.</span> Cleanup: delete all orders with status <code>cancelled</code>. Run a SELECT with the same WHERE first to preview what you\'re about to delete — that habit will save you one day.</div>' +
+        queryBlock('q3d','SELECT * FROM orders WHERE status = \'cancelled\'; -- preview first') + '</div>';
+
+      out += '<div class="section-heading">The danger zone: SQL Injection</div>';
+      out += '<div class="info-box red"><h4>🚨 This is how real breaches happen</h4><p>Imagine a login endpoint built like this in a backend, concatenating raw user input directly into the query string:</p></div>';
+      out += '<div class="bug-line">const query = "SELECT * FROM users WHERE email = \'" + userInput + "\' AND status = \'active\'";</div>';
+      out += '<div class="info-box gray"><p>If <code>userInput</code> is <code>anything\' OR \'1\'=\'1</code>, the final query becomes:</p></div>';
+      out += '<div class="bug-line">SELECT * FROM users WHERE email = \'anything\' OR \'1\'=\'1\' AND status = \'active\'</div>';
+      out += '<div class="question-block"><div class="question-text"><span class="qnum">5.</span> Try it yourself — run that exact injected query below against our real <code>users</code> table and see what comes back.</div>' +
+        queryBlock('q3e',"SELECT * FROM users WHERE email = 'anything' OR '1'='1' AND status = 'active';") + '</div>';
+
+      out += '<div class="question-block"><div class="question-text"><span class="qnum">R3a.</span> What did the injected query return, and why is that dangerous for a login check?</div>' +
+        '<textarea class="reflect" id="r-q3a" rows="3" oninput="onReflectInput(this)"></textarea></div>';
+      out += '<div class="question-block"><div class="question-text"><span class="qnum">R3b.</span> The fix is "parameterized queries" (e.g. <code>db.query("SELECT * FROM users WHERE email = ?", [userInput])</code>), which every ORM does by default. In your own words, why does passing the value separately instead of concatenating it into the string prevent this attack?</div>' +
+        '<textarea class="reflect" id="r-q3b" rows="3" oninput="onReflectInput(this)"></textarea></div>';
+
+      return out;
+    }
+  },
+  {
+    id:'capstone', tag:'Capstone', tagColor:'#3C3489', tagBg:'#EEEDFE',
+    title:'Debugging Session — Spot the Bug',
+    desc:'A junior teammate wrote these four queries. Each has a mistake. Find it, fix it, and prove your fix works by running it.',
+    body: function(){
+      var out = '<div class="scenario-box"><strong>Scenario:</strong> Code review time. Read each broken query, explain what\'s wrong in the box, then write and run the corrected version in the editor below it.</div>';
+
+      var bugs = [
+        {q:'"Get all pending orders" — but this returns everything:', bad:'SELECT * FROM orders WHERE status = "completed" OR status = "pending" OR status = "cancelled";', id:'b1'},
+        {q:'"Top 5 cheapest products" — but this returns the most expensive:', bad:'SELECT * FROM products ORDER BY price LIMIT 5; -- intended DESC', id:'b2'},
+        {q:'"Count of orders per user" — but this crashes / errors:', bad:'SELECT user_id, COUNT(*) FROM orders;', id:'b3'},
+        {q:'"Deactivate one specific user, id 3" — but this is catastrophic:', bad:'UPDATE users SET status = \'inactive\';', id:'b4'}
+      ];
+
+      bugs.forEach(function(b, i){
+        out += '<div class="question-block"><div class="question-text"><span class="qnum">'+(i+1)+'.</span> ' + b.q + '</div>' +
+          '<div class="bug-line">' + b.bad.replace(/</g,'&lt;') + '</div>' +
+          '<textarea class="reflect" id="r-bug'+(i+1)+'" rows="2" placeholder="What is wrong with this query?" oninput="onReflectInput(this)"></textarea>' +
+          '<div style="margin-top:8px">' + queryBlock('bugfix'+(i+1), 'Write the corrected query here') + '</div>' +
+          '</div>';
+      });
+
+      out += '<div class="info-box green"><h4>🎯 Where to go next</h4><p>You now have the four verbs that power almost every backend feature: reading lists (SELECT/WHERE/ORDER BY/LIMIT), building dashboards (aggregates/GROUP BY/HAVING), and writing data safely (INSERT/UPDATE/DELETE, parameterized). Next up: JOIN across tables properly, indexes, and query performance — the difference between an endpoint that takes 8ms and one that takes 8 seconds.</p></div>';
+
+      return out;
+    }
+  }
+];
+
+// ═══════════════════════════════════════════════
+// RENDER / NAV / PROGRESS (framework)
+// ═══════════════════════════════════════════════
+var currentIndex = 0;
+
+function renderNav(){
+  var wrap = document.getElementById('navItems');
+  wrap.innerHTML = EXERCISES.map(function(ex, i){
+    return '<div class="nav-item" id="nav-'+i+'" onclick="goTo('+i+')">' +
+      '<span class="nav-dot" id="navdot-'+i+'">'+(i+1)+'</span>' +
+      '<span>'+ex.title+'</span></div>';
+  }).join('');
+}
+
+function renderExercises(){
+  var wrap = document.getElementById('exerciseContainer');
+  wrap.innerHTML = EXERCISES.map(function(ex, i){
+    return '<section class="exercise-card" id="card-'+i+'">' +
+      '<div class="exercise-header">' +
+        '<span class="exercise-tag" style="background:'+ex.tagBg+';color:'+ex.tagColor+'">'+ex.tag+' &middot; '+(i+1)+' of '+EXERCISES.length+'</span>' +
+        '<div class="exercise-title">'+ex.title+'</div>' +
+        '<div class="exercise-desc">'+ex.desc+'</div>' +
+        '<div class="exercise-progress"><div class="ex-prog-bar"><div class="ex-prog-fill" id="exprog-'+i+'" style="width:0%"></div></div><span class="ex-prog-label" id="exprog-lbl-'+i+'">0% answered</span></div>' +
+      '</div>' +
+      '<div class="exercise-body">' + ex.body() +
+        '<div class="nav-btns">' +
+          '<button class="btn-ghost" onclick="prevCard()" '+(i===0?'disabled':'')+'>← Back</button>' +
+          '<div class="nav-btns-right">' +
+            '<button class="btn-ghost" onclick="resetEngine()">↺ Reset database</button>' +
+            (i===EXERCISES.length-1
+              ? '<button class="btn-success" onclick="finishLab()">✓ Finish lab</button>'
+              : '<button class="btn-primary" onclick="nextCard()">Next →</button>') +
+          '</div>' +
+        '</div>' +
+      '</div></section>';
+  }).join('');
+}
+
+function goTo(i){
+  currentIndex = i;
+  document.querySelectorAll('.exercise-card').forEach(function(c){ c.classList.remove('visible'); });
+  document.getElementById('card-'+i).classList.add('visible');
+  document.getElementById('completionCard').classList.remove('visible');
+  document.querySelectorAll('.nav-item').forEach(function(n,ix){ n.classList.toggle('active', ix===i); });
+  document.querySelectorAll('.nav-dot').forEach(function(d,ix){ d.classList.toggle('active', ix===i); });
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function nextCard(){ if(currentIndex < EXERCISES.length-1) goTo(currentIndex+1); }
+function prevCard(){ if(currentIndex > 0) goTo(currentIndex-1); }
+function finishLab(){
+  document.querySelectorAll('.exercise-card').forEach(function(c){ c.classList.remove('visible'); });
+  document.getElementById('completionCard').classList.add('visible');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function onReflectInput(el){
+  el.classList.toggle('answered', (el.value||'').trim().length>0);
+  autoResize(el);
+  updateProgress();
+}
+function autoResize(el){ el.style.height='auto'; el.style.height=(el.scrollHeight)+'px'; }
+
+function updateProgress(){
+  var totalAll=0, doneAll=0;
+  EXERCISES.forEach(function(ex, i){
+    var card = document.getElementById('card-'+i);
+    var reflects = card.querySelectorAll('textarea.reflect');
+    var editors = card.querySelectorAll('.query-editor');
+    var t=0, d=0;
+    reflects.forEach(function(r){ t++; if((r.value||'').trim()) d++; });
+    editors.forEach(function(ed){ t++; var qid = ed.id.replace('editor-',''); if(QUERY_ANSWERED[qid]) d++; });
+    var pct = t>0 ? Math.round(d/t*100) : 0;
+    var fill = document.getElementById('exprog-'+i);
+    var lbl = document.getElementById('exprog-lbl-'+i);
+    if(fill) fill.style.width = pct+'%';
+    if(lbl) lbl.textContent = pct+'% answered';
+    var dot = document.getElementById('navdot-'+i);
+    if(dot){
+      if(pct===100){ dot.classList.add('done'); dot.textContent='✓'; }
+      else { dot.classList.remove('done'); dot.textContent=(i+1); }
+    }
+    var navItem = document.getElementById('nav-'+i);
+    if(navItem) navItem.classList.toggle('done', pct===100);
+    totalAll += t; doneAll += d;
+  });
+  var overall = totalAll>0 ? Math.round(doneAll/totalAll*100) : 0;
+  document.getElementById('progFill').style.width = overall+'%';
+  document.getElementById('progPct').textContent = overall+'%';
+}
+
+function saveDraft(){
+  try{
+    var data = { meta:{}, reflects:{}, queries:{} };
+    ['f-name','f-id','f-class','f-date'].forEach(function(id){ data.meta[id]=document.getElementById(id).value; });
+    document.querySelectorAll('textarea.reflect').forEach(function(t){ data.reflects[t.id]=t.value; });
+    document.querySelectorAll('.query-editor').forEach(function(t){ data.queries[t.id]=t.value; });
+    localStorage.setItem('dbms_sql_fundamentals_draft', JSON.stringify(data));
+    showToast('Draft saved ✓');
+  }catch(e){ showToast('Could not save'); }
+}
+function loadDraft(){
+  try{
+    var raw = localStorage.getItem('dbms_sql_fundamentals_draft');
+    if(!raw) return;
+    var data = JSON.parse(raw);
+    if(data.meta) Object.keys(data.meta).forEach(function(id){ var el=document.getElementById(id); if(el) el.value=data.meta[id]; });
+    if(data.reflects) Object.keys(data.reflects).forEach(function(id){ var el=document.getElementById(id); if(el){ el.value=data.reflects[id]; el.classList.toggle('answered', (el.value||'').trim().length>0);} });
+    if(data.queries) Object.keys(data.queries).forEach(function(id){ var el=document.getElementById(id); if(el) el.value=data.queries[id]; });
+  }catch(e){}
+}
+function showToast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2200);
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  renderNav();
+  renderExercises();
+  goTo(0);
+  loadDraft();
+  updateProgress();
+  initEngine();
+});
+document.addEventListener('keydown', function(e){
+  if((e.ctrlKey||e.metaKey) && e.key==='s'){ e.preventDefault(); saveDraft(); }
+});
+
+window.runQuery = runQuery;
+window.resetEngine = resetEngine;
+window.goTo = goTo;
+window.nextCard = nextCard;
+window.prevCard = prevCard;
+window.finishLab = finishLab;
+window.saveDraft = saveDraft;
+window.onReflectInput = onReflectInput;
+
+</script>
+</body>
+</html>

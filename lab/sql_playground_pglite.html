@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>QueryBench // PostgreSQL Playground (PGlite)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+:root{
+  --bg:#0d1117;
+  --panel:#12181f;
+  --panel2:#161d26;
+  --line:#22303c;
+  --text:#d7e2ea;
+  --dim:#7b8fa1;
+  --accent:#8ecae6;
+  --accent2:#f0b429;
+  --danger:#ff6b6b;
+  --ok:#6fe07b;
+  --mono: 'JetBrains Mono','Fira Code',ui-monospace,Consolas,monospace;
+  --sans: 'Inter',ui-sans-serif,system-ui,sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(142,202,230,0.07), transparent 40%),
+    radial-gradient(circle at 85% 100%, rgba(240,180,41,0.05), transparent 45%),
+    var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  min-height:100vh;
+}
+::selection{background:rgba(142,202,230,.3);}
+
+/* ===== HEADER ===== */
+header{
+  padding:22px 28px 18px;
+  border-bottom:1px solid var(--line);
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  flex-wrap:wrap;
+}
+.brand{display:flex; align-items:center; gap:12px;}
+.brand-mark{
+  width:38px;height:38px;border-radius:9px;
+  background:linear-gradient(135deg,var(--accent),#336791);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-weight:700;color:#031521;font-size:16px;
+  box-shadow:0 0 0 1px rgba(142,202,230,.4), 0 8px 20px -6px rgba(142,202,230,.5);
+}
+.brand h1{font-size:17px;margin:0;letter-spacing:.2px;font-weight:700;}
+.brand p{margin:1px 0 0;font-size:12px;color:var(--dim);font-family:var(--mono);}
+.hdr-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.btn{
+  border:1px solid var(--line); background:var(--panel2); color:var(--text);
+  padding:9px 14px; border-radius:8px; font-size:13px; cursor:pointer;
+  font-family:var(--sans); font-weight:600; display:inline-flex; align-items:center; gap:7px;
+  transition:.15s border-color, .15s transform, .15s background;
+}
+.btn:hover{border-color:var(--accent); transform:translateY(-1px);}
+.btn:active{transform:translateY(0);}
+.btn.primary{background:var(--accent); color:#031521; border-color:var(--accent);}
+.btn.primary:hover{background:#a9dcf1;}
+.btn.ghost{background:transparent;}
+input[type=file]{display:none;}
+
+/* ===== LAYOUT ===== */
+.wrap{display:grid; grid-template-columns:250px 1fr; min-height:calc(100vh - 82px);}
+@media (max-width:860px){.wrap{grid-template-columns:1fr;}}
+
+.sidebar{
+  border-right:1px solid var(--line);
+  padding:18px 14px;
+  background:linear-gradient(180deg, rgba(255,255,255,.012), transparent 200px);
+  overflow-y:auto;
+}
+.sidebar h2{
+  font-size:11px; text-transform:uppercase; letter-spacing:1.4px; color:var(--dim);
+  margin:4px 0 12px; font-family:var(--mono); font-weight:600;
+}
+.dbname{
+  font-family:var(--mono); font-size:12.5px; color:var(--accent2); margin-bottom:14px;
+  padding:8px 10px; background:var(--panel2); border-radius:7px; border:1px dashed var(--line);
+  word-break:break-all;
+}
+.tbl-item{
+  margin-bottom:8px; border:1px solid var(--line); border-radius:8px; overflow:hidden;
+  background:var(--panel);
+}
+.tbl-head{
+  padding:9px 11px; cursor:pointer; display:flex; align-items:center; justify-content:space-between;
+  font-family:var(--mono); font-size:12.5px; font-weight:600; color:var(--text);
+  user-select:none;
+}
+.tbl-head:hover{background:var(--panel2);}
+.tbl-head .count{font-size:10px; color:var(--dim); font-weight:400;}
+.tbl-cols{display:none; padding:0 11px 10px; border-top:1px solid var(--line);}
+.tbl-cols.open{display:block;}
+.col-row{
+  font-family:var(--mono); font-size:11.5px; color:var(--dim); padding:4px 0;
+  display:flex; justify-content:space-between; gap:6px;
+}
+.col-row b{color:var(--text); font-weight:500;}
+.col-row .pk{color:var(--accent2);}
+.empty-hint{font-size:12.5px; color:var(--dim); line-height:1.6; padding:6px 2px;}
+
+.main{display:flex; flex-direction:column; min-width:0;}
+.editor-bar{
+  padding:14px 20px 0; display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+}
+.tag{
+  font-family:var(--mono); font-size:11px; padding:4px 9px; border-radius:20px;
+  border:1px solid var(--line); color:var(--dim); cursor:pointer; background:var(--panel);
+}
+.tag:hover{border-color:var(--accent); color:var(--accent);}
+
+.editor-wrap{margin:12px 20px 0; position:relative;}
+textarea#sql{
+  width:100%; min-height:150px; resize:vertical;
+  background:var(--panel); border:1px solid var(--line); border-radius:10px;
+  color:var(--text); font-family:var(--mono); font-size:14px; line-height:1.6;
+  padding:16px 18px; outline:none;
+}
+textarea#sql:focus{border-color:var(--accent); box-shadow:0 0 0 3px rgba(142,202,230,.08);}
+.run-row{
+  display:flex; justify-content:space-between; align-items:center; margin-top:10px; gap:10px; flex-wrap:wrap;
+}
+.run-hint{font-size:11.5px; color:var(--dim); font-family:var(--mono);}
+.run-hint kbd{
+  background:var(--panel2); border:1px solid var(--line); border-radius:4px; padding:1px 6px; font-family:var(--mono);
+}
+
+.results{margin:18px 20px 28px; flex:1;}
+.status-bar{
+  display:flex; align-items:center; gap:10px; margin-bottom:10px; font-family:var(--mono); font-size:12.5px;
+}
+.status-dot{width:8px;height:8px;border-radius:50%; background:var(--dim);}
+.status-dot.ok{background:var(--ok); box-shadow:0 0 8px var(--ok);}
+.status-dot.err{background:var(--danger); box-shadow:0 0 8px var(--danger);}
+.status-dot.busy{background:var(--accent2); box-shadow:0 0 8px var(--accent2);}
+.status-text{color:var(--dim);}
+.status-text.ok{color:var(--ok);}
+.status-text.err{color:var(--danger);}
+
+.result-block{margin-bottom:22px;}
+.result-label{font-family:var(--mono); font-size:11px; color:var(--dim); margin-bottom:6px;}
+.table-scroll{
+  overflow:auto; border:1px solid var(--line); border-radius:10px; max-height:420px;
+  background:var(--panel);
+}
+table.result-table{border-collapse:collapse; width:100%; font-size:13px; font-family:var(--mono);}
+table.result-table thead th{
+  position:sticky; top:0; background:var(--panel2); color:var(--accent);
+  text-align:left; padding:9px 14px; border-bottom:1px solid var(--line); white-space:nowrap;
+}
+table.result-table tbody td{
+  padding:8px 14px; border-bottom:1px solid rgba(255,255,255,.04); color:var(--text); white-space:nowrap;
+}
+table.result-table tbody tr:hover{background:rgba(142,202,230,.05);}
+table.result-table tbody td.null{color:var(--dim); font-style:italic;}
+
+.err-box{
+  border:1px solid rgba(255,107,107,.4); background:rgba(255,107,107,.06); border-radius:10px;
+  padding:14px 16px; font-family:var(--mono); font-size:13px; color:#ffb3b3; white-space:pre-wrap;
+}
+.placeholder{
+  text-align:center; padding:60px 20px; color:var(--dim); font-size:13.5px; line-height:1.8;
+}
+.placeholder .big{font-size:34px; margin-bottom:10px;}
+
+footer{
+  text-align:center; padding:16px; font-size:11px; color:var(--dim); font-family:var(--mono);
+  border-top:1px solid var(--line);
+}
+.spin{
+  width:14px;height:14px;border:2px solid var(--line); border-top-color:var(--accent);
+  border-radius:50%; animation:spin .7s linear infinite; display:inline-block;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.note{
+  font-size:11.5px; color:var(--dim); line-height:1.6; margin-top:10px; padding:10px 12px;
+  border:1px dashed var(--line); border-radius:8px; background:var(--panel2);
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">Pg</div>
+    <div>
+      <h1>QueryBench</h1>
+      <p>เขียน SQL แล้วดูผลลัพธ์ทันที &mdash; PostgreSQL จริงในเบราว์เซอร์ (PGlite)</p>
+    </div>
+  </div>
+  <div class="hdr-actions">
+    <button class="btn ghost" id="loadSampleBtn">🧪 โหลดฐานข้อมูลตัวอย่าง</button>
+    <label class="btn" for="fileInput">📂 Import Database
+      <input type="file" id="fileInput" accept=".gz,.tar,.tgz">
+    </label>
+    <label class="btn" for="sqlFileInput">📜 Import .sql script
+      <input type="file" id="sqlFileInput" accept=".sql,.txt">
+    </label>
+    <button class="btn" id="exportBtn">💾 Export Database</button>
+    <button class="btn primary" id="runBtn">▶ Run (Ctrl+Enter)</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <aside class="sidebar">
+    <h2>Schema Explorer</h2>
+    <div class="dbname" id="dbNameLabel">กำลังเตรียม Postgres engine…</div>
+    <div id="tableList"><div class="empty-hint">กด "โหลดฐานข้อมูลตัวอย่าง" เพื่อเริ่มเล่น หรือ Import ไฟล์ dump (.tar.gz) ที่เคย Export จาก QueryBench มาก่อน หรือ Import ไฟล์ .sql script (CREATE TABLE / INSERT ฯลฯ) เพื่อรันสร้างฐานข้อมูลใหม่</div></div>
+  </aside>
+
+  <main class="main">
+    <div class="editor-bar">
+      <span class="tag" data-q="SELECT * FROM students;">SELECT * FROM students;</span>
+      <span class="tag" data-q="SELECT s.name, c.title FROM students s JOIN enrollments e ON s.id=e.student_id JOIN courses c ON c.id=e.course_id;">JOIN ตัวอย่าง</span>
+      <span class="tag" data-q="SELECT course_id, COUNT(*) AS total FROM enrollments GROUP BY course_id ORDER BY total DESC;">GROUP BY ตัวอย่าง</span>
+      <span class="tag" data-q="SELECT current_database(), version();">Postgres version()</span>
+    </div>
+
+    <div class="editor-wrap">
+      <textarea id="sql" spellcheck="false" placeholder="-- เขียน SQL ที่นี่ เช่น
+SELECT * FROM students;">SELECT * FROM students;</textarea>
+    </div>
+
+    <div class="run-row" style="padding:0 20px;">
+      <span class="run-hint">กด <kbd>Ctrl</kbd>+<kbd>Enter</kbd> เพื่อรันคำสั่ง</span>
+      <span class="run-hint" id="dialectHint">Engine: PGlite (real PostgreSQL, compiled to WASM)</span>
+    </div>
+
+    <div class="results">
+      <div class="status-bar" id="statusBar" style="display:none;">
+        <div class="status-dot" id="statusDot"></div>
+        <span class="status-text" id="statusText"></span>
+      </div>
+      <div id="output">
+        <div class="placeholder">
+          <div class="big">🐘</div>
+          พิมพ์คำสั่ง SQL แล้วกด Run<br>ผลลัพธ์จะแสดงที่นี่แบบตาราง
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<footer>QueryBench · Client-side PostgreSQL playground powered by PGlite · ข้อมูลทั้งหมดอยู่ในเบราว์เซอร์ของคุณ ไม่มีการส่งขึ้นเซิร์ฟเวอร์</footer>
+
+<script type="module">
+import { PGlite } from "https://cdn.jsdelivr.net/npm/@electric-sql/pglite@0.2.17/dist/index.js";
+
+let db = null;
+let currentDbName = "in-memory (ยังไม่ได้โหลดข้อมูล)";
+
+const $ = (id) => document.getElementById(id);
+const output = $('output');
+const statusBar = $('statusBar');
+const statusDot = $('statusDot');
+const statusText = $('statusText');
+const tableList = $('tableList');
+const dbNameLabel = $('dbNameLabel');
+
+function setStatus(kind, msg){
+  statusBar.style.display = 'flex';
+  statusDot.className = 'status-dot ' + kind;
+  statusText.className = 'status-text ' + kind;
+  statusText.textContent = msg;
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function initDb(){
+  setStatus('busy', 'กำลังเตรียม Postgres engine (WASM)…');
+  db = new PGlite();
+  await db.waitReady;
+  dbNameLabel.textContent = currentDbName;
+  setStatus('ok', 'พร้อมใช้งาน — กด "โหลดฐานข้อมูลตัวอย่าง" เพื่อเริ่มต้น');
+  refreshSchema();
+}
+
+function renderTable(columns, rows){
+  const wrap = document.createElement('div');
+  wrap.className = 'table-scroll';
+  const table = document.createElement('table');
+  table.className = 'result-table';
+
+  const thead = document.createElement('thead');
+  const trh = document.createElement('tr');
+  columns.forEach(c => {
+    const th = document.createElement('th');
+    th.textContent = c;
+    trh.appendChild(th);
+  });
+  thead.appendChild(trh);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  rows.forEach(row => {
+    const tr = document.createElement('tr');
+    columns.forEach(col => {
+      const td = document.createElement('td');
+      const val = row[col];
+      if(val === null || val === undefined){
+        td.textContent = 'NULL';
+        td.className = 'null';
+      } else if (typeof val === 'object'){
+        td.textContent = JSON.stringify(val);
+      } else {
+        td.textContent = val;
+      }
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+  return wrap;
+}
+
+async function runQuery(){
+  if(!db){
+    setStatus('err', 'ยังไม่มีฐานข้อมูล — กด "โหลดฐานข้อมูลตัวอย่าง" หรือ Import ก่อน');
+    return;
+  }
+  const sql = $('sql').value.trim();
+  if(!sql){ return; }
+
+  output.innerHTML = '';
+  setStatus('busy', 'กำลังรันคำสั่ง…');
+  const t0 = performance.now();
+  try {
+    const results = await db.exec(sql);
+    const dt = (performance.now() - t0).toFixed(1);
+
+    let totalRows = 0;
+    let anyRows = false;
+    results.forEach((res, i) => {
+      const rows = res.rows || [];
+      if(rows.length > 0){
+        anyRows = true;
+        totalRows += rows.length;
+        const columns = res.fields ? res.fields.map(f => f.name) : Object.keys(rows[0]);
+        const block = document.createElement('div');
+        block.className = 'result-block';
+        if(results.length > 1){
+          const label = document.createElement('div');
+          label.className = 'result-label';
+          label.textContent = `Statement ${i + 1} · ${rows.length} rows`;
+          block.appendChild(label);
+        }
+        block.appendChild(renderTable(columns, rows));
+        output.appendChild(block);
+      }
+    });
+
+    if(!anyRows){
+      output.innerHTML = `<div class="placeholder"><div class="big">✅</div>คำสั่งทำงานสำเร็จ แต่ไม่มีข้อมูลให้แสดงเป็นตาราง</div>`;
+    }
+
+    setStatus('ok', `รันสำเร็จ · ${totalRows} แถว · ${dt} ms`);
+    refreshSchema();
+  } catch(e){
+    const errBox = document.createElement('div');
+    errBox.className = 'err-box';
+    errBox.textContent = '❌ ' + e.message;
+    output.appendChild(errBox);
+    setStatus('err', 'เกิดข้อผิดพลาดในการรัน SQL');
+  }
+}
+
+async function refreshSchema(){
+  if(!db){ return; }
+  try {
+    const tablesRes = await db.query(`
+      SELECT table_name FROM information_schema.tables
+      WHERE table_schema = 'public' ORDER BY table_name;
+    `);
+    tableList.innerHTML = '';
+    if(tablesRes.rows.length === 0){
+      tableList.innerHTML = `<div class="empty-hint">ยังไม่มีตารางในฐานข้อมูลนี้</div>`;
+      return;
+    }
+
+    for(const row of tablesRes.rows){
+      const tname = row.table_name;
+      let countLabel = '';
+      try {
+        const c = await db.query(`SELECT COUNT(*)::int AS n FROM "${tname}";`);
+        countLabel = c.rows[0].n + ' rows';
+      } catch(e){ countLabel = ''; }
+
+      const item = document.createElement('div');
+      item.className = 'tbl-item';
+
+      const head = document.createElement('div');
+      head.className = 'tbl-head';
+      head.innerHTML = `<span>📋 ${escapeHtml(tname)}</span><span class="count">${countLabel}</span>`;
+
+      const colsDiv = document.createElement('div');
+      colsDiv.className = 'tbl-cols';
+
+      try {
+        const info = await db.query(`
+          SELECT c.column_name, c.data_type,
+                 EXISTS (
+                   SELECT 1 FROM information_schema.table_constraints tc
+                   JOIN information_schema.key_column_usage kcu
+                     ON tc.constraint_name = kcu.constraint_name
+                   WHERE tc.constraint_type = 'PRIMARY KEY'
+                     AND tc.table_name = c.table_name
+                     AND kcu.column_name = c.column_name
+                 ) AS is_pk
+          FROM information_schema.columns c
+          WHERE c.table_name = $1
+          ORDER BY c.ordinal_position;
+        `, [tname]);
+        info.rows.forEach(col => {
+          const r = document.createElement('div');
+          r.className = 'col-row';
+          const isPk = col.is_pk ? ' <span class="pk">PK</span>' : '';
+          r.innerHTML = `<b>${escapeHtml(col.column_name)}</b><span>${escapeHtml(col.data_type)}${isPk}</span>`;
+          colsDiv.appendChild(r);
+        });
+      } catch(e){}
+
+      head.addEventListener('click', () => colsDiv.classList.toggle('open'));
+
+      item.appendChild(head);
+      item.appendChild(colsDiv);
+      tableList.appendChild(item);
+    }
+  } catch(e){
+    tableList.innerHTML = `<div class="empty-hint">อ่าน schema ไม่สำเร็จ: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+async function loadSampleDb(){
+  setStatus('busy', 'กำลังสร้างฐานข้อมูลตัวอย่าง…');
+  const seed = `
+  DROP TABLE IF EXISTS enrollments;
+  DROP TABLE IF EXISTS courses;
+  DROP TABLE IF EXISTS students;
+
+  CREATE TABLE students (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    major TEXT,
+    gpa NUMERIC(3,2)
+  );
+  CREATE TABLE courses (
+    id INTEGER PRIMARY KEY,
+    title TEXT NOT NULL,
+    credits INTEGER
+  );
+  CREATE TABLE enrollments (
+    id SERIAL PRIMARY KEY,
+    student_id INTEGER REFERENCES students(id),
+    course_id INTEGER REFERENCES courses(id),
+    grade TEXT
+  );
+
+  INSERT INTO students (name,major,gpa) VALUES
+    ('Aran','Computer Science',3.65),
+    ('Bua','Software Engineering',3.20),
+    ('Chai','Computer Science',3.90),
+    ('Duen','Information Systems',2.85),
+    ('Fah','Software Engineering',3.45);
+
+  INSERT INTO courses (id,title,credits) VALUES
+    (101,'Database Systems',3),
+    (102,'Data Structures',3),
+    (103,'Operating Systems',3),
+    (104,'Web Development',3);
+
+  INSERT INTO enrollments (student_id,course_id,grade) VALUES
+    (1,101,'A'),
+    (1,102,'B+'),
+    (2,101,'B'),
+    (3,101,'A'),
+    (3,103,'A-'),
+    (4,104,'C+'),
+    (5,101,'A'),
+    (5,104,'B+');
+  `;
+  await db.exec(seed);
+  currentDbName = 'sample (students / courses / enrollments)';
+  dbNameLabel.textContent = currentDbName;
+  await refreshSchema();
+  $('sql').value = 'SELECT * FROM students;';
+  output.innerHTML = `<div class="placeholder"><div class="big">🎉</div>โหลดฐานข้อมูลตัวอย่างสำเร็จ! ลองกด Run ดูได้เลย</div>`;
+  setStatus('ok', 'โหลดฐานข้อมูลตัวอย่างสำเร็จ');
+}
+
+async function importDbFile(file){
+  setStatus('busy', `กำลัง Import "${file.name}"…`);
+  try {
+    db = await PGlite.create({ loadDataDir: file });
+    await db.waitReady;
+    currentDbName = file.name;
+    dbNameLabel.textContent = currentDbName;
+    await refreshSchema();
+    output.innerHTML = `<div class="placeholder"><div class="big">📂</div>Import "${escapeHtml(file.name)}" สำเร็จ! ลองรัน SELECT * FROM ชื่อตาราง;</div>`;
+    setStatus('ok', `Import "${file.name}" สำเร็จ`);
+  } catch(e){
+    setStatus('err', 'Import ไม่สำเร็จ: ' + e.message + ' (ไฟล์ต้องเป็น PGlite dump ที่ export มาจากเครื่องมือนี้เท่านั้น)');
+  }
+}
+
+function sanitizeSqlScript(rawText){
+  const removed = [];
+  let text = rawText;
+
+  // psql meta-commands like \c dbname, \d, \l ... (not valid SQL, PGlite has no multi-db switching)
+  text = text.replace(/^[ \t]*\\[a-zA-Z].*$/gm, (m) => { removed.push(m.trim()); return ''; });
+
+  // CREATE DATABASE ...; / DROP DATABASE ...;  (PGlite is a single database instance already)
+  text = text.replace(/^[ \t]*(DROP|CREATE)\s+DATABASE\b[^;]*;/gim, (m) => { removed.push(m.trim()); return ''; });
+
+  return { sql: text, removed };
+}
+
+async function importSqlScript(file){
+  if(!db){
+    setStatus('err', 'ยังไม่มีฐานข้อมูล — กด "โหลดฐานข้อมูลตัวอย่าง" ก่อน หรือรอ engine พร้อมก่อน');
+    return;
+  }
+  setStatus('busy', `กำลังรันไฟล์ "${file.name}"…`);
+  output.innerHTML = '';
+  const t0 = performance.now();
+  try {
+    const rawText = await file.text();
+    const { sql: text, removed } = sanitizeSqlScript(rawText);
+
+    if(removed.length > 0){
+      const note = document.createElement('div');
+      note.className = 'note';
+      note.innerHTML = `⚠️ ตัดคำสั่งที่ PGlite (Postgres เดี่ยว) ไม่รองรับออก ${removed.length} รายการ ก่อนรัน:<br>` +
+        removed.map(r => `&middot; <code>${escapeHtml(r.length > 90 ? r.slice(0,90)+'…' : r)}</code>`).join('<br>');
+      output.appendChild(note);
+    }
+
+    const results = await db.exec(text);
+    const dt = (performance.now() - t0).toFixed(1);
+
+    let totalRows = 0;
+    let anyRows = false;
+    results.forEach((res, i) => {
+      const rows = res.rows || [];
+      if(rows.length > 0){
+        anyRows = true;
+        totalRows += rows.length;
+        const columns = res.fields ? res.fields.map(f => f.name) : Object.keys(rows[0]);
+        const block = document.createElement('div');
+        block.className = 'result-block';
+        const label = document.createElement('div');
+        label.className = 'result-label';
+        label.textContent = `Statement ${i + 1} · ${rows.length} rows`;
+        block.appendChild(label);
+        block.appendChild(renderTable(columns, rows));
+        output.appendChild(block);
+      }
+    });
+
+    if(!anyRows){
+      const doneMsg = document.createElement('div');
+      doneMsg.className = 'placeholder';
+      doneMsg.innerHTML = `<div class="big">📜</div>รันไฟล์ "${escapeHtml(file.name)}" สำเร็จ (${results.length} คำสั่ง) — schema/data ถูกอัปเดตแล้ว`;
+      output.appendChild(doneMsg);
+    }
+
+    currentDbName = `imported script: ${file.name}`;
+    dbNameLabel.textContent = currentDbName;
+    setStatus('ok', `รันไฟล์ "${file.name}" สำเร็จ · ${results.length} คำสั่ง · ${totalRows} แถวที่ query คืนค่า · ${dt} ms`);
+    refreshSchema();
+  } catch(e){
+    const errBox = document.createElement('div');
+    errBox.className = 'err-box';
+    errBox.textContent = '❌ ' + e.message;
+    output.appendChild(errBox);
+    setStatus('err', `รันไฟล์ "${file.name}" ไม่สำเร็จ`);
+  }
+}
+
+async function exportDb(){
+  if(!db){ setStatus('err', 'ยังไม่มีฐานข้อมูลให้ export'); return; }
+  setStatus('busy', 'กำลังเตรียมไฟล์ export…');
+  try {
+    const blob = await db.dumpDataDir('gzip');
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'querybench-export.tar.gz';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    setStatus('ok', 'Export สำเร็จ — เก็บไฟล์ .tar.gz ไว้ import กลับได้ภายหลัง');
+  } catch(e){
+    setStatus('err', 'Export ไม่สำเร็จ: ' + e.message);
+  }
+}
+
+// Events
+$('runBtn').addEventListener('click', runQuery);
+$('loadSampleBtn').addEventListener('click', async () => {
+  $('loadSampleBtn').innerHTML = '<span class="spin"></span> กำลังโหลด...';
+  await loadSampleDb();
+  $('loadSampleBtn').innerHTML = '🧪 โหลดฐานข้อมูลตัวอย่าง';
+});
+$('fileInput').addEventListener('change', (e) => {
+  const f = e.target.files[0];
+  if(f) importDbFile(f);
+  e.target.value = '';
+});
+$('sqlFileInput').addEventListener('change', (e) => {
+  const f = e.target.files[0];
+  if(f) importSqlScript(f);
+  e.target.value = '';
+});
+$('exportBtn').addEventListener('click', exportDb);
+
+document.querySelectorAll('.tag').forEach(tag => {
+  tag.addEventListener('click', () => {
+    $('sql').value = tag.dataset.q;
+    $('sql').focus();
+  });
+});
+
+$('sql').addEventListener('keydown', (e) => {
+  if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){
+    e.preventDefault();
+    runQuery();
+  }
+});
+
+initDb();
+</script>
+</body>
+</html>
