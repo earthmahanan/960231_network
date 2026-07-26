@@ -172,7 +172,23 @@ textarea.reflect.answered{border-color:var(--gold-bd);background:#fffdf6}
 .engine-dot.loading{background:var(--gold);animation:pulse 1s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
-.bug-line{font-family:var(--mono);background:#2b211c;color:#f3d2d2;padding:8px 10px;border-radius:6px;font-size:12.5px;margin-bottom:6px;overflow-x:auto}
+.bug-line{font-family:var(--mono);background:#2b211c;color:#f3d2d2;padding:8px 10px;border-radius:6px;font-size:12.5px;margin-bottom:6px;overflow-x:auto}@media print{
+  .sidebar{display:none !important}
+  .main{max-width:100%;padding:0 .25in}
+  .topbar-right,.engine-banner,.hint-toggle,.toast{display:none !important}
+  .exercise-card{display:block !important;box-shadow:none;border:1px solid var(--bdr);page-break-inside:avoid;break-inside:avoid;margin-bottom:1.25rem}
+  .exercise-card:not(:last-of-type){page-break-after:always;break-after:page}
+  .completion-card{display:none !important}
+  .nav-btns{display:none !important}
+  .query-toolbar .run-btn{display:none !important}
+  .query-editor{background:#fff !important;color:#2b211c !important;border:1px solid var(--bdr2)}
+  .query-block{border:1px solid var(--bdr2)}
+  .result-wrap{max-height:none !important;overflow:visible !important}
+  textarea.reflect{min-height:60px}
+  button{display:none !important}
+  a[href]:after{content:none !important}
+  body{background:#fff}
+}
 </style>
 </head>
 <body>

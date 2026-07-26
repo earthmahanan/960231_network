@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>QueryBench // PostgreSQL Playground (PGlite)</title>
@@ -190,11 +190,11 @@ footer{
     <div class="brand-mark">Pg</div>
     <div>
       <h1>QueryBench</h1>
-      <p>เขียน SQL แล้วดูผลลัพธ์ทันที &mdash; PostgreSQL จริงในเบราว์เซอร์ (PGlite)</p>
+      <p>Write SQL and see results instantly &mdash; real PostgreSQL running in your browser (PGlite)</p>
     </div>
   </div>
   <div class="hdr-actions">
-    <button class="btn ghost" id="loadSampleBtn">🧪 โหลดฐานข้อมูลตัวอย่าง</button>
+    <button class="btn ghost" id="loadSampleBtn">🧪 Load Sample Database</button>
     <label class="btn" for="fileInput">📂 Import Database
       <input type="file" id="fileInput" accept=".gz,.tar,.tgz">
     </label>
@@ -209,25 +209,25 @@ footer{
 <div class="wrap">
   <aside class="sidebar">
     <h2>Schema Explorer</h2>
-    <div class="dbname" id="dbNameLabel">กำลังเตรียม Postgres engine…</div>
-    <div id="tableList"><div class="empty-hint">กด "โหลดฐานข้อมูลตัวอย่าง" เพื่อเริ่มเล่น หรือ Import ไฟล์ dump (.tar.gz) ที่เคย Export จาก QueryBench มาก่อน หรือ Import ไฟล์ .sql script (CREATE TABLE / INSERT ฯลฯ) เพื่อรันสร้างฐานข้อมูลใหม่</div></div>
+    <div class="dbname" id="dbNameLabel">Preparing Postgres engine…</div>
+    <div id="tableList"><div class="empty-hint">Click "Load Sample Database" to get started, or import a dump (.tar.gz) previously exported from QueryBench, or import a .sql script (CREATE TABLE / INSERT, etc.) to build a new database</div></div>
   </aside>
 
   <main class="main">
     <div class="editor-bar">
       <span class="tag" data-q="SELECT * FROM students;">SELECT * FROM students;</span>
-      <span class="tag" data-q="SELECT s.name, c.title FROM students s JOIN enrollments e ON s.id=e.student_id JOIN courses c ON c.id=e.course_id;">JOIN ตัวอย่าง</span>
-      <span class="tag" data-q="SELECT course_id, COUNT(*) AS total FROM enrollments GROUP BY course_id ORDER BY total DESC;">GROUP BY ตัวอย่าง</span>
+      <span class="tag" data-q="SELECT s.name, c.title FROM students s JOIN enrollments e ON s.id=e.student_id JOIN courses c ON c.id=e.course_id;">JOIN example</span>
+      <span class="tag" data-q="SELECT course_id, COUNT(*) AS total FROM enrollments GROUP BY course_id ORDER BY total DESC;">GROUP BY example</span>
       <span class="tag" data-q="SELECT current_database(), version();">Postgres version()</span>
     </div>
 
     <div class="editor-wrap">
-      <textarea id="sql" spellcheck="false" placeholder="-- เขียน SQL ที่นี่ เช่น
+      <textarea id="sql" spellcheck="false" placeholder="-- Write your SQL here, e.g.
 SELECT * FROM students;">SELECT * FROM students;</textarea>
     </div>
 
     <div class="run-row" style="padding:0 20px;">
-      <span class="run-hint">กด <kbd>Ctrl</kbd>+<kbd>Enter</kbd> เพื่อรันคำสั่ง</span>
+      <span class="run-hint">Press <kbd>Ctrl</kbd>+<kbd>Enter</kbd> to run</span>
       <span class="run-hint" id="dialectHint">Engine: PGlite (real PostgreSQL, compiled to WASM)</span>
     </div>
 
@@ -239,20 +239,20 @@ SELECT * FROM students;">SELECT * FROM students;</textarea>
       <div id="output">
         <div class="placeholder">
           <div class="big">🐘</div>
-          พิมพ์คำสั่ง SQL แล้วกด Run<br>ผลลัพธ์จะแสดงที่นี่แบบตาราง
+          Type a SQL statement and click Run<br>Results will appear here as a table
         </div>
       </div>
     </div>
   </main>
 </div>
 
-<footer>QueryBench · Client-side PostgreSQL playground powered by PGlite · ข้อมูลทั้งหมดอยู่ในเบราว์เซอร์ของคุณ ไม่มีการส่งขึ้นเซิร์ฟเวอร์</footer>
+<footer>QueryBench · Client-side PostgreSQL playground powered by PGlite · All data stays in your browser, nothing is sent to a server</footer>
 
 <script type="module">
 import { PGlite } from "https://cdn.jsdelivr.net/npm/@electric-sql/pglite@0.2.17/dist/index.js";
 
 let db = null;
-let currentDbName = "in-memory (ยังไม่ได้โหลดข้อมูล)";
+let currentDbName = "in-memory (no data loaded yet)";
 
 const $ = (id) => document.getElementById(id);
 const output = $('output');
@@ -274,11 +274,11 @@ function escapeHtml(s){
 }
 
 async function initDb(){
-  setStatus('busy', 'กำลังเตรียม Postgres engine (WASM)…');
+  setStatus('busy', 'Preparing Postgres engine (WASM)…');
   db = new PGlite();
   await db.waitReady;
   dbNameLabel.textContent = currentDbName;
-  setStatus('ok', 'พร้อมใช้งาน — กด "โหลดฐานข้อมูลตัวอย่าง" เพื่อเริ่มต้น');
+  setStatus('ok', 'Ready — click "Load Sample Database" to get started');
   refreshSchema();
 }
 
@@ -323,14 +323,14 @@ function renderTable(columns, rows){
 
 async function runQuery(){
   if(!db){
-    setStatus('err', 'ยังไม่มีฐานข้อมูล — กด "โหลดฐานข้อมูลตัวอย่าง" หรือ Import ก่อน');
+    setStatus('err', 'No database loaded — click "Load Sample Database" or import one first');
     return;
   }
   const sql = $('sql').value.trim();
   if(!sql){ return; }
 
   output.innerHTML = '';
-  setStatus('busy', 'กำลังรันคำสั่ง…');
+  setStatus('busy', 'Running query…');
   const t0 = performance.now();
   try {
     const results = await db.exec(sql);
@@ -358,17 +358,17 @@ async function runQuery(){
     });
 
     if(!anyRows){
-      output.innerHTML = `<div class="placeholder"><div class="big">✅</div>คำสั่งทำงานสำเร็จ แต่ไม่มีข้อมูลให้แสดงเป็นตาราง</div>`;
+      output.innerHTML = `<div class="placeholder"><div class="big">✅</div>Statement ran successfully but returned no rows to display</div>`;
     }
 
-    setStatus('ok', `รันสำเร็จ · ${totalRows} แถว · ${dt} ms`);
+    setStatus('ok', `Success · ${totalRows} rows · ${dt} ms`);
     refreshSchema();
   } catch(e){
     const errBox = document.createElement('div');
     errBox.className = 'err-box';
     errBox.textContent = '❌ ' + e.message;
     output.appendChild(errBox);
-    setStatus('err', 'เกิดข้อผิดพลาดในการรัน SQL');
+    setStatus('err', 'Error running SQL');
   }
 }
 
@@ -381,7 +381,7 @@ async function refreshSchema(){
     `);
     tableList.innerHTML = '';
     if(tablesRes.rows.length === 0){
-      tableList.innerHTML = `<div class="empty-hint">ยังไม่มีตารางในฐานข้อมูลนี้</div>`;
+      tableList.innerHTML = `<div class="empty-hint">No tables in this database yet</div>`;
       return;
     }
 
@@ -434,12 +434,12 @@ async function refreshSchema(){
       tableList.appendChild(item);
     }
   } catch(e){
-    tableList.innerHTML = `<div class="empty-hint">อ่าน schema ไม่สำเร็จ: ${escapeHtml(e.message)}</div>`;
+    tableList.innerHTML = `<div class="empty-hint">Failed to read schema: ${escapeHtml(e.message)}</div>`;
   }
 }
 
 async function loadSampleDb(){
-  setStatus('busy', 'กำลังสร้างฐานข้อมูลตัวอย่าง…');
+  setStatus('busy', 'Creating sample database…');
   const seed = `
   DROP TABLE IF EXISTS enrollments;
   DROP TABLE IF EXISTS courses;
@@ -491,22 +491,22 @@ async function loadSampleDb(){
   dbNameLabel.textContent = currentDbName;
   await refreshSchema();
   $('sql').value = 'SELECT * FROM students;';
-  output.innerHTML = `<div class="placeholder"><div class="big">🎉</div>โหลดฐานข้อมูลตัวอย่างสำเร็จ! ลองกด Run ดูได้เลย</div>`;
-  setStatus('ok', 'โหลดฐานข้อมูลตัวอย่างสำเร็จ');
+  output.innerHTML = `<div class="placeholder"><div class="big">🎉</div>Sample database loaded! Try clicking Run</div>`;
+  setStatus('ok', 'Sample database loaded successfully');
 }
 
 async function importDbFile(file){
-  setStatus('busy', `กำลัง Import "${file.name}"…`);
+  setStatus('busy', `Importing "${file.name}"…`);
   try {
     db = await PGlite.create({ loadDataDir: file });
     await db.waitReady;
     currentDbName = file.name;
     dbNameLabel.textContent = currentDbName;
     await refreshSchema();
-    output.innerHTML = `<div class="placeholder"><div class="big">📂</div>Import "${escapeHtml(file.name)}" สำเร็จ! ลองรัน SELECT * FROM ชื่อตาราง;</div>`;
-    setStatus('ok', `Import "${file.name}" สำเร็จ`);
+    output.innerHTML = `<div class="placeholder"><div class="big">📂</div>Imported "${escapeHtml(file.name)}" successfully! Try running SELECT * FROM table_name;</div>`;
+    setStatus('ok', `Imported "${file.name}" successfully`);
   } catch(e){
-    setStatus('err', 'Import ไม่สำเร็จ: ' + e.message + ' (ไฟล์ต้องเป็น PGlite dump ที่ export มาจากเครื่องมือนี้เท่านั้น)');
+    setStatus('err', 'Import failed: ' + e.message + ' (the file must be a PGlite dump previously exported from this tool)');
   }
 }
 
@@ -525,10 +525,10 @@ function sanitizeSqlScript(rawText){
 
 async function importSqlScript(file){
   if(!db){
-    setStatus('err', 'ยังไม่มีฐานข้อมูล — กด "โหลดฐานข้อมูลตัวอย่าง" ก่อน หรือรอ engine พร้อมก่อน');
+    setStatus('err', 'No database loaded — click "Load Sample Database" first, or wait for the engine to be ready');
     return;
   }
-  setStatus('busy', `กำลังรันไฟล์ "${file.name}"…`);
+  setStatus('busy', `Running file "${file.name}"…`);
   output.innerHTML = '';
   const t0 = performance.now();
   try {
@@ -538,7 +538,7 @@ async function importSqlScript(file){
     if(removed.length > 0){
       const note = document.createElement('div');
       note.className = 'note';
-      note.innerHTML = `⚠️ ตัดคำสั่งที่ PGlite (Postgres เดี่ยว) ไม่รองรับออก ${removed.length} รายการ ก่อนรัน:<br>` +
+      note.innerHTML = `⚠️ Removed ${removed.length} statement(s) not supported by PGlite (single-database Postgres) before running:<br>` +
         removed.map(r => `&middot; <code>${escapeHtml(r.length > 90 ? r.slice(0,90)+'…' : r)}</code>`).join('<br>');
       output.appendChild(note);
     }
@@ -568,26 +568,26 @@ async function importSqlScript(file){
     if(!anyRows){
       const doneMsg = document.createElement('div');
       doneMsg.className = 'placeholder';
-      doneMsg.innerHTML = `<div class="big">📜</div>รันไฟล์ "${escapeHtml(file.name)}" สำเร็จ (${results.length} คำสั่ง) — schema/data ถูกอัปเดตแล้ว`;
+      doneMsg.innerHTML = `<div class="big">📜</div>File "${escapeHtml(file.name)}" ran successfully (${results.length} statement(s)) — schema/data updated`;
       output.appendChild(doneMsg);
     }
 
     currentDbName = `imported script: ${file.name}`;
     dbNameLabel.textContent = currentDbName;
-    setStatus('ok', `รันไฟล์ "${file.name}" สำเร็จ · ${results.length} คำสั่ง · ${totalRows} แถวที่ query คืนค่า · ${dt} ms`);
+    setStatus('ok', `File "${file.name}" ran successfully · ${results.length} statement(s) · ${totalRows} rows returned · ${dt} ms`);
     refreshSchema();
   } catch(e){
     const errBox = document.createElement('div');
     errBox.className = 'err-box';
     errBox.textContent = '❌ ' + e.message;
     output.appendChild(errBox);
-    setStatus('err', `รันไฟล์ "${file.name}" ไม่สำเร็จ`);
+    setStatus('err', `Failed to run file "${file.name}"`);
   }
 }
 
 async function exportDb(){
-  if(!db){ setStatus('err', 'ยังไม่มีฐานข้อมูลให้ export'); return; }
-  setStatus('busy', 'กำลังเตรียมไฟล์ export…');
+  if(!db){ setStatus('err', 'No database to export'); return; }
+  setStatus('busy', 'Preparing export file…');
   try {
     const blob = await db.dumpDataDir('gzip');
     const url = URL.createObjectURL(blob);
@@ -598,18 +598,18 @@ async function exportDb(){
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
-    setStatus('ok', 'Export สำเร็จ — เก็บไฟล์ .tar.gz ไว้ import กลับได้ภายหลัง');
+    setStatus('ok', 'Export successful — keep the .tar.gz file to import it back later');
   } catch(e){
-    setStatus('err', 'Export ไม่สำเร็จ: ' + e.message);
+    setStatus('err', 'Export failed: ' + e.message);
   }
 }
 
 // Events
 $('runBtn').addEventListener('click', runQuery);
 $('loadSampleBtn').addEventListener('click', async () => {
-  $('loadSampleBtn').innerHTML = '<span class="spin"></span> กำลังโหลด...';
+  $('loadSampleBtn').innerHTML = '<span class="spin"></span> Loading...';
   await loadSampleDb();
-  $('loadSampleBtn').innerHTML = '🧪 โหลดฐานข้อมูลตัวอย่าง';
+  $('loadSampleBtn').innerHTML = '🧪 Load Sample Database';
 });
 $('fileInput').addEventListener('change', (e) => {
   const f = e.target.files[0];
