@@ -126,7 +126,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .schema-caption{font-size:11px;color:var(--txt3);padding:6px 9px;font-family:var(--sans);font-style:italic;border-top:1px solid var(--bdr)}
 
 .query-block{border:1.5px solid var(--bdr);border-radius:8px;overflow:hidden;margin-bottom:.5rem;background:#fff}
-.query-editor{width:100%;min-height:88px;border:none;padding:10px 12px;font-family:var(--mono);font-size:13px;color:#eae3d6;background:#2b211c;resize:vertical;line-height:1.6}
+.query-editor{width:100%;min-height:88px;border:none;padding:10px 12px;font-family:var(--mono);font-size:13px;color:#eae3d6;background:#2b211c;resize:vertical;line-height:1.6;-webkit-user-select:text;user-select:text}
 .query-editor:focus{outline:none}
 .query-toolbar{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg);border-top:1px solid var(--bdr)}
 .query-toolbar-left{font-size:11px;color:var(--txt3)}
@@ -200,7 +200,8 @@ textarea.reflect.answered{border-color:var(--gold-bd);background:#fffdf6}
       <p>960231 Database Management System · Developer Track</p>
     </div>
     <div class="topbar-right">
-      <button class="btn-ghost" onclick="saveDraft()">💾 Save draft</button>
+      <span id="autosaveStatus" style="font-size:11px;color:var(--txt3);margin-right:4px">Autosave on</span>
+      <button class="btn-ghost" onclick="saveDraft(false)">💾 Save draft</button>
       <button class="btn-ghost" onclick="window.print()">🖨 Print / PDF</button>
     </div>
   </div>
@@ -208,10 +209,10 @@ textarea.reflect.answered{border-color:var(--gold-bd);background:#fffdf6}
   <div class="student-banner">
     <h3>Student information</h3>
     <div class="student-grid">
-      <div class="field-group"><label for="f-name">Full name</label><input type="text" id="f-name" placeholder="Your name" oninput="updateProgress()"></div>
-      <div class="field-group"><label for="f-id">Student ID</label><input type="text" id="f-id" placeholder="e.g. s1234567" oninput="updateProgress()"></div>
-      <div class="field-group"><label for="f-class">Class / section</label><input type="text" id="f-class" placeholder="e.g. COMP201-A" oninput="updateProgress()"></div>
-      <div class="field-group"><label for="f-date">Date</label><input type="date" id="f-date" oninput="updateProgress()"></div>
+      <div class="field-group"><label for="f-name">Full name</label><input type="text" id="f-name" placeholder="Your name" oninput="updateProgress();scheduleAutoSave()"></div>
+      <div class="field-group"><label for="f-id">Student ID</label><input type="text" id="f-id" placeholder="e.g. s1234567" oninput="updateProgress();scheduleAutoSave()"></div>
+      <div class="field-group"><label for="f-class">Class / section</label><input type="text" id="f-class" placeholder="e.g. COMP201-A" oninput="updateProgress();scheduleAutoSave()"></div>
+      <div class="field-group"><label for="f-date">Date</label><input type="date" id="f-date" oninput="updateProgress();scheduleAutoSave()"></div>
     </div>
   </div>
 
@@ -439,7 +440,8 @@ var SCHEMA_HTML =
 
 function queryBlock(id, placeholder){
   return '<div class="query-block">' +
-    '<textarea class="query-editor" id="editor-'+id+'" placeholder="'+placeholder+'" spellcheck="false"></textarea>' +
+    '<textarea class="query-editor" id="editor-'+id+'" placeholder="'+placeholder+'" spellcheck="false" '+
+      'oninput="scheduleAutoSave()" onpaste="return blockPaste(event)" oncopy="return blockCopy(event)" oncut="return blockCopy(event)" oncontextmenu="return blockPaste(event)"></textarea>' +
     '<div class="query-toolbar">' +
       '<span class="query-toolbar-left">PostgreSQL dialect · runs live in your browser</span>' +
       '<div style="display:flex;align-items:center;gap:10px">' +
@@ -485,7 +487,7 @@ var EXERCISES = [
         queryBlock('q1e','') + '</div>';
 
       out += '<div class="step-label">Reflection</div><div class="question-block"><div class="question-text"><span class="qnum">R1.</span> If a frontend developer asks you to add pagination (page 2 of 20 results) to an endpoint, which two SQL keywords would you reach for, and how would the numbers change between page 1 and page 2?</div>' +
-        '<textarea class="reflect" id="r-q1" rows="3" oninput="onReflectInput(this)"></textarea></div>';
+        '<textarea class="reflect" id="r-q1" rows="3" oninput="onReflectInput(this)" onpaste="return blockPaste(event)" oncopy="return blockCopy(event)" oncut="return blockCopy(event)" oncontextmenu="return blockPaste(event)"></textarea></div>';
 
       return out;
     }
@@ -513,7 +515,7 @@ var EXERCISES = [
         queryBlock('q2e','') + '</div>';
 
       out += '<div class="step-label">Reflection</div><div class="question-block"><div class="question-text"><span class="qnum">R2.</span> In your own words: why does <code>WHERE COUNT(*) > 3</code> fail, but <code>HAVING COUNT(*) > 3</code> works? What is different about when each one runs?</div>' +
-        '<textarea class="reflect" id="r-q2" rows="3" oninput="onReflectInput(this)"></textarea></div>';
+        '<textarea class="reflect" id="r-q2" rows="3" oninput="onReflectInput(this)" onpaste="return blockPaste(event)" oncopy="return blockCopy(event)" oncut="return blockCopy(event)" oncontextmenu="return blockPaste(event)"></textarea></div>';
 
       return out;
     }
@@ -546,9 +548,9 @@ var EXERCISES = [
         queryBlock('q3e',"SELECT * FROM users WHERE email = 'anything' OR '1'='1' AND status = 'active';") + '</div>';
 
       out += '<div class="question-block"><div class="question-text"><span class="qnum">R3a.</span> What did the injected query return, and why is that dangerous for a login check?</div>' +
-        '<textarea class="reflect" id="r-q3a" rows="3" oninput="onReflectInput(this)"></textarea></div>';
+        '<textarea class="reflect" id="r-q3a" rows="3" oninput="onReflectInput(this)" onpaste="return blockPaste(event)" oncopy="return blockCopy(event)" oncut="return blockCopy(event)" oncontextmenu="return blockPaste(event)"></textarea></div>';
       out += '<div class="question-block"><div class="question-text"><span class="qnum">R3b.</span> The fix is "parameterized queries" (e.g. <code>db.query("SELECT * FROM users WHERE email = ?", [userInput])</code>), which every ORM does by default. In your own words, why does passing the value separately instead of concatenating it into the string prevent this attack?</div>' +
-        '<textarea class="reflect" id="r-q3b" rows="3" oninput="onReflectInput(this)"></textarea></div>';
+        '<textarea class="reflect" id="r-q3b" rows="3" oninput="onReflectInput(this)" onpaste="return blockPaste(event)" oncopy="return blockCopy(event)" oncut="return blockCopy(event)" oncontextmenu="return blockPaste(event)"></textarea></div>';
 
       return out;
     }
@@ -570,7 +572,7 @@ var EXERCISES = [
       bugs.forEach(function(b, i){
         out += '<div class="question-block"><div class="question-text"><span class="qnum">'+(i+1)+'.</span> ' + b.q + '</div>' +
           '<div class="bug-line">' + b.bad.replace(/</g,'&lt;') + '</div>' +
-          '<textarea class="reflect" id="r-bug'+(i+1)+'" rows="2" placeholder="What is wrong with this query?" oninput="onReflectInput(this)"></textarea>' +
+          '<textarea class="reflect" id="r-bug'+(i+1)+'" rows="2" placeholder="What is wrong with this query?" oninput="onReflectInput(this)" onpaste="return blockPaste(event)" oncopy="return blockCopy(event)" oncut="return blockCopy(event)" oncontextmenu="return blockPaste(event)"></textarea>' +
           '<div style="margin-top:8px">' + queryBlock('bugfix'+(i+1), 'Write the corrected query here') + '</div>' +
           '</div>';
       });
@@ -641,8 +643,28 @@ function onReflectInput(el){
   el.classList.toggle('answered', (el.value||'').trim().length>0);
   autoResize(el);
   updateProgress();
+  scheduleAutoSave();
 }
 function autoResize(el){ el.style.height='auto'; el.style.height=(el.scrollHeight)+'px'; }
+
+// ── Copy/paste protection (academic integrity) ──
+function blockCopy(e){
+  e.preventDefault();
+  showToast('Copy/cut is disabled here — write your own answer 🙂');
+  return false;
+}
+function blockPaste(e){
+  e.preventDefault();
+  showToast('Pasting is disabled here — write your own answer 🙂');
+  return false;
+}
+
+// ── Autosave ──
+var autoSaveTimer = null;
+function scheduleAutoSave(){
+  if(autoSaveTimer) clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(function(){ saveDraft(true); }, 1500);
+}
 
 function updateProgress(){
   var totalAll=0, doneAll=0;
@@ -672,14 +694,18 @@ function updateProgress(){
   document.getElementById('progPct').textContent = overall+'%';
 }
 
-function saveDraft(){
+function saveDraft(auto){
   try{
     var data = { meta:{}, reflects:{}, queries:{} };
     ['f-name','f-id','f-class','f-date'].forEach(function(id){ data.meta[id]=document.getElementById(id).value; });
     document.querySelectorAll('textarea.reflect').forEach(function(t){ data.reflects[t.id]=t.value; });
     document.querySelectorAll('.query-editor').forEach(function(t){ data.queries[t.id]=t.value; });
     localStorage.setItem('dbms_sql_fundamentals_draft', JSON.stringify(data));
-    showToast('Draft saved ✓');
+    var statusEl = document.getElementById('autosaveStatus');
+    var now = new Date();
+    var hh = String(now.getHours()).padStart(2,'0'), mm = String(now.getMinutes()).padStart(2,'0'), ss = String(now.getSeconds()).padStart(2,'0');
+    if(statusEl) statusEl.textContent = 'Saved ' + hh+':'+mm+':'+ss;
+    if(!auto) showToast('Draft saved ✓');
   }catch(e){ showToast('Could not save'); }
 }
 function loadDraft(){
@@ -706,9 +732,10 @@ document.addEventListener('DOMContentLoaded', function(){
   loadDraft();
   updateProgress();
   initEngine();
+  setInterval(function(){ saveDraft(true); }, 30000);
 });
 document.addEventListener('keydown', function(e){
-  if((e.ctrlKey||e.metaKey) && e.key==='s'){ e.preventDefault(); saveDraft(); }
+  if((e.ctrlKey||e.metaKey) && e.key==='s'){ e.preventDefault(); saveDraft(false); }
 });
 
 window.runQuery = runQuery;
@@ -719,6 +746,10 @@ window.prevCard = prevCard;
 window.finishLab = finishLab;
 window.saveDraft = saveDraft;
 window.onReflectInput = onReflectInput;
+window.blockCopy = blockCopy;
+window.blockPaste = blockPaste;
+window.scheduleAutoSave = scheduleAutoSave;
+window.updateProgress = updateProgress;
 
 </script>
 </body>
