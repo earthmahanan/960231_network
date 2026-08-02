@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DBMS Lab — SQL JOINs</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F7F1E8;
+  --card:#FFFEFB;
+  --burgundy:#6E1423;
+  --burgundy-light:#8C1D2E;
+  --burgundy-dark:#4A0E18;
+  --gold:#C9962C;
+  --gold-light:#E8C46A;
+  --gold-bg:#FBF2DC;
+  --gold-bd:#D9AE4E;
+  --teal:#0F6E56;
+  --teal-bg:#E1F5EE;
+  --teal-bd:#5DCAA5;
+  --red:#791F1F;
+  --red-bg:#FCEBEB;
+  --red-bd:#F09595;
+  --blue-bg:#F3E9D8;
+  --blue-bd:#D9AE4E;
+  --txt:#2b211c;
+  --txt2:#6b5d52;
+  --txt3:#9a8c7f;
+  --bdr:#e3d5bf;
+  --bdr2:#cbb894;
+  --radius:10px;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+html,body{min-height:100%;background:var(--bg);font-family:var(--sans);color:var(--txt);font-size:15px;line-height:1.6}
+.shell{display:flex;min-height:100vh}
+.sidebar{width:260px;flex-shrink:0;background:var(--burgundy);position:sticky;top:0;height:100vh;overflow-y:auto;padding:1.5rem 0}
+.main{flex:1;max-width:980px;padding:2rem 2.5rem 4rem;min-width:0}
+@media(max-width:768px){.sidebar{display:none}.main{padding:1.25rem 1rem 3rem}}
+.sidebar-logo{font-size:17px;font-weight:700;color:#fff;padding:0 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:8px;line-height:1.3;flex-wrap:wrap}
+.sidebar-logo .mod-badge{font-size:11px;font-weight:600;background:rgba(201,150,44,.28);color:var(--gold-light);border-radius:4px;padding:2px 7px;letter-spacing:.05em}
+.sidebar-title{font-size:11px;font-weight:600;color:rgba(255,255,255,.5);letter-spacing:.08em;text-transform:uppercase;padding:0 1.25rem;margin-bottom:.75rem}
+.nav-item{display:flex;align-items:center;gap:10px;padding:.6rem 1.25rem;cursor:pointer;transition:background .15s;font-size:13px;color:rgba(255,255,255,.8);border-left:3px solid transparent}
+.nav-item:hover{background:rgba(255,255,255,.08)}
+.nav-item.active{background:rgba(255,255,255,.12);color:#fff;border-left-color:var(--gold-light)}
+.nav-item.done{color:rgba(255,255,255,.9)}
+.nav-dot{width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;transition:all .2s}
+.nav-dot.done{background:var(--gold-light);border-color:var(--gold-light);color:var(--burgundy-dark)}
+.nav-dot.active{border-color:#fff;color:#fff}
+.progress-bar-wrap{padding:1rem 1.25rem .5rem;margin-top:.5rem}
+.progress-bar-label{font-size:11px;color:rgba(255,255,255,.55);margin-bottom:6px;display:flex;justify-content:space-between}
+.progress-bar{height:4px;background:rgba(255,255,255,.18);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:var(--gold-light);border-radius:2px;transition:width .4s ease}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.75rem;flex-wrap:wrap;gap:12px}
+.topbar-left h1{font-size:22px;font-weight:700;color:var(--burgundy);margin-bottom:2px}
+.topbar-left p{font-size:13px;color:var(--txt2)}
+.topbar-right{display:flex;gap:8px;align-items:center}
+button{font-family:var(--sans);cursor:pointer;border:none;border-radius:8px;font-size:13px;font-weight:500;padding:8px 16px;transition:all .15s}
+button:disabled{opacity:.4;cursor:not-allowed}
+.btn-ghost{background:transparent;border:1.5px solid var(--bdr2);color:var(--txt2)}
+.btn-ghost:hover:not(:disabled){background:var(--card);border-color:var(--burgundy);color:var(--burgundy)}
+.btn-primary{background:var(--burgundy);color:#fff}
+.btn-primary:hover:not(:disabled){background:var(--burgundy-light)}
+.btn-success{background:var(--gold);color:#3b2a08}
+.btn-success:hover:not(:disabled){background:var(--gold-light)}
+.btn-sm{padding:5px 11px;font-size:12px;border-radius:6px}
+.student-banner{background:var(--card);border:1.5px solid var(--bdr);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1.75rem;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.student-banner h3{font-size:12px;font-weight:600;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.75rem}
+.student-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:520px){.student-grid{grid-template-columns:1fr}}
+.field-group{display:flex;flex-direction:column;gap:4px}
+.field-group label{font-size:12px;font-weight:600;color:var(--txt2)}
+.field-group input{border:1.5px solid var(--bdr);border-radius:6px;padding:7px 10px;font-size:14px;font-family:var(--sans);color:var(--txt);background:var(--bg);transition:border .15s}
+.field-group input:focus{outline:none;border-color:var(--burgundy);background:#fff}
+.exercise-card{background:var(--card);border:1.5px solid var(--bdr);border-radius:var(--radius);margin-bottom:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden;display:none}
+.exercise-card.visible{display:block}
+.exercise-header{padding:1.25rem 1.5rem 1rem;border-bottom:1.5px solid var(--bdr)}
+.exercise-tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;display:inline-block;padding:2px 8px;border-radius:4px;margin-bottom:6px}
+.exercise-title{font-size:19px;font-weight:700;color:var(--burgundy);margin-bottom:3px}
+.exercise-desc{font-size:13px;color:var(--txt2)}
+.exercise-body{padding:1.25rem 1.5rem}
+.exercise-progress{display:flex;align-items:center;gap:8px;margin-top:.75rem}
+.ex-prog-bar{flex:1;height:5px;background:var(--bg);border-radius:3px;overflow:hidden}
+.ex-prog-fill{height:100%;background:var(--gold-bd);border-radius:3px;transition:width .3s}
+.ex-prog-label{font-size:11px;color:var(--txt3);white-space:nowrap}
+.info-box{border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem;border:.5px solid}
+.info-box h4{font-size:13px;font-weight:700;margin-bottom:.4rem}
+.info-box p,.info-box ul,.info-box ol{font-size:13.5px;line-height:1.7}
+.info-box ul,.info-box ol{padding-left:1.25rem}
+.info-box.gold{background:var(--gold-bg);border-color:var(--gold-bd)}.info-box.gold h4{color:#8a6410}
+.info-box.teal{background:var(--teal-bg);border-color:var(--teal-bd)}.info-box.teal h4{color:var(--teal)}
+.info-box.red{background:var(--red-bg);border-color:var(--red-bd)}.info-box.red h4{color:var(--red)}
+.info-box.gray{background:#f4f0e6;border-color:var(--bdr)}.info-box.gray h4{color:var(--txt2)}
+.info-box code{font-family:var(--mono);background:rgba(0,0,0,.06);padding:1px 5px;border-radius:4px;font-size:12px}
+.section-heading{font-size:15px;font-weight:700;color:var(--burgundy);margin:1.5rem 0 .75rem;padding-bottom:.4rem;border-bottom:2px solid var(--gold-bg)}
+.step-label{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--burgundy);background:var(--gold-bg);border-radius:4px;padding:3px 10px;margin-bottom:.6rem}
+.question-block{margin-bottom:1.25rem}
+.question-text{font-size:14px;font-weight:600;color:var(--txt);margin-bottom:.5rem;line-height:1.5}
+.question-text .qnum{color:var(--burgundy);margin-right:4px}
+textarea{width:100%;border:1.5px solid var(--bdr);border-radius:8px;padding:10px 12px;font-size:13.5px;font-family:var(--sans);color:var(--txt);background:var(--bg);resize:vertical;transition:border .15s;line-height:1.6;min-height:72px;box-sizing:border-box;overflow:hidden}
+textarea:focus{outline:none;border-color:var(--burgundy);background:#fff}
+textarea.answered{border-color:var(--gold-bd);background:#fffdf6}
+textarea.sql-input{font-family:var(--mono);font-size:13px;background:#2b211c;color:#f5e9d0;min-height:60px}
+textarea.sql-input:focus{border-color:var(--burgundy)}
+textarea.sql-input.answered{border-color:var(--gold-bd)}
+.query-block{border:1.5px solid var(--bdr);border-radius:8px;overflow:hidden;margin-bottom:.5rem;background:#fff}
+.query-block textarea.sql-input{width:100%;border:none;border-radius:0;padding:10px 12px;resize:vertical;min-height:88px}
+.query-block textarea.sql-input:focus{outline:none;border:none}
+.query-toolbar{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg);border-top:1px solid var(--bdr)}
+.query-toolbar-left{font-size:11px;color:var(--txt3)}
+.query-status{font-size:12px;font-weight:600}
+.query-status.ok{color:var(--teal)}
+.query-status.err{color:var(--red)}
+.query-status.pending{color:var(--txt3)}
+.result-table-wrap{margin-top:.5rem;max-height:260px;overflow:auto;border-radius:8px;border:1.5px solid var(--bdr);display:none}
+.result-table-wrap.show{display:block}
+.result-table{width:100%;border-collapse:collapse;font-size:12px}
+.result-table th{background:var(--teal);color:#fff;padding:6px 8px;text-align:left;position:sticky;top:0}
+.result-table td{border-bottom:1px solid var(--bdr);padding:5px 8px;font-family:var(--mono)}
+.result-table tr:nth-child(even) td{background:#f7f9f8}
+.result-meta{font-size:11px;color:var(--txt3);padding:6px 8px}
+.engine-banner{display:flex;align-items:center;gap:10px;background:var(--card);border:1.5px dashed var(--bdr2);border-radius:8px;padding:.6rem .9rem;margin-bottom:1.25rem;font-size:12px;color:var(--txt3)}
+.engine-dot{width:9px;height:9px;border-radius:50%;background:var(--txt3);flex-shrink:0}
+.engine-dot.ready{background:var(--teal)}
+.engine-dot.loading{background:var(--gold);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.result-msg{font-size:12.5px;padding:.5rem .75rem;border-radius:6px;margin-top:.5rem}
+.result-msg.ok{background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal-bd)}
+.result-msg.err{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)}
+.result-msg.warn{background:var(--gold-bg);color:#8a6410;border:1px solid var(--gold-bd)}
+.table-wrap{overflow-x:auto;margin-bottom:1rem;border-radius:8px;border:1.5px solid var(--bdr)}
+.lab-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.lab-table th{background:var(--burgundy);color:#fff;padding:7px 9px;text-align:left;font-weight:600;font-size:11.5px;white-space:nowrap}
+.lab-table td{border-bottom:1px solid var(--bdr);padding:6px 9px;font-family:var(--mono);font-size:12px;white-space:nowrap}
+.lab-table tr:last-child td{border-bottom:none}
+.lab-table tr:nth-child(even) td{background:#faf6ec}
+.lab-table td.null-cell{color:var(--txt3);font-style:italic}
+.scenario-box{background:var(--gold-bg);border:1px solid var(--gold-bd);border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem;font-size:13.5px;line-height:1.75;color:#3b2a08}
+.scenario-box strong{color:var(--burgundy)}
+.fun-fact{display:flex;gap:10px;align-items:flex-start;background:#EFE4F0;border:.5px solid #C9A8CC;border-radius:8px;padding:.85rem 1rem;margin-bottom:1.25rem}
+.fun-fact .ff-icon{font-size:22px;line-height:1}
+.fun-fact .ff-text{font-size:13px;color:#6E2A6E;line-height:1.6}
+.fun-fact .ff-text strong{color:#6E2A6E}
+.venn-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:1.25rem}
+.venn-card{flex:1;min-width:150px;background:var(--card);border:1.5px solid var(--bdr);border-radius:8px;padding:.9rem;text-align:center}
+.venn-card svg{margin-bottom:6px}
+.venn-card .vname{font-size:12.5px;font-weight:700;color:var(--burgundy)}
+.nav-btns{display:flex;justify-content:space-between;align-items:center;margin-top:1.75rem;padding-top:1.25rem;border-top:1.5px solid var(--bdr)}
+.nav-btns-right{display:flex;gap:8px}
+.completion-card{background:var(--card);border:2px solid var(--gold-bd);border-radius:var(--radius);padding:2rem;text-align:center;box-shadow:0 4px 16px rgba(110,20,35,.12);display:none}
+.completion-card.visible{display:block}
+.completion-card .check{font-size:52px;margin-bottom:.75rem}
+.completion-card h2{font-size:24px;font-weight:700;color:var(--burgundy);margin-bottom:.5rem}
+.completion-card p{font-size:15px;color:var(--txt2);margin-bottom:1.5rem}
+.completion-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.toast{position:fixed;bottom:1.25rem;right:1.25rem;background:var(--burgundy);color:#fff;font-size:13px;padding:9px 16px;border-radius:8px;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;z-index:100}
+.toast.show{opacity:1;transform:translateY(0)}
+code.inline{font-family:var(--mono);background:rgba(0,0,0,.06);padding:1px 6px;border-radius:4px;font-size:12.5px;color:var(--burgundy)}
+@media print{
+  .sidebar{display:none !important}
+  .main{max-width:100%;padding:0 .25in}
+  .topbar-right,.toast,.engine-banner{display:none !important}
+  .exercise-card{display:block !important;box-shadow:none;border:1px solid var(--bdr);page-break-inside:avoid;break-inside:avoid;margin-bottom:1.25rem}
+  .exercise-card:not(:last-of-type){page-break-after:always;break-after:page}
+  .completion-card{display:none !important}
+  .nav-btns{display:none !important}
+  .query-toolbar .run-btn{display:none !important}
+  .result-table-wrap{max-height:none !important;overflow:visible !important}
+  textarea{background:#fff !important;color:#2b211c !important;border:1px solid var(--bdr2)}
+  textarea.sql-input{background:#fff !important;color:#2b211c !important}
+  .query-block{border:1px solid var(--bdr2)}
+  button{display:none !important}
+  body{background:#fff}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="sidebar">
+    <div class="sidebar-logo">🔗 <span>SQL JOIN Lab <span class="mod-badge">MODULE 8</span></span></div>
+    <div class="sidebar-title">Exercises</div>
+    <div id="navList"></div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-label"><span>Overall progress</span><span id="progPct">0%</span></div>
+      <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1>SQL JOINs — The Reunion Lab</h1>
+        <p>Two tables walk into a query. What comes out depends entirely on you.</p>
+      </div>
+      <div class="topbar-right">
+        <button class="btn-ghost" onclick="saveDraft()">💾 Save draft</button>
+        <button class="btn-ghost" onclick="resetEngine()">↺ Reset database</button>
+        <button class="btn-primary" onclick="window.print()">🖨 Print / PDF</button>
+      </div>
+    </div>
+
+    <div class="student-banner">
+      <h3>Student info</h3>
+      <div class="student-grid">
+        <div class="field-group"><label for="f-name">Full name</label><input type="text" id="f-name" placeholder="e.g. Somchai Prasert" oninput="updateProgress()"></div>
+        <div class="field-group"><label for="f-id">Student ID</label><input type="text" id="f-id" placeholder="e.g. s1234567" oninput="updateProgress()"></div>
+        <div class="field-group"><label for="f-class">Class / section</label><input type="text" id="f-class" placeholder="e.g. COMP201-A" oninput="updateProgress()"></div>
+        <div class="field-group"><label for="f-date">Date</label><input type="date" id="f-date" oninput="updateProgress()"></div>
+      </div>
+    </div>
+
+    <div class="fun-fact">
+      <div class="ff-icon">🍿</div>
+      <div class="ff-text"><strong>Why this lab feels like a dating show.</strong> A JOIN is just SQL trying to set two tables up on a date based on a shared value (the key). <code class="inline">INNER JOIN</code> only invites the couples who actually matched. <code class="inline">LEFT JOIN</code> makes sure every row from the left table shows up — matched or not, third-wheeling with a table full of <code class="inline">NULL</code>s. <code class="inline">FULL OUTER JOIN</code> is the "everybody's invited, no one left behind" version. Keep that picture in your head — you'll use it in every exercise below.</div>
+    </div>
+
+    <div class="info-box gold">
+      <h4>📎 The dataset for this whole lab — Pixel Bean Café</h4>
+      <p>You're the new backend dev for a small electronics shop's ordering system. Three tables, <code class="inline">users</code>, <code class="inline">products</code>, and <code class="inline">orders</code>, will follow you through every exercise. Study them once — you'll need them for every question.</p>
+    </div>
+
+    <div class="engine-banner">
+      <span class="engine-dot" id="engineDot"></span>
+      <span id="engineMsg">Starting the in-browser SQL engine (PostgreSQL via WebAssembly — PGlite)…</span>
+    </div>
+
+    <div id="datasetTables"></div>
+
+    <div id="exerciseContainer"></div>
+
+    <div class="completion-card" id="completionCard">
+      <div class="check">✅</div>
+      <h2>Lab complete!</h2>
+      <p>All questions answered. Save this page as a PDF and upload it as instructed.</p>
+      <div class="completion-actions">
+        <button class="btn-primary" onclick="window.print()">🖨 Print / PDF</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { PGlite } from 'https://cdn.jsdelivr.net/npm/@electric-sql/pglite/dist/index.js';
+
+var DB = null;
+var ENGINE_READY = false;
+
+var SEED_SQL = `
+CREATE TABLE users (
+  id INTEGER PRIMARY KEY,
+  fname TEXT NOT NULL,
+  lname TEXT NOT NULL,
+  email TEXT NOT NULL,
+  status TEXT NOT NULL,
+  city TEXT,
+  referred_by INTEGER REFERENCES users(id)
+);
+CREATE TABLE products (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  category TEXT NOT NULL,
+  price NUMERIC NOT NULL,
+  stock INTEGER NOT NULL
+);
+CREATE TABLE orders (
+  id INTEGER PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id),
+  product_id INTEGER NOT NULL REFERENCES products(id),
+  quantity INTEGER NOT NULL,
+  order_date TEXT NOT NULL,
+  status TEXT NOT NULL
+);
+
+INSERT INTO users (id,fname,lname,email,status,city,referred_by) VALUES
+(1,'Now','Suphanat','now@mail.com','active','Bangkok',NULL),
+(2,'Ploy','Kanjanaporn','ploy@mail.com','active','Chiang Mai',1),
+(3,'Field','Anuwat','field@mail.com','inactive','Bangkok',NULL),
+(4,'Yoyo','Ratchanok','yoyo@mail.com','active','Khon Kaen',2),
+(5,'Toey','Kamonwan','toey@mail.com','banned','Bangkok',NULL),
+(6,'Boss','Krittin','boss@mail.com','active','Phuket',1),
+(7,'Milk','Waraporn','milk@mail.com','active','Chiang Mai',6),
+(8,'Kim','Napassorn','kim@mail.com','inactive','Bangkok',NULL);
+
+INSERT INTO products (id,name,category,price,stock) VALUES
+(1,'Mechanical Keyboard','Electronics',1590.00,25),
+(2,'Wireless Mouse','Electronics',590.00,60),
+(3,'Standing Desk','Furniture',6900.00,5),
+(4,'Office Chair','Furniture',3200.00,12),
+(5,'USB-C Hub','Electronics',790.00,0),
+(6,'Desk Lamp','Furniture',450.00,30),
+(7,'Monitor 27in','Electronics',5200.00,8),
+(8,'Webcam 1080p','Electronics',990.00,20);
+
+INSERT INTO orders (id,user_id,product_id,quantity,order_date,status) VALUES
+(1,1,1,1,'2024-05-01','completed'),
+(2,1,2,2,'2024-05-01','completed'),
+(3,2,3,1,'2024-05-03','completed'),
+(4,3,4,1,'2024-05-04','cancelled'),
+(5,4,1,1,'2024-05-05','completed'),
+(6,4,7,1,'2024-05-05','completed'),
+(7,6,2,3,'2024-05-07','completed'),
+(8,1,7,1,'2024-05-10','pending'),
+(9,7,6,2,'2024-05-11','completed'),
+(10,2,1,1,'2024-05-12','completed'),
+(11,4,4,1,'2024-05-13','pending'),
+(12,6,5,1,'2024-05-14','cancelled'),
+(13,NULL,2,1,'2024-05-15','completed');
+`;
+
+var IDB_NAME = 'sql-join-lab-db-v2';
+
+async function tablesExist(){
+  try{
+    var res = await DB.query("SELECT to_regclass('public.users') AS t;");
+    return !!(res.rows[0] && res.rows[0].t);
+  }catch(e){ return false; }
+}
+
+async function initEngine(){
+  var dot=document.getElementById('engineDot');
+  var msg=document.getElementById('engineMsg');
+  dot.classList.add('loading');
+  try{
+    DB = new PGlite('idb://' + IDB_NAME);
+    await DB.waitReady;
+    if(!(await tablesExist())){
+      await DB.exec(SEED_SQL);
+    }
+    ENGINE_READY = true;
+    dot.classList.add('ready'); dot.classList.remove('loading');
+    msg.textContent = 'SQL engine ready — real PostgreSQL running in your browser. Your data persists here across visits.';
+    document.querySelectorAll('.run-btn').forEach(function(b){ b.disabled = false; });
+  }catch(err){
+    msg.textContent = 'Engine failed to load (' + err.message + '). Check your connection and reload.';
+  }
+}
+
+async function resetEngine(){
+  if(!ENGINE_READY) return;
+  if(!window.confirm('This will permanently erase everything you inserted/updated/deleted and restore the original seed data. Continue?')) return;
+  await DB.exec('DROP TABLE IF EXISTS orders; DROP TABLE IF EXISTS products; DROP TABLE IF EXISTS users;');
+  await DB.exec(SEED_SQL);
+  showToast('Database reset to original seed data ✓');
+}
+
+var QUERY_ANSWERED = {};
+
+async function runQuery(id){
+  var editor = document.getElementById(id);
+  var statusEl = document.getElementById(id+'-status');
+  var resultWrap = document.getElementById(id+'-resulttable');
+  if(!ENGINE_READY){ statusEl.textContent='Engine still loading…'; statusEl.className='query-status pending'; return; }
+  var sql = editor.value.trim();
+  if(!sql){ statusEl.textContent='Write a query first'; statusEl.className='query-status pending'; return; }
+  try{
+    var res = await DB.query(sql);
+    var cols = (res.fields || []).map(function(f){ return f.name; });
+    var rows = res.rows || [];
+    if(cols.length === 0){
+      statusEl.textContent = '✓ Statement executed' + (typeof res.affectedRows === 'number' ? '. Changed rows: ' + res.affectedRows : '');
+      statusEl.className = 'query-status ok';
+      resultWrap.classList.remove('show');
+      resultWrap.innerHTML = '';
+    } else {
+      var html = '<table class="result-table"><thead><tr>' + cols.map(function(c){return '<th>'+c+'</th>';}).join('') + '</tr></thead><tbody>';
+      rows.forEach(function(r){
+        html += '<tr>' + cols.map(function(c){ var v=r[c]; return '<td>'+(v===null||v===undefined?'<i>NULL</i>':v)+'</td>'; }).join('') + '</tr>';
+      });
+      html += '</tbody></table><div class="result-meta">' + rows.length + ' row(s) returned</div>';
+      resultWrap.innerHTML = html;
+      resultWrap.classList.add('show');
+      statusEl.textContent = '✓ Success';
+      statusEl.className = 'query-status ok';
+    }
+    QUERY_ANSWERED[id] = true;
+  }catch(e){
+    statusEl.textContent = '✗ ' + e.message;
+    statusEl.className = 'query-status err';
+    resultWrap.classList.remove('show');
+  }
+  updateProgress();
+}
+
+// ═══════════════════════════════════════════════
+// DATA — static preview tables shown above the exercises
+// (mirrors the real seeded database above exactly)
+// ═══════════════════════════════════════════════
+var USERS = {
+  headers:['id','fname','lname','email','status','city','referred_by'],
+  rows:[
+    [1,'Now','Suphanat','now@mail.com','active','Bangkok',null],
+    [2,'Ploy','Kanjanaporn','ploy@mail.com','active','Chiang Mai',1],
+    [3,'Field','Anuwat','field@mail.com','inactive','Bangkok',null],
+    [4,'Yoyo','Ratchanok','yoyo@mail.com','active','Khon Kaen',2],
+    [5,'Toey','Kamonwan','toey@mail.com','banned','Bangkok',null],
+    [6,'Boss','Krittin','boss@mail.com','active','Phuket',1],
+    [7,'Milk','Waraporn','milk@mail.com','active','Chiang Mai',6],
+    [8,'Kim','Napassorn','kim@mail.com','inactive','Bangkok',null]
+  ]
+};
+var PRODUCTS = {
+  headers:['id','name','category','price','stock'],
+  rows:[
+    [1,'Mechanical Keyboard','Electronics',1590.00,25],
+    [2,'Wireless Mouse','Electronics',590.00,60],
+    [3,'Standing Desk','Furniture',6900.00,5],
+    [4,'Office Chair','Furniture',3200.00,12],
+    [5,'USB-C Hub','Electronics',790.00,0],
+    [6,'Desk Lamp','Furniture',450.00,30],
+    [7,'Monitor 27in','Electronics',5200.00,8],
+    [8,'Webcam 1080p','Electronics',990.00,20]
+  ]
+};
+var ORDERS = {
+  headers:['id','user_id','product_id','quantity','order_date','status'],
+  rows:[
+    [1,1,1,1,'2024-05-01','completed'],
+    [2,1,2,2,'2024-05-01','completed'],
+    [3,2,3,1,'2024-05-03','completed'],
+    [4,3,4,1,'2024-05-04','cancelled'],
+    [5,4,1,1,'2024-05-05','completed'],
+    [6,4,7,1,'2024-05-05','completed'],
+    [7,6,2,3,'2024-05-07','completed'],
+    [8,1,7,1,'2024-05-10','pending'],
+    [9,7,6,2,'2024-05-11','completed'],
+    [10,2,1,1,'2024-05-12','completed'],
+    [11,4,4,1,'2024-05-13','pending'],
+    [12,6,5,1,'2024-05-14','cancelled'],
+    [13,null,2,1,'2024-05-15','completed']
+  ]
+};
+
+function renderDataTable(data){
+  var h='<div class="table-wrap"><table class="lab-table"><thead><tr>';
+  data.headers.forEach(function(hd){h+='<th>'+hd+'</th>';});
+  h+='</tr></thead><tbody>';
+  data.rows.forEach(function(r){
+    h+='<tr>';
+    r.forEach(function(c){
+      h+= (c===null||c===undefined) ? '<td class="null-cell">NULL</td>' : '<td>'+c+'</td>';
+    });
+    h+='</tr>';
+  });
+  h+='</tbody></table></div>';
+  return h;
+}
+
+function renderDataset(){
+  var h='<div class="section-heading">users</div>'+renderDataTable(USERS);
+  h+='<div class="section-heading">products <span style="font-weight:400;color:var(--txt3);font-size:11.5px">— note Webcam 1080p (id 8): never ordered</span></div>'+renderDataTable(PRODUCTS);
+  h+='<div class="section-heading">orders <span style="font-weight:400;color:var(--txt3);font-size:11.5px">— note order 13: a walk-in sale with no matching user</span></div>'+renderDataTable(ORDERS);
+  document.getElementById('datasetTables').innerHTML=h;
+}
+
+// ═══════════════════════════════════════════════
+// EXERCISES
+// ═══════════════════════════════════════════════
+var EXERCISES = [
+  {
+    id:'ex1', tag:'Exercise 1', tagColor:'#6E1423', tagBg:'#FBF2DC',
+    title:'INNER JOIN',
+    desc:'Find every order alongside the user who placed it — but only the ones that actually match.',
+    intro:'<div class="scenario-box"><strong>Scenario:</strong> The shop manager wants a report of every order with the user\'s name and the product name attached. Walk-in orders with no linked account (order 13) should NOT appear.</div>',
+    questions:[
+      {id:'ex1-q1', type:'sql', label:'Q1 · Write the query', text:'Write a SQL query using <code class="inline">INNER JOIN</code> (joining all three tables) that returns <code class="inline">fname</code>, <code class="inline">name</code> (product name), and <code class="inline">quantity</code> for every order that has a matching user.', hint:'SELECT ... FROM users JOIN orders ON users.id = orders.user_id JOIN products ON products.id = orders.product_id;', check:{type:'inner'}},
+      {id:'ex1-q2', type:'concept', label:'Q2 · Explain the gap', text:'Order 13 (the walk-in) does not appear in your result. Explain exactly why.'},
+      {id:'ex1-q3', type:'sql', label:'Q3 · Two INNER JOINs, two keys', text:'Write an INNER JOIN between just <code class="inline">orders</code> and <code class="inline">products</code> (no users table this time) that returns <code class="inline">name</code>, <code class="inline">category</code>, and <code class="inline">price</code> for every order placed.', hint:'SELECT ... FROM orders INNER JOIN products ON orders.product_id = products.id;', check:{type:'inner'}},
+      //{id:'ex1-q4', type:'concept', label:'Q4 · Predict a row count', text:'If you INNER JOIN <code class="inline">users</code> to <code class="inline">orders</code> only (not products), how many of the 13 order rows survive, and which order id gets dropped? Explain your reasoning without running anything.'}
+    ]
+  },
+  {
+    id:'ex2', tag:'Exercise 2', tagColor:'#0F6E56', tagBg:'#E1F5EE',
+    title:'LEFT JOIN',
+    desc:'Now flip the requirement: the manager wants to see every user, even the ones who never ordered anything.',
+    intro:'<div class="scenario-box"><strong>Scenario:</strong> Marketing wants a full user list with whatever they ordered, so they can email the ones who never bought a thing. Every user must appear, order or not.</div>',
+    questions:[
+      {id:'ex2-q1', type:'sql', label:'Q1 · Write the query', text:'Write a <code class="inline">LEFT JOIN</code> query (users to orders) returning <code class="inline">fname</code>, <code class="inline">order_date</code>, and <code class="inline">status</code> for ALL users, with NULLs where there\'s no order.', hint:'SELECT ... FROM users LEFT JOIN orders ON users.id = orders.user_id;', check:{type:'left'}},
+      {id:'ex2-q2', type:'concept', label:'Q2 · Spot the never-buyer', text:'Which user(s) show up with NULL order_date/status values?'},
+      {id:'ex2-q3', type:'sql', label:'Q3 · The anti-join pattern', text:'Add a <code class="inline">WHERE</code> clause to your Q1 query so it returns ONLY the users who have never placed an order — the classic "LEFT JOIN + WHERE right-side key IS NULL" trick.', hint:'WHERE orders.id IS NULL', check:{type:'left-anti'}},
+      //{id:'ex2-q4', type:'sql', label:'Q4 · LEFT JOIN, products side', text:'Write a <code class="inline">LEFT JOIN</code> from <code class="inline">products</code> to <code class="inline">orders</code> returning <code class="inline">name</code> (product) and <code class="inline">quantity</code> for ALL products, matched or not.', hint:'SELECT ... FROM products LEFT JOIN orders ON products.id = orders.product_id;', check:{type:'left'}}
+    ]
+  },
+  {
+    id:'ex3', tag:'Exercise 3', tagColor:'#B8860B', tagBg:'#FBF1D8',
+    title:'RIGHT JOIN',
+    desc:'LEFT has a mirror image — keep everything from the table on the right instead.',
+    intro:'<div class="scenario-box"><strong>Scenario:</strong> Now think inventory instead of customers: ops wants every product kept in the report, even ones that have never sold, alongside order info where it exists.</div>',
+    questions:[
+      {id:'ex3-q1', type:'sql', label:'Q1 · Write the query', text:'Write a <code class="inline">RIGHT JOIN</code> query, <code class="inline">orders RIGHT JOIN products</code>, returning <code class="inline">name</code> (product), <code class="inline">quantity</code>, <code class="inline">order_date</code> for ALL products — including Webcam 1080p (id 8), with NULL quantity/order_date.', hint:'SELECT ... FROM orders RIGHT JOIN products ON orders.product_id = products.id;', check:{type:'right'}},
+      {id:'ex3-q2', type:'concept', label:'Q2 · Same result, LEFT JOIN style', text:'Describe how you\'d rewrite Q1 as an equivalent <code class="inline">LEFT JOIN</code> instead, just by swapping which table comes first.'},
+      {id:'ex3-q3', type:'sql', label:'Q3 · RIGHT JOIN, the other pair', text:'Write a <code class="inline">RIGHT JOIN</code> query, <code class="inline">orders RIGHT JOIN users</code>, returning <code class="inline">fname</code>, <code class="inline">order_date</code> for ALL users — including the ones with zero orders.', hint:'SELECT ... FROM orders RIGHT JOIN users ON orders.user_id = users.id;', check:{type:'right'}},
+      {id:'ex3-q4', type:'concept', label:'Q4 · Only the unsold products', text:'Modify your Q1 query with a WHERE clause so it returns ONLY the product(s) that have never been ordered. What single row do you expect back?'}
+    ]
+  },
+  {
+    id:'ex4', tag:'Exercise 4', tagColor:'#3F5B45', tagBg:'#E7EFE8',
+    title:'SELF JOIN',
+    desc:'A table can join with itself.',
+    intro:'<div class="scenario-box"><strong>New twist:</strong> <code class="inline">users</code> has a <code class="inline">referred_by</code> column (a user id pointing to whoever referred them). Now (1) referred Ploy (2) and Boss (6); Ploy (2) referred Yoyo (4); Boss (6) referred Milk (7). Field (3), Toey (5), and Kim (8) were not referred by anyone.</div>',
+    questions:[
+      {id:'ex4-q1', type:'sql', label:'Q1 · SELF JOIN', text:'Write a SELF JOIN on <code class="inline">users</code> that lists each referred user\'s name next to the name of the person who referred them.', hint:'FROM users AS c JOIN users AS r ON c.referred_by = r.id — then select c.fname AS user, r.fname AS referrer.', check:{type:'self'}},
+      {id:'ex4-q2', type:'concept', label:'Q2 · Why two aliases', text:'Why does a self join need two table aliases even though there is only one physical table?'},
+      {id:'ex4-q3', type:'sql', label:'Q3 · LEFT self join', text:'Rewrite Q1 as a <code class="inline">LEFT JOIN</code> self join instead, so users who were NOT referred by anyone still appear, with a NULL referrer.', hint:'FROM users AS c LEFT JOIN users AS r ON c.referred_by = r.id;', check:{type:'left'}},
+      //{id:'ex4-q4', type:'concept', label:'Q4 · Trace the chain', text:'Boss (6) referred Milk (7), and Now (1) referred Boss (6). Is this a 2-level referral chain traceable with a single self join, or would you need to join <code class="inline">users</code> to itself twice to show Now → Boss → Milk in one row? Explain.'}
+    ]
+  },
+  {
+    id:'ex5', tag:'Exercise 5 · Combined', tagColor:'#3C3489', tagBg:'#EEEDFE',
+    title:'Combined Practice — the hard section',
+    desc:'No more labeled sections. Every question below mixes JOIN with WHERE, ORDER BY, LIMIT, GROUP BY, and/or HAVING — figure out which JOIN type each one actually needs.',
+    intro:'<div class="fun-fact"><div class="ff-icon">🔥</div><div class="ff-text"><strong>Rules of engagement:</strong> nobody tells you which JOIN keyword to use here — read what the question needs (only real matches? everyone, matched or not?) and pick it yourself. Then layer WHERE / ORDER BY / LIMIT / GROUP BY / HAVING on top as the question requires.</div></div>',
+    questions:[
+      {id:'ex5-q1', type:'sql', label:'Q1 · JOIN + WHERE', text:'List <code class="inline">fname</code>, <code class="inline">name</code> (product), and <code class="inline">quantity</code> for every matched order with status <code class="inline">completed</code>.', hint:'INNER JOIN users+orders+products, then WHERE status = \'completed\'.', check:{type:'combo-where'}},
+      {id:'ex5-q2', type:'sql', label:'Q2 · JOIN + ORDER BY + LIMIT', text:'Find the top 3 highest-value matched orders (quantity × price), showing user fname, product name, and that computed total, highest first.', hint:'INNER JOIN all three tables, ORDER BY quantity*price DESC, LIMIT 3.', check:{type:'combo-orderlimit'}},
+      {id:'ex5-q3', type:'sql', label:'Q3 · JOIN + GROUP BY + HAVING', text:'Show every user\'s total amount spent (quantity × price, summed), including users who spent $0, but only users whose total is above 2000 OR exactly 0 (use HAVING — you can\'t filter an aggregate with WHERE).', hint:'This needs LEFT JOINs so zero-spend users survive, then GROUP BY + SUM + HAVING.', check:{type:'combo-having'}},
+      {id:'ex5-q4', type:'sql', label:'Q4 · JOIN + WHERE + ORDER BY', text:'List every user who has never placed an order, ordered alphabetically by fname.', hint:'LEFT JOIN + WHERE order-side key IS NULL + ORDER BY fname.', check:{type:'left-anti'}},
+      {id:'ex5-q5', type:'sql', label:'Q5 · JOIN + GROUP BY + HAVING, category edition', text:'Show each product <code class="inline">category</code> along with the number of orders placed against it, but only categories with more than 3 orders.', hint:'INNER JOIN orders to products, GROUP BY category, COUNT(*), HAVING COUNT(*) > 3.', check:{type:'combo-having'}},
+      {id:'ex5-q6', type:'sql', label:'Q6 · JOIN + ORDER BY + LIMIT, inventory edition', text:'List the 2 products with the LOWEST stock, along with how many times each has ever been ordered (0 is a valid answer). Every product should appear, ordered by stock ascending.', hint:'LEFT JOIN products to orders, GROUP BY product, COUNT(orders.id), ORDER BY stock ASC, LIMIT 2.', check:{type:'combo-orderlimit'}},
+      {id:'ex5-q7', type:'concept', label:'Q7 · Boss-battle bug', text:'A junior dev wrote: <code class="inline">SELECT u.fname, o.product_id, o.quantity FROM users u, orders o WHERE u.id = o.user_id OR o.quantity > 2;</code> — this returns way more rows than expected. Explain exactly why the OR is the bug, and what the corrected INNER JOIN + WHERE version should look like.'}
+    ]
+  }
+];
+
+// ═══════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════
+function renderExercises(){
+  var container=document.getElementById('exerciseContainer');
+  var nav=document.getElementById('navList');
+  var navHtml='', bodyHtml='';
+  EXERCISES.forEach(function(ex,i){
+    navHtml+='<div class="nav-item" id="nav-'+i+'" onclick="showExercise('+i+')">'+
+      '<div class="nav-dot" id="navdot-'+i+'">'+(i+1)+'</div><span>'+ex.title+'</span></div>';
+
+    var qh='';
+    ex.questions.forEach(function(q,qi){
+      qh+='<div class="question-block">';
+      qh+='<div class="question-text"><span class="qnum">Q'+(qi+1)+'.</span>'+q.text+'</div>';
+      var noCopy='onpaste="return blockPaste(event)" oncopy="return blockCopy(event)" oncut="return blockCopy(event)" oncontextmenu="return blockPaste(event)"';
+      if(q.type==='sql'){
+        qh+='<div class="query-block">';
+        qh+='<textarea class="sql-input" id="'+q.id+'" placeholder="-- write your SQL here" spellcheck="false" oninput="autoResize(this)" '+noCopy+'></textarea>';
+        qh+='<div class="query-toolbar"><span class="query-toolbar-left">PostgreSQL dialect · runs live in your browser</span>'+
+            '<div style="display:flex;align-items:center;gap:10px">'+
+              '<span class="query-status pending" id="'+q.id+'-status">Not run yet</span>'+
+              '<button class="btn-primary btn-sm run-btn" disabled onclick="runQuery(\''+q.id+'\')">▶ Run query</button>'+
+            '</div></div>';
+        qh+='</div>';
+        qh+='<div class="result-table-wrap" id="'+q.id+'-resulttable"></div>';
+      } else {
+        qh+='<textarea id="'+q.id+'" placeholder="Type your answer..." oninput="autoResize(this);updateProgress()" '+noCopy+'></textarea>';
+      }
+      qh+='</div>';
+    });
+
+    bodyHtml+='<div class="exercise-card" id="card-'+i+'">'+
+      '<div class="exercise-header">'+
+        '<span class="exercise-tag" style="color:'+ex.tagColor+';background:'+ex.tagBg+'">'+ex.tag+'</span>'+
+        '<div class="exercise-title">'+ex.title+'</div>'+
+        '<div class="exercise-desc">'+ex.desc+'</div>'+
+        '<div class="exercise-progress"><div class="ex-prog-bar"><div class="ex-prog-fill" id="exprog-'+i+'" style="width:0%"></div></div><div class="ex-prog-label" id="exprog-lbl-'+i+'">0% answered</div></div>'+
+      '</div>'+
+      '<div class="exercise-body">'+
+        (ex.intro||'')+
+        qh+
+        '<div class="nav-btns">'+
+          '<button class="btn-ghost" onclick="showExercise('+(i-1)+')" '+(i===0?'disabled':'')+'>← Previous</button>'+
+          '<div class="nav-btns-right">'+
+            (i<EXERCISES.length-1 ? '<button class="btn-primary" onclick="showExercise('+(i+1)+')">Next exercise →</button>' : '<button class="btn-success" onclick="finishLab()">🎉 Finish lab</button>')+
+          '</div>'+
+        '</div>'+
+      '</div></div>';
+  });
+  nav.innerHTML=navHtml;
+  container.innerHTML=bodyHtml;
+}
+
+function blockCopy(e){
+  e.preventDefault();
+  showToast('Copy/cut is disabled here — write your own answer 🙂');
+  return false;
+}
+function blockPaste(e){
+  e.preventDefault();
+  showToast('Pasting is disabled here — write your own answer 🙂');
+  return false;
+}
+
+function showExercise(i){
+  if(i<0||i>=EXERCISES.length) return;
+  EXERCISES.forEach(function(ex,idx){
+    document.getElementById('card-'+idx).classList.toggle('visible', idx===i);
+    document.getElementById('nav-'+idx).classList.toggle('active', idx===i);
+    document.getElementById('navdot-'+idx).classList.toggle('active', idx===i);
+  });
+  document.getElementById('completionCard').classList.remove('visible');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function finishLab(){
+  document.getElementById('completionCard').classList.add('visible');
+  window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
+}
+
+function autoResize(el){ el.style.height='auto'; el.style.height=(el.scrollHeight+2)+'px'; }
+
+// ═══════════════════════════════════════════════
+// PROGRESS
+// ═══════════════════════════════════════════════
+function getAllFields(){
+  var fields={};
+  EXERCISES.forEach(function(ex){
+    ex.questions.forEach(function(q){
+      var el=document.getElementById(q.id);
+      if(el) fields[q.id]={el:el, type:q.type};
+    });
+  });
+  return fields;
+}
+function isFieldDone(f){
+  if(f.type==='sql') return !!QUERY_ANSWERED[f.el.id];
+  return (f.el.value||'').trim().length>0;
+}
+function updateProgress(){
+  var fields=getAllFields();
+  var total=0, done=0;
+  Object.keys(fields).forEach(function(id){
+    total++;
+    if(isFieldDone(fields[id])) done++;
+  });
+  var pct=total>0?Math.round(done/total*100):0;
+  document.getElementById('progFill').style.width=pct+'%';
+  document.getElementById('progPct').textContent=pct+'%';
+
+  EXERCISES.forEach(function(ex,i){
+    var t=0,d=0;
+    ex.questions.forEach(function(q){
+      var f=fields[q.id];
+      if(f){ t++; if(isFieldDone(f)) d++; }
+    });
+    var epct=t>0?Math.round(d/t*100):0;
+    var fill=document.getElementById('exprog-'+i);
+    var lbl=document.getElementById('exprog-lbl-'+i);
+    if(fill) fill.style.width=epct+'%';
+    if(lbl) lbl.textContent=epct+'% answered';
+    var dot=document.getElementById('navdot-'+i);
+    if(dot){
+      if(epct===100){dot.classList.add('done');dot.textContent='✓';}
+      else{dot.classList.remove('done');dot.textContent=i+1;}
+    }
+    var navItem=document.getElementById('nav-'+i);
+    if(navItem) navItem.classList.toggle('done', epct===100);
+  });
+  document.querySelectorAll('textarea').forEach(function(el){
+    if(el.classList.contains('sql-input')){
+      el.classList.toggle('answered', !!QUERY_ANSWERED[el.id]);
+    } else {
+      el.classList.toggle('answered',(el.value||'').trim().length>0);
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════
+// SAVE / LOAD / DOWNLOAD
+// ═══════════════════════════════════════════════
+function gatherAll(){
+  var data={
+    lab:'dbms-sql-join-lab',
+    meta:{
+      name:document.getElementById('f-name').value,
+      studentId:document.getElementById('f-id').value,
+      classSection:document.getElementById('f-class').value,
+      date:document.getElementById('f-date').value,
+      savedAt:new Date().toISOString()
+    },
+    answers:{}
+  };
+  var fields=getAllFields();
+  Object.keys(fields).forEach(function(id){ data.answers[id]=fields[id].el.value; });
+  return data;
+}
+function saveDraft(){
+  try{
+    localStorage.setItem('dbms_sql_join_lab_draft', JSON.stringify(gatherAll()));
+    showToast('Draft saved ✓');
+  }catch(e){ showToast('Could not save'); }
+}
+function loadDraft(){
+  try{
+    var raw=localStorage.getItem('dbms_sql_join_lab_draft');
+    if(!raw) return;
+    var data=JSON.parse(raw);
+    if(data.meta){
+      if(data.meta.name) document.getElementById('f-name').value=data.meta.name;
+      if(data.meta.studentId) document.getElementById('f-id').value=data.meta.studentId;
+      if(data.meta.classSection) document.getElementById('f-class').value=data.meta.classSection;
+      if(data.meta.date) document.getElementById('f-date').value=data.meta.date;
+    }
+    if(data.answers){
+      Object.keys(data.answers).forEach(function(id){
+        var el=document.getElementById(id);
+        if(!el) return;
+        el.value=data.answers[id];
+        autoResize(el);
+      });
+    }
+    updateProgress();
+  }catch(e){}
+}
+function showToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); },2200);
+}
+
+// ═══════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', function(){
+  renderDataset();
+  renderExercises();
+  showExercise(0);
+  loadDraft();
+  updateProgress();
+  initEngine();
+});
+document.addEventListener('keydown', function(e){
+  if((e.ctrlKey||e.metaKey) && e.key==='s'){ e.preventDefault(); saveDraft(); }
+});
+
+window.runQuery = runQuery;
+window.resetEngine = resetEngine;
+window.showExercise = showExercise;
+window.finishLab = finishLab;
+window.autoResize = autoResize;
+window.updateProgress = updateProgress;
+window.saveDraft = saveDraft;
+window.blockCopy = blockCopy;
+window.blockPaste = blockPaste;
+</script>
+</body>
+</html>
