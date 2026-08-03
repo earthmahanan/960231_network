@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DBMS Lab — Subqueries & Views</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F7F1E8;
+  --card:#FFFEFB;
+  --burgundy:#6E1423;
+  --burgundy-light:#8C1D2E;
+  --burgundy-dark:#4A0E18;
+  --gold:#C9962C;
+  --gold-light:#E8C46A;
+  --gold-bg:#FBF2DC;
+  --gold-bd:#D9AE4E;
+  --teal:#0F6E56;
+  --teal-bg:#E1F5EE;
+  --teal-bd:#5DCAA5;
+  --red:#791F1F;
+  --red-bg:#FCEBEB;
+  --red-bd:#F09595;
+  --blue-bg:#F3E9D8;
+  --blue-bd:#D9AE4E;
+  --txt:#2b211c;
+  --txt2:#6b5d52;
+  --txt3:#9a8c7f;
+  --bdr:#e3d5bf;
+  --bdr2:#cbb894;
+  --radius:10px;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+html,body{min-height:100%;background:var(--bg);font-family:var(--sans);color:var(--txt);font-size:15px;line-height:1.6}
+.shell{display:flex;min-height:100vh}
+.sidebar{width:260px;flex-shrink:0;background:var(--burgundy);position:sticky;top:0;height:100vh;overflow-y:auto;padding:1.5rem 0}
+.main{flex:1;max-width:980px;padding:2rem 2.5rem 4rem;min-width:0}
+@media(max-width:768px){.sidebar{display:none}.main{padding:1.25rem 1rem 3rem}}
+.sidebar-logo{font-size:17px;font-weight:700;color:#fff;padding:0 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:8px;line-height:1.3;flex-wrap:wrap}
+.sidebar-logo .mod-badge{font-size:11px;font-weight:600;background:rgba(201,150,44,.28);color:var(--gold-light);border-radius:4px;padding:2px 7px;letter-spacing:.05em}
+.sidebar-title{font-size:11px;font-weight:600;color:rgba(255,255,255,.5);letter-spacing:.08em;text-transform:uppercase;padding:0 1.25rem;margin-bottom:.75rem}
+.nav-item{display:flex;align-items:center;gap:10px;padding:.6rem 1.25rem;cursor:pointer;transition:background .15s;font-size:13px;color:rgba(255,255,255,.8);border-left:3px solid transparent}
+.nav-item:hover{background:rgba(255,255,255,.08)}
+.nav-item.active{background:rgba(255,255,255,.12);color:#fff;border-left-color:var(--gold-light)}
+.nav-item.done{color:rgba(255,255,255,.9)}
+.nav-dot{width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;transition:all .2s}
+.nav-dot.done{background:var(--gold-light);border-color:var(--gold-light);color:var(--burgundy-dark)}
+.nav-dot.active{border-color:#fff;color:#fff}
+.progress-bar-wrap{padding:1rem 1.25rem .5rem;margin-top:.5rem}
+.progress-bar-label{font-size:11px;color:rgba(255,255,255,.55);margin-bottom:6px;display:flex;justify-content:space-between}
+.progress-bar{height:4px;background:rgba(255,255,255,.18);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:var(--gold-light);border-radius:2px;transition:width .4s ease}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.75rem;flex-wrap:wrap;gap:12px}
+.topbar-left h1{font-size:22px;font-weight:700;color:var(--burgundy);margin-bottom:2px}
+.topbar-left p{font-size:13px;color:var(--txt2)}
+.topbar-right{display:flex;gap:8px;align-items:center}
+button{font-family:var(--sans);cursor:pointer;border:none;border-radius:8px;font-size:13px;font-weight:500;padding:8px 16px;transition:all .15s}
+button:disabled{opacity:.4;cursor:not-allowed}
+.btn-ghost{background:transparent;border:1.5px solid var(--bdr2);color:var(--txt2)}
+.btn-ghost:hover:not(:disabled){background:var(--card);border-color:var(--burgundy);color:var(--burgundy)}
+.btn-primary{background:var(--burgundy);color:#fff}
+.btn-primary:hover:not(:disabled){background:var(--burgundy-light)}
+.btn-success{background:var(--gold);color:#3b2a08}
+.btn-success:hover:not(:disabled){background:var(--gold-light)}
+.btn-sm{padding:5px 11px;font-size:12px;border-radius:6px}
+.student-banner{background:var(--card);border:1.5px solid var(--bdr);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1.75rem;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.student-banner h3{font-size:12px;font-weight:600;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.75rem}
+.student-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:520px){.student-grid{grid-template-columns:1fr}}
+.field-group{display:flex;flex-direction:column;gap:4px}
+.field-group label{font-size:12px;font-weight:600;color:var(--txt2)}
+.field-group input{border:1.5px solid var(--bdr);border-radius:6px;padding:7px 10px;font-size:14px;font-family:var(--sans);color:var(--txt);background:var(--bg);transition:border .15s}
+.field-group input:focus{outline:none;border-color:var(--burgundy);background:#fff}
+.exercise-card{background:var(--card);border:1.5px solid var(--bdr);border-radius:var(--radius);margin-bottom:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden;display:none}
+.exercise-card.visible{display:block}
+.exercise-header{padding:1.25rem 1.5rem 1rem;border-bottom:1.5px solid var(--bdr)}
+.exercise-tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;display:inline-block;padding:2px 8px;border-radius:4px;margin-bottom:6px}
+.exercise-title{font-size:19px;font-weight:700;color:var(--burgundy);margin-bottom:3px}
+.exercise-desc{font-size:13px;color:var(--txt2)}
+.exercise-body{padding:1.25rem 1.5rem}
+.exercise-progress{display:flex;align-items:center;gap:8px;margin-top:.75rem}
+.ex-prog-bar{flex:1;height:5px;background:var(--bg);border-radius:3px;overflow:hidden}
+.ex-prog-fill{height:100%;background:var(--gold-bd);border-radius:3px;transition:width .3s}
+.ex-prog-label{font-size:11px;color:var(--txt3);white-space:nowrap}
+.info-box{border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem;border:.5px solid}
+.info-box h4{font-size:13px;font-weight:700;margin-bottom:.4rem}
+.info-box p,.info-box ul,.info-box ol{font-size:13.5px;line-height:1.7}
+.info-box ul,.info-box ol{padding-left:1.25rem}
+.info-box.gold{background:var(--gold-bg);border-color:var(--gold-bd)}.info-box.gold h4{color:#8a6410}
+.info-box.teal{background:var(--teal-bg);border-color:var(--teal-bd)}.info-box.teal h4{color:var(--teal)}
+.info-box.red{background:var(--red-bg);border-color:var(--red-bd)}.info-box.red h4{color:var(--red)}
+.info-box.gray{background:#f4f0e6;border-color:var(--bdr)}.info-box.gray h4{color:var(--txt2)}
+.info-box code{font-family:var(--mono);background:rgba(0,0,0,.06);padding:1px 5px;border-radius:4px;font-size:12px}
+.section-heading{font-size:15px;font-weight:700;color:var(--burgundy);margin:1.5rem 0 .75rem;padding-bottom:.4rem;border-bottom:2px solid var(--gold-bg)}
+.step-label{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--burgundy);background:var(--gold-bg);border-radius:4px;padding:3px 10px;margin-bottom:.6rem}
+.question-block{margin-bottom:1.25rem}
+.question-text{font-size:14px;font-weight:600;color:var(--txt);margin-bottom:.5rem;line-height:1.5}
+.question-text .qnum{color:var(--burgundy);margin-right:4px}
+textarea{width:100%;border:1.5px solid var(--bdr);border-radius:8px;padding:10px 12px;font-size:13.5px;font-family:var(--sans);color:var(--txt);background:var(--bg);resize:vertical;transition:border .15s;line-height:1.6;min-height:72px;box-sizing:border-box;overflow:hidden}
+textarea:focus{outline:none;border-color:var(--burgundy);background:#fff}
+textarea.answered{border-color:var(--gold-bd);background:#fffdf6}
+textarea.sql-input{font-family:var(--mono);font-size:13px;background:#2b211c;color:#f5e9d0;min-height:60px}
+textarea.sql-input:focus{border-color:var(--burgundy)}
+textarea.sql-input.answered{border-color:var(--gold-bd)}
+.query-block{border:1.5px solid var(--bdr);border-radius:8px;overflow:hidden;margin-bottom:.5rem;background:#fff}
+.query-block textarea.sql-input{width:100%;border:none;border-radius:0;padding:10px 12px;resize:vertical;min-height:88px}
+.query-block textarea.sql-input:focus{outline:none;border:none}
+.query-toolbar{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg);border-top:1px solid var(--bdr)}
+.query-toolbar-left{font-size:11px;color:var(--txt3)}
+.query-status{font-size:12px;font-weight:600}
+.query-status.ok{color:var(--teal)}
+.query-status.err{color:var(--red)}
+.query-status.pending{color:var(--txt3)}
+.result-table-wrap{margin-top:.5rem;max-height:260px;overflow:auto;border-radius:8px;border:1.5px solid var(--bdr);display:none}
+.result-table-wrap.show{display:block}
+.result-table{width:100%;border-collapse:collapse;font-size:12px}
+.result-table th{background:var(--teal);color:#fff;padding:6px 8px;text-align:left;position:sticky;top:0}
+.result-table td{border-bottom:1px solid var(--bdr);padding:5px 8px;font-family:var(--mono)}
+.result-table tr:nth-child(even) td{background:#f7f9f8}
+.result-meta{font-size:11px;color:var(--txt3);padding:6px 8px}
+.engine-banner{display:flex;align-items:center;gap:10px;background:var(--card);border:1.5px dashed var(--bdr2);border-radius:8px;padding:.6rem .9rem;margin-bottom:1.25rem;font-size:12px;color:var(--txt3)}
+.engine-dot{width:9px;height:9px;border-radius:50%;background:var(--txt3);flex-shrink:0}
+.engine-dot.ready{background:var(--teal)}
+.engine-dot.loading{background:var(--gold);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.result-msg{font-size:12.5px;padding:.5rem .75rem;border-radius:6px;margin-top:.5rem}
+.result-msg.ok{background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal-bd)}
+.result-msg.err{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)}
+.result-msg.warn{background:var(--gold-bg);color:#8a6410;border:1px solid var(--gold-bd)}
+.table-wrap{overflow-x:auto;margin-bottom:1rem;border-radius:8px;border:1.5px solid var(--bdr)}
+.lab-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.lab-table th{background:var(--burgundy);color:#fff;padding:7px 9px;text-align:left;font-weight:600;font-size:11.5px;white-space:nowrap}
+.lab-table td{border-bottom:1px solid var(--bdr);padding:6px 9px;font-family:var(--mono);font-size:12px;white-space:nowrap}
+.lab-table tr:last-child td{border-bottom:none}
+.lab-table tr:nth-child(even) td{background:#faf6ec}
+.lab-table td.null-cell{color:var(--txt3);font-style:italic}
+.scenario-box{background:var(--gold-bg);border:1px solid var(--gold-bd);border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem;font-size:13.5px;line-height:1.75;color:#3b2a08}
+.scenario-box strong{color:var(--burgundy)}
+.fun-fact{display:flex;gap:10px;align-items:flex-start;background:#EFE4F0;border:.5px solid #C9A8CC;border-radius:8px;padding:.85rem 1rem;margin-bottom:1.25rem}
+.fun-fact .ff-icon{font-size:22px;line-height:1}
+.fun-fact .ff-text{font-size:13px;color:#6E2A6E;line-height:1.6}
+.fun-fact .ff-text strong{color:#6E2A6E}
+.venn-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:1.25rem}
+.venn-card{flex:1;min-width:150px;background:var(--card);border:1.5px solid var(--bdr);border-radius:8px;padding:.9rem;text-align:center}
+.venn-card svg{margin-bottom:6px}
+.venn-card .vname{font-size:12.5px;font-weight:700;color:var(--burgundy)}
+.nav-btns{display:flex;justify-content:space-between;align-items:center;margin-top:1.75rem;padding-top:1.25rem;border-top:1.5px solid var(--bdr)}
+.nav-btns-right{display:flex;gap:8px}
+.completion-card{background:var(--card);border:2px solid var(--gold-bd);border-radius:var(--radius);padding:2rem;text-align:center;box-shadow:0 4px 16px rgba(110,20,35,.12);display:none}
+.completion-card.visible{display:block}
+.completion-card .check{font-size:52px;margin-bottom:.75rem}
+.completion-card h2{font-size:24px;font-weight:700;color:var(--burgundy);margin-bottom:.5rem}
+.completion-card p{font-size:15px;color:var(--txt2);margin-bottom:1.5rem}
+.completion-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.toast{position:fixed;bottom:1.25rem;right:1.25rem;background:var(--burgundy);color:#fff;font-size:13px;padding:9px 16px;border-radius:8px;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;z-index:100}
+.toast.show{opacity:1;transform:translateY(0)}
+code.inline{font-family:var(--mono);background:rgba(0,0,0,.06);padding:1px 6px;border-radius:4px;font-size:12.5px;color:var(--burgundy)}
+@media print{
+  .sidebar{display:none !important}
+  .main{max-width:100%;padding:0 .25in}
+  .topbar-right,.toast,.engine-banner{display:none !important}
+  .exercise-card{display:block !important;box-shadow:none;border:1px solid var(--bdr);page-break-inside:avoid;break-inside:avoid;margin-bottom:1.25rem}
+  .exercise-card:not(:last-of-type){page-break-after:always;break-after:page}
+  .completion-card{display:none !important}
+  .nav-btns{display:none !important}
+  .query-toolbar .run-btn{display:none !important}
+  .result-table-wrap{max-height:none !important;overflow:visible !important}
+  textarea{background:#fff !important;color:#2b211c !important;border:1px solid var(--bdr2)}
+  textarea.sql-input{background:#fff !important;color:#2b211c !important}
+  .query-block{border:1px solid var(--bdr2)}
+  button{display:none !important}
+  body{background:#fff}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="sidebar">
+    <div class="sidebar-logo">🔍 <span>Subquery & Views Lab <span class="mod-badge">MODULE 9</span></span></div>
+    <div class="sidebar-title">Exercises</div>
+    <div id="navList"></div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-label"><span>Overall progress</span><span id="progPct">0%</span></div>
+      <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1>Subqueries & Views — A Query Inside a Query</h1>
+        <p>Same shop, same tables — now you'll ask questions that need an answer before they can be answered.</p>
+      </div>
+      <div class="topbar-right">
+        <button class="btn-ghost" onclick="saveDraft()">💾 Save draft</button>
+        <button class="btn-ghost" onclick="resetEngine()">↺ Reset database</button>
+        <button class="btn-primary" onclick="window.print()">🖨 Print / PDF</button>
+      </div>
+    </div>
+
+    <div class="student-banner">
+      <h3>Student info</h3>
+      <div class="student-grid">
+        <div class="field-group"><label for="f-name">Full name</label><input type="text" id="f-name" placeholder="e.g. Somchai Prasert" oninput="updateProgress()"></div>
+        <div class="field-group"><label for="f-id">Student ID</label><input type="text" id="f-id" placeholder="e.g. s1234567" oninput="updateProgress()"></div>
+        <div class="field-group"><label for="f-class">Class / section</label><input type="text" id="f-class" placeholder="e.g. COMP201-A" oninput="updateProgress()"></div>
+        <div class="field-group"><label for="f-date">Date</label><input type="date" id="f-date" oninput="updateProgress()"></div>
+      </div>
+    </div>
+
+    <div class="fun-fact">
+      <div class="ff-icon">🪆</div>
+      <div class="ff-text"><strong>Think Russian nesting dolls.</strong> A <strong>subquery</strong> is a query hiding inside another query — the inner one has to run first before the outer one can use its answer ("what's the average price?" before "which products cost more than that?"). A <strong>view</strong> is just a subquery you liked enough to give a name and save — so instead of retyping it everywhere, you <code class="inline">SELECT * FROM your_saved_query</code> like it's a real table. Keep that picture in your head for every exercise below.</div>
+    </div>
+
+    <div class="info-box gold">
+      <h4>📎 Same dataset as the JOIN lab (Module 8)</h4>
+      <p>You're still the backend dev for the same small electronics shop. Same three tables — <code class="inline">users</code>, <code class="inline">products</code>, <code class="inline">orders</code> — same rows. If you did Module 8, you already know this data; this time you'll answer questions JOINs alone can't easily solve, and package the useful ones as views.</p>
+    </div>
+
+    <div class="engine-banner">
+      <span class="engine-dot" id="engineDot"></span>
+      <span id="engineMsg">Starting the in-browser SQL engine (PostgreSQL via WebAssembly — PGlite)…</span>
+    </div>
+
+    <div id="datasetTables"></div>
+
+    <div id="exerciseContainer"></div>
+
+    <div class="completion-card" id="completionCard">
+      <div class="check">✅</div>
+      <h2>Lab complete!</h2>
+      <p>All questions answered. Save this page as a PDF and upload it as instructed.</p>
+      <div class="completion-actions">
+        <button class="btn-primary" onclick="window.print()">🖨 Print / PDF</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { PGlite } from 'https://cdn.jsdelivr.net/npm/@electric-sql/pglite/dist/index.js';
+
+var DB = null;
+var ENGINE_READY = false;
+
+var SEED_SQL = `
+CREATE TABLE users (
+  id INTEGER PRIMARY KEY,
+  fname TEXT NOT NULL,
+  lname TEXT NOT NULL,
+  email TEXT NOT NULL,
+  status TEXT NOT NULL,
+  city TEXT,
+  referred_by INTEGER REFERENCES users(id)
+);
+CREATE TABLE products (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  category TEXT NOT NULL,
+  price NUMERIC NOT NULL,
+  stock INTEGER NOT NULL
+);
+CREATE TABLE orders (
+  id INTEGER PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id),
+  product_id INTEGER NOT NULL REFERENCES products(id),
+  quantity INTEGER NOT NULL,
+  order_date TEXT NOT NULL,
+  status TEXT NOT NULL
+);
+
+INSERT INTO users (id,fname,lname,email,status,city,referred_by) VALUES
+(1,'Now','Suphanat','now@mail.com','active','Bangkok',NULL),
+(2,'Ploy','Kanjanaporn','ploy@mail.com','active','Chiang Mai',1),
+(3,'Field','Anuwat','field@mail.com','inactive','Bangkok',NULL),
+(4,'Yoyo','Ratchanok','yoyo@mail.com','active','Khon Kaen',2),
+(5,'Toey','Kamonwan','toey@mail.com','banned','Bangkok',NULL),
+(6,'Boss','Krittin','boss@mail.com','active','Phuket',1),
+(7,'Milk','Waraporn','milk@mail.com','active','Chiang Mai',6),
+(8,'Kim','Napassorn','kim@mail.com','inactive','Bangkok',NULL);
+
+INSERT INTO products (id,name,category,price,stock) VALUES
+(1,'Mechanical Keyboard','Electronics',1590.00,25),
+(2,'Wireless Mouse','Electronics',590.00,60),
+(3,'Standing Desk','Furniture',6900.00,5),
+(4,'Office Chair','Furniture',3200.00,12),
+(5,'USB-C Hub','Electronics',790.00,0),
+(6,'Desk Lamp','Furniture',450.00,30),
+(7,'Monitor 27in','Electronics',5200.00,8),
+(8,'Webcam 1080p','Electronics',990.00,20);
+
+INSERT INTO orders (id,user_id,product_id,quantity,order_date,status) VALUES
+(1,1,1,1,'2024-05-01','completed'),
+(2,1,2,2,'2024-05-01','completed'),
+(3,2,3,1,'2024-05-03','completed'),
+(4,3,4,1,'2024-05-04','cancelled'),
+(5,4,1,1,'2024-05-05','completed'),
+(6,4,7,1,'2024-05-05','completed'),
+(7,6,2,3,'2024-05-07','completed'),
+(8,1,7,1,'2024-05-10','pending'),
+(9,7,6,2,'2024-05-11','completed'),
+(10,2,1,1,'2024-05-12','completed'),
+(11,4,4,1,'2024-05-13','pending'),
+(12,6,5,1,'2024-05-14','cancelled'),
+(13,NULL,2,1,'2024-05-15','completed');
+`;
+
+var IDB_NAME = 'sql-subquery-views-lab-db-v1';
+
+async function tablesExist(){
+  try{
+    var res = await DB.query("SELECT to_regclass('public.users') AS t;");
+    return !!(res.rows[0] && res.rows[0].t);
+  }catch(e){ return false; }
+}
+
+async function initEngine(){
+  var dot=document.getElementById('engineDot');
+  var msg=document.getElementById('engineMsg');
+  dot.classList.add('loading');
+  try{
+    DB = new PGlite('idb://' + IDB_NAME);
+    await DB.waitReady;
+    if(!(await tablesExist())){
+      await DB.exec(SEED_SQL);
+    }
+    ENGINE_READY = true;
+    dot.classList.add('ready'); dot.classList.remove('loading');
+    msg.textContent = 'SQL engine ready — real PostgreSQL running in your browser. Your data persists here across visits.';
+    document.querySelectorAll('.run-btn').forEach(function(b){ b.disabled = false; });
+  }catch(err){
+    msg.textContent = 'Engine failed to load (' + err.message + '). Check your connection and reload.';
+  }
+}
+
+async function resetEngine(){
+  if(!ENGINE_READY) return;
+  if(!window.confirm('This will permanently erase everything you inserted/updated/deleted and restore the original seed data. Continue?')) return;
+  await DB.exec('DROP TABLE IF EXISTS orders; DROP TABLE IF EXISTS products; DROP TABLE IF EXISTS users;');
+  await DB.exec(SEED_SQL);
+  showToast('Database reset to original seed data ✓');
+}
+
+var QUERY_ANSWERED = {};
+
+async function runQuery(id){
+  var editor = document.getElementById(id);
+  var statusEl = document.getElementById(id+'-status');
+  var resultWrap = document.getElementById(id+'-resulttable');
+  if(!ENGINE_READY){ statusEl.textContent='Engine still loading…'; statusEl.className='query-status pending'; return; }
+  var sql = editor.value.trim();
+  if(!sql){ statusEl.textContent='Write a query first'; statusEl.className='query-status pending'; return; }
+  try{
+    var res = await DB.query(sql);
+    var cols = (res.fields || []).map(function(f){ return f.name; });
+    var rows = res.rows || [];
+    if(cols.length === 0){
+      statusEl.textContent = '✓ Statement executed' + (typeof res.affectedRows === 'number' ? '. Changed rows: ' + res.affectedRows : '');
+      statusEl.className = 'query-status ok';
+      resultWrap.classList.remove('show');
+      resultWrap.innerHTML = '';
+    } else {
+      var html = '<table class="result-table"><thead><tr>' + cols.map(function(c){return '<th>'+c+'</th>';}).join('') + '</tr></thead><tbody>';
+      rows.forEach(function(r){
+        html += '<tr>' + cols.map(function(c){ var v=r[c]; return '<td>'+(v===null||v===undefined?'<i>NULL</i>':v)+'</td>'; }).join('') + '</tr>';
+      });
+      html += '</tbody></table><div class="result-meta">' + rows.length + ' row(s) returned</div>';
+      resultWrap.innerHTML = html;
+      resultWrap.classList.add('show');
+      statusEl.textContent = '✓ Success';
+      statusEl.className = 'query-status ok';
+    }
+    QUERY_ANSWERED[id] = true;
+  }catch(e){
+    statusEl.textContent = '✗ ' + e.message;
+    statusEl.className = 'query-status err';
+    resultWrap.classList.remove('show');
+  }
+  updateProgress();
+}
+
+// ═══════════════════════════════════════════════
+// DATA — static preview tables shown above the exercises
+// (mirrors the real seeded database above exactly)
+// ═══════════════════════════════════════════════
+var USERS = {
+  headers:['id','fname','lname','email','status','city','referred_by'],
+  rows:[
+    [1,'Now','Suphanat','now@mail.com','active','Bangkok',null],
+    [2,'Ploy','Kanjanaporn','ploy@mail.com','active','Chiang Mai',1],
+    [3,'Field','Anuwat','field@mail.com','inactive','Bangkok',null],
+    [4,'Yoyo','Ratchanok','yoyo@mail.com','active','Khon Kaen',2],
+    [5,'Toey','Kamonwan','toey@mail.com','banned','Bangkok',null],
+    [6,'Boss','Krittin','boss@mail.com','active','Phuket',1],
+    [7,'Milk','Waraporn','milk@mail.com','active','Chiang Mai',6],
+    [8,'Kim','Napassorn','kim@mail.com','inactive','Bangkok',null]
+  ]
+};
+var PRODUCTS = {
+  headers:['id','name','category','price','stock'],
+  rows:[
+    [1,'Mechanical Keyboard','Electronics',1590.00,25],
+    [2,'Wireless Mouse','Electronics',590.00,60],
+    [3,'Standing Desk','Furniture',6900.00,5],
+    [4,'Office Chair','Furniture',3200.00,12],
+    [5,'USB-C Hub','Electronics',790.00,0],
+    [6,'Desk Lamp','Furniture',450.00,30],
+    [7,'Monitor 27in','Electronics',5200.00,8],
+    [8,'Webcam 1080p','Electronics',990.00,20]
+  ]
+};
+var ORDERS = {
+  headers:['id','user_id','product_id','quantity','order_date','status'],
+  rows:[
+    [1,1,1,1,'2024-05-01','completed'],
+    [2,1,2,2,'2024-05-01','completed'],
+    [3,2,3,1,'2024-05-03','completed'],
+    [4,3,4,1,'2024-05-04','cancelled'],
+    [5,4,1,1,'2024-05-05','completed'],
+    [6,4,7,1,'2024-05-05','completed'],
+    [7,6,2,3,'2024-05-07','completed'],
+    [8,1,7,1,'2024-05-10','pending'],
+    [9,7,6,2,'2024-05-11','completed'],
+    [10,2,1,1,'2024-05-12','completed'],
+    [11,4,4,1,'2024-05-13','pending'],
+    [12,6,5,1,'2024-05-14','cancelled'],
+    [13,null,2,1,'2024-05-15','completed']
+  ]
+};
+
+function renderDataTable(data){
+  var h='<div class="table-wrap"><table class="lab-table"><thead><tr>';
+  data.headers.forEach(function(hd){h+='<th>'+hd+'</th>';});
+  h+='</tr></thead><tbody>';
+  data.rows.forEach(function(r){
+    h+='<tr>';
+    r.forEach(function(c){
+      h+= (c===null||c===undefined) ? '<td class="null-cell">NULL</td>' : '<td>'+c+'</td>';
+    });
+    h+='</tr>';
+  });
+  h+='</tbody></table></div>';
+  return h;
+}
+
+function renderDataset(){
+  var h='<div class="section-heading">users</div>'+renderDataTable(USERS);
+  h+='<div class="section-heading">products <span style="font-weight:400;color:var(--txt3);font-size:11.5px">— note Webcam 1080p (id 8): never ordered</span></div>'+renderDataTable(PRODUCTS);
+  h+='<div class="section-heading">orders <span style="font-weight:400;color:var(--txt3);font-size:11.5px">— note order 13: a walk-in sale with no matching user</span></div>'+renderDataTable(ORDERS);
+  document.getElementById('datasetTables').innerHTML=h;
+}
+
+// ═══════════════════════════════════════════════
+// EXERCISES
+// ═══════════════════════════════════════════════
+var EXERCISES = [
+  {
+    id:'ex1', tag:'Exercise 1', tagColor:'#6E1423', tagBg:'#FBF2DC',
+    title:'Scalar & WHERE Subqueries',
+    desc:'Ask a question whose answer depends on another question — starting with the simplest shape: one query nested in the WHERE clause.',
+    intro:'<div class="scenario-box"><strong>Scenario:</strong> The manager doesn\'t want "products under 1000 baht" — that number changes every quarter. She wants "products cheaper than our average price," worked out fresh every time you run the report.</div>',
+    questions:[
+      {id:'ex1-q1', type:'sql', label:'Q1 · Scalar subquery', text:'Write a query that returns <code class="inline">name</code> and <code class="inline">price</code> for every product priced <em>above</em> the average price of all products. Use a subquery in the <code class="inline">WHERE</code> clause — do not hardcode the average as a number.', hint:'SELECT name, price FROM products WHERE price > (SELECT AVG(price) FROM products);', check:{type:'scalar'}},
+      {id:'ex1-q2', type:'concept', label:'Q2 · Order of execution', text:'In the query you just wrote, which part runs first — the inner <code class="inline">SELECT AVG(price)...</code> or the outer <code class="inline">SELECT name, price...</code>? Explain how you know.'},
+      {id:'ex1-q3', type:'sql', label:'Q3 · IN with a subquery', text:'Write a query that returns the <code class="inline">fname</code> and <code class="inline">city</code> of every user who has placed at least one order with status <code class="inline">completed</code>. Use <code class="inline">IN</code> with a subquery on <code class="inline">orders</code> — no JOIN allowed here.', hint:'SELECT fname, city FROM users WHERE id IN (SELECT user_id FROM orders WHERE status = \'completed\');', check:{type:'in-subquery'}},
+      {id:'ex1-q4', type:'sql', label:'Q4 · Subquery in FROM', text:'Write a query using a subquery in the <code class="inline">FROM</code> clause that first computes each product\'s <code class="inline">quantity * price</code> as <code class="inline">line_total</code> for every order row, then selects only the rows from that subquery where <code class="inline">line_total > 3000</code>.', hint:'SELECT * FROM (SELECT o.id, p.name, o.quantity * p.price AS line_total FROM orders o JOIN products p ON o.product_id = p.id) AS t WHERE line_total > 3000;', check:{type:'from-subquery'}}
+    ]
+  },
+  {
+    id:'ex2', tag:'Exercise 2', tagColor:'#0F6E56', tagBg:'#E1F5EE',
+    title:'Subqueries',
+    desc:'The plot twist: this time the inner query can\'t run on its own — it needs a value from the outer row first.',
+    intro:'<div class="scenario-box"><strong>Scenario:</strong> "Average price" was a single, shop-wide number. Now ops wants something trickier: for every product, compare it only against products in its <em>own</em> category. That number is different for every row — the query has to re-ask the question per row.</div>',
+    questions:[
+      {id:'ex2-q1', type:'sql', label:'Q1 · subquery', text:'Write a query that returns <code class="inline">name</code>, <code class="inline">category</code>, and <code class="inline">price</code> for every product priced above the average price <em>of its own category</em>. The inner query must reference <code class="inline">category</code> from the outer row.', hint:'SELECT p1.name, p1.category, p1.price FROM products p1 WHERE p1.price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category = p1.category);', check:{type:'correlated'}},
+      //{id:'ex2-q2', type:'concept', label:'Q2 · Why "correlated"?', text:'What makes this subquery "correlated" rather than an ordinary subquery like the one in Exercise 1? Point to the exact part of the SQL that creates the dependency.'},
+      {id:'ex2-q3', type:'sql', label:'Q3 · EXISTS', text:'Write a query that returns the <code class="inline">fname</code> of every user who has placed at least one order for a <code class="inline">Furniture</code> product. Use <code class="inline">EXISTS</code> with a subquery — no JOIN, no IN.', hint:'SELECT fname FROM users u WHERE EXISTS (SELECT 1 FROM orders o JOIN products p ON o.product_id = p.id WHERE o.user_id = u.id AND p.category = \'Furniture\');', check:{type:'exists'}},
+      {id:'ex2-q4', type:'concept', label:'Q4 · NOT IN vs NOT EXISTS trap', text:'The <code class="inline">orders</code> table has a row (order 13) where <code class="inline">user_id</code> is <code class="inline">NULL</code>. If someone wrote <code class="inline">SELECT fname FROM users WHERE id NOT IN (SELECT user_id FROM orders)</code>, what would happen, and why? What would you use instead to safely find users with zero orders?'}
+    ]
+  },
+  {
+    id:'ex3', tag:'Exercise 3 · Combined', tagColor:'#791F1F', tagBg:'#FCEBEB',
+    title:'Combined Practice — Subqueries + JOINs',
+    desc:'Real reports rarely use just one technique. Every question below needs a JOIN AND a subquery working together in the same query.',
+    intro:'<div class="fun-fact"><div class="ff-icon">🔥</div><div class="ff-text"><strong>Rules of engagement:</strong> nobody tells you where the subquery goes or which JOIN type to use — read what the question needs (a threshold to compare against? every row from one side, matched or not?) and combine the two techniques yourself.</div></div>',
+    questions:[
+      {id:'ex3-q1', type:'sql', label:'Q1 · JOIN + scalar subquery', text:'Return <code class="inline">fname</code>, product <code class="inline">name</code>, and <code class="inline">quantity</code> for every order where the ordered <code class="inline">quantity</code> is above the average quantity across ALL orders. You need a JOIN (to get the names) AND a subquery (for the average).', hint:'SELECT u.fname, p.name, o.quantity FROM orders o JOIN users u ON o.user_id = u.id JOIN products p ON o.product_id = p.id WHERE o.quantity > (SELECT AVG(quantity) FROM orders);', check:{type:'join-scalar'}},
+      {id:'ex3-q2', type:'sql', label:'Q2 · JOIN + subquery', text:'Return <code class="inline">name</code> (product), <code class="inline">category</code>, and <code class="inline">order id</code> for every order placed on a product priced above the average price <em>of its own category</em> (reuse your Exercise 2 logic), joined so the order id is visible.', hint:'SELECT p.name, p.category, o.id FROM orders o JOIN products p ON o.product_id = p.id WHERE p.price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category = p.category);', check:{type:'join-correlated'}},
+      //{id:'ex3-q3', type:'sql', label:'Q3 · LEFT JOIN + EXISTS', text:'Return the <code class="inline">fname</code> and <code class="inline">city</code> of every user, plus a computed column <code class="inline">has_furniture_order</code> that is TRUE if that user has ever ordered a <code class="inline">Furniture</code> product and FALSE otherwise. All users must appear.', hint:'SELECT u.fname, u.city, EXISTS (SELECT 1 FROM orders o JOIN products p ON o.product_id = p.id WHERE o.user_id = u.id AND p.category = \'Furniture\') AS has_furniture_order FROM users u;', check:{type:'exists-flag'}},
+      {id:'ex3-q4', type:'sql', label:'Q4 · JOIN + subquery in FROM', text:'Using a subquery in the <code class="inline">FROM</code> clause that first computes each order\'s <code class="inline">quantity * price</code> as <code class="inline">line_total</code>, JOIN that result back to <code class="inline">users</code> and return <code class="inline">fname</code> and <code class="inline">line_total</code> for only the rows where <code class="inline">line_total > 3000</code>.', hint:'SELECT u.fname, t.line_total FROM (SELECT o.user_id, o.quantity * p.price AS line_total FROM orders o JOIN products p ON o.product_id = p.id) AS t JOIN users u ON t.user_id = u.id WHERE t.line_total > 3000;', check:{type:'join-from-subquery'}},
+      //{id:'ex3-q5', type:'sql', label:'Q5 · LEFT JOIN vs NOT EXISTS, same answer two ways', text:'Find every product that has never been ordered, TWICE in the same box: once using <code class="inline">LEFT JOIN ... WHERE ... IS NULL</code>, and once using <code class="inline">NOT EXISTS</code>. Both should return the identical row(s).', hint:'Query 1: SELECT p.name FROM products p LEFT JOIN orders o ON p.id = o.product_id WHERE o.id IS NULL; -- Query 2: SELECT p.name FROM products p WHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.product_id = p.id);', check:{type:'left-vs-notexists'}},
+      {id:'ex3-q6', type:'concept', label:'Q6 · Boss-battle bug', text:'A junior dev wrote: <code class="inline">SELECT name FROM products WHERE price > (SELECT price FROM products WHERE category = \'Electronics\');</code> and got the error <code class="inline">"more than one row returned by a subquery used as an expression"</code>. Explain exactly why this happens, and rewrite it two ways: once using an aggregate function, and once using <code class="inline">ANY</code>.'}
+    ]
+  },
+  {
+    id:'ex4', tag:'Exercise 4', tagColor:'#B8860B', tagBg:'#FBF1D8',
+    title:'Creating & Querying Views',
+    desc:'Stop retyping the same subquery. Save it once, under a name, and query it like a table forever after.',
+    intro:'<div class="scenario-box"><strong>Scenario:</strong> Finance keeps asking for "spending per user" in slightly different ways every week. Instead of rewriting the JOIN + GROUP BY each time, wrap it once as a view they can just <code class="inline">SELECT * FROM</code>.</div>',
+    questions:[
+      {id:'ex4-q1', type:'sql', label:'Q1 · CREATE VIEW', text:'Create a view named <code class="inline">user_spending</code> with columns <code class="inline">fname</code>, <code class="inline">city</code>, and <code class="inline">total_spent</code> (the SUM of <code class="inline">quantity * price</code> across all of that user\'s orders). Every user must appear, even ones who spent $0 — use the right JOIN type.', hint:'CREATE VIEW user_spending AS SELECT u.fname, u.city, COALESCE(SUM(o.quantity * p.price), 0) AS total_spent FROM users u LEFT JOIN orders o ON u.id = o.user_id LEFT JOIN products p ON o.product_id = p.id GROUP BY u.fname, u.city;', check:{type:'create-view'}},
+      {id:'ex4-q2', type:'sql', label:'Q2 · Query the view', text:'Now query <code class="inline">user_spending</code> (not the base tables) to return only users whose <code class="inline">total_spent</code> is above 3000, ordered highest first.', hint:'SELECT * FROM user_spending WHERE total_spent > 3000 ORDER BY total_spent DESC;', check:{type:'query-view'}},
+      {id:'ex4-q3', type:'sql', label:'Q3 · A second view, built on a subquery', text:'Create a view named <code class="inline">expensive_products</code> containing <code class="inline">name</code>, <code class="inline">category</code>, and <code class="inline">price</code> for every product priced above the overall average price (reuse your logic from Exercise 1, Q1, but as a view this time).', hint:'CREATE VIEW expensive_products AS SELECT name, category, price FROM products WHERE price > (SELECT AVG(price) FROM products);', check:{type:'create-view'}},
+      //{id:'ex4-q4', type:'sql', label:'Q4 · View built with a JOIN + subquery', text:'Create a view named <code class="inline">product_order_counts</code> with <code class="inline">name</code>, <code class="inline">category</code>, and <code class="inline">times_ordered</code> (COUNT of orders for that product, 0 if never ordered — use the right JOIN). Then, in the same box, write a second query against the view returning only products with <code class="inline">times_ordered = 0</code>.', hint:'CREATE VIEW product_order_counts AS SELECT p.name, p.category, COUNT(o.id) AS times_ordered FROM products p LEFT JOIN orders o ON p.id = o.product_id GROUP BY p.name, p.category; -- then: SELECT * FROM product_order_counts WHERE times_ordered = 0;', check:{type:'create-view'}},
+      //{id:'ex4-q5', type:'concept', label:'Q5 · Why bother with a view?', text:'The query behind <code class="inline">expensive_products</code> is barely three lines. What is actually gained by saving it as a view instead of just typing the subquery again each time? Give at least two concrete benefits.'}
+    ]
+  },
+  {
+    id:'ex5', tag:'Exercise 5', tagColor:'#3C3489', tagBg:'#EEEDFE',
+    title:'Updating Through Views & Managing Them',
+    desc:'Views aren\'t always just for reading. Find out when PostgreSQL will let you write through one — and when it won\'t.',
+    intro:'<div class="fun-fact"><div class="ff-icon">⚠️</div><div class="ff-text"><strong>Heads up:</strong> not every view is <em>updatable</em>. A view built from a single table with no aggregation, <code class="inline">DISTINCT</code>, or <code class="inline">GROUP BY</code> usually is. One built on <code class="inline">SUM()</code> and <code class="inline">GROUP BY</code>, like <code class="inline">user_spending</code>, is not — PostgreSQL won\'t know which underlying row you actually mean to change.</div></div>',
+    questions:[
+      {id:'ex5-q1', type:'sql', label:'Q1 · A simple, updatable view', text:'Create a view named <code class="inline">bangkok_users</code> containing all columns of <code class="inline">users</code> where <code class="inline">city = \'Bangkok\'</code>.', hint:'CREATE VIEW bangkok_users AS SELECT * FROM users WHERE city = \'Bangkok\';', check:{type:'create-view'}},
+      {id:'ex5-q2', type:'sql', label:'Q2 · UPDATE through the view', text:'Through <code class="inline">bangkok_users</code> (not the <code class="inline">users</code> table directly), update Kim Napassorn\'s status to <code class="inline">active</code>. Then run <code class="inline">SELECT * FROM users WHERE fname = \'Kim\';</code> in the box below to confirm the base table actually changed.', hint:'UPDATE bangkok_users SET status = \'active\' WHERE fname = \'Kim\';  -- then check with a second query', check:{type:'update-view'}},
+      {id:'ex5-q3', type:'sql', label:'Q3 · Try updating an aggregating view', text:'Attempt <code class="inline">UPDATE user_spending SET total_spent = 0 WHERE fname = \'Now\';</code> and run it. Paste the exact error message PostgreSQL gives you into your answer for Q4.', hint:'This should fail — that is expected and correct.', check:{type:'update-view-fail'}},
+      {id:'ex5-q4', type:'concept', label:'Q4 · Explain the failure', text:'Paste the error from Q3 and explain, in your own words, why PostgreSQL refuses to update through <code class="inline">user_spending</code> but allowed it through <code class="inline">bangkok_users</code>.'},
+      //{id:'ex5-q5', type:'sql', label:'Q5 · DROP and recreate', text:'Drop the <code class="inline">expensive_products</code> view, then recreate it so it also includes a <code class="inline">stock</code> column.', hint:'DROP VIEW expensive_products; CREATE VIEW expensive_products AS SELECT name, category, price, stock FROM products WHERE price > (SELECT AVG(price) FROM products);', check:{type:'drop-recreate'}},
+      //{id:'ex5-q6', type:'sql', label:'Q6 · Subquery inside a view', text:'Create a view named <code class="inline">big_spenders</code> that selects <code class="inline">fname</code> and <code class="inline">city</code> from <code class="inline">users</code> for only the users who appear in <code class="inline">user_spending</code> (Exercise 4) with <code class="inline">total_spent</code> greater than 3000 — reference <code class="inline">user_spending</code> inside this view\'s subquery.', hint:'CREATE VIEW big_spenders AS SELECT fname, city FROM users WHERE fname IN (SELECT fname FROM user_spending WHERE total_spent > 3000);', check:{type:'create-view'}}
+    ]
+  }
+];
+
+// ═══════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════
+function renderExercises(){
+  var container=document.getElementById('exerciseContainer');
+  var nav=document.getElementById('navList');
+  var navHtml='', bodyHtml='';
+  EXERCISES.forEach(function(ex,i){
+    navHtml+='<div class="nav-item" id="nav-'+i+'" onclick="showExercise('+i+')">'+
+      '<div class="nav-dot" id="navdot-'+i+'">'+(i+1)+'</div><span>'+ex.title+'</span></div>';
+
+    var qh='';
+    ex.questions.forEach(function(q,qi){
+      qh+='<div class="question-block">';
+      qh+='<div class="question-text"><span class="qnum">Q'+(qi+1)+'.</span>'+q.text+'</div>';
+      var noCopy='onpaste="return blockPaste(event)" oncopy="return blockCopy(event)" oncut="return blockCopy(event)" oncontextmenu="return blockPaste(event)"';
+      if(q.type==='sql'){
+        qh+='<div class="query-block">';
+        qh+='<textarea class="sql-input" id="'+q.id+'" placeholder="-- write your SQL here" spellcheck="false" oninput="autoResize(this)" '+noCopy+'></textarea>';
+        qh+='<div class="query-toolbar"><span class="query-toolbar-left">PostgreSQL dialect · runs live in your browser</span>'+
+            '<div style="display:flex;align-items:center;gap:10px">'+
+              '<span class="query-status pending" id="'+q.id+'-status">Not run yet</span>'+
+              '<button class="btn-primary btn-sm run-btn" disabled onclick="runQuery(\''+q.id+'\')">▶ Run query</button>'+
+            '</div></div>';
+        qh+='</div>';
+        qh+='<div class="result-table-wrap" id="'+q.id+'-resulttable"></div>';
+      } else {
+        qh+='<textarea id="'+q.id+'" placeholder="Type your answer..." oninput="autoResize(this);updateProgress()" '+noCopy+'></textarea>';
+      }
+      qh+='</div>';
+    });
+
+    bodyHtml+='<div class="exercise-card" id="card-'+i+'">'+
+      '<div class="exercise-header">'+
+        '<span class="exercise-tag" style="color:'+ex.tagColor+';background:'+ex.tagBg+'">'+ex.tag+'</span>'+
+        '<div class="exercise-title">'+ex.title+'</div>'+
+        '<div class="exercise-desc">'+ex.desc+'</div>'+
+        '<div class="exercise-progress"><div class="ex-prog-bar"><div class="ex-prog-fill" id="exprog-'+i+'" style="width:0%"></div></div><div class="ex-prog-label" id="exprog-lbl-'+i+'">0% answered</div></div>'+
+      '</div>'+
+      '<div class="exercise-body">'+
+        (ex.intro||'')+
+        qh+
+        '<div class="nav-btns">'+
+          '<button class="btn-ghost" onclick="showExercise('+(i-1)+')" '+(i===0?'disabled':'')+'>← Previous</button>'+
+          '<div class="nav-btns-right">'+
+            (i<EXERCISES.length-1 ? '<button class="btn-primary" onclick="showExercise('+(i+1)+')">Next exercise →</button>' : '<button class="btn-success" onclick="finishLab()">🎉 Finish lab</button>')+
+          '</div>'+
+        '</div>'+
+      '</div></div>';
+  });
+  nav.innerHTML=navHtml;
+  container.innerHTML=bodyHtml;
+}
+
+function blockCopy(e){
+  e.preventDefault();
+  showToast('Copy/cut is disabled here — write your own answer 🙂');
+  return false;
+}
+function blockPaste(e){
+  e.preventDefault();
+  showToast('Pasting is disabled here — write your own answer 🙂');
+  return false;
+}
+
+function showExercise(i){
+  if(i<0||i>=EXERCISES.length) return;
+  EXERCISES.forEach(function(ex,idx){
+    document.getElementById('card-'+idx).classList.toggle('visible', idx===i);
+    document.getElementById('nav-'+idx).classList.toggle('active', idx===i);
+    document.getElementById('navdot-'+idx).classList.toggle('active', idx===i);
+  });
+  document.getElementById('completionCard').classList.remove('visible');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function finishLab(){
+  document.getElementById('completionCard').classList.add('visible');
+  window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
+}
+
+function autoResize(el){ el.style.height='auto'; el.style.height=(el.scrollHeight+2)+'px'; }
+
+// ═══════════════════════════════════════════════
+// PROGRESS
+// ═══════════════════════════════════════════════
+function getAllFields(){
+  var fields={};
+  EXERCISES.forEach(function(ex){
+    ex.questions.forEach(function(q){
+      var el=document.getElementById(q.id);
+      if(el) fields[q.id]={el:el, type:q.type};
+    });
+  });
+  return fields;
+}
+function isFieldDone(f){
+  if(f.type==='sql') return !!QUERY_ANSWERED[f.el.id];
+  return (f.el.value||'').trim().length>0;
+}
+function updateProgress(){
+  var fields=getAllFields();
+  var total=0, done=0;
+  Object.keys(fields).forEach(function(id){
+    total++;
+    if(isFieldDone(fields[id])) done++;
+  });
+  var pct=total>0?Math.round(done/total*100):0;
+  document.getElementById('progFill').style.width=pct+'%';
+  document.getElementById('progPct').textContent=pct+'%';
+
+  EXERCISES.forEach(function(ex,i){
+    var t=0,d=0;
+    ex.questions.forEach(function(q){
+      var f=fields[q.id];
+      if(f){ t++; if(isFieldDone(f)) d++; }
+    });
+    var epct=t>0?Math.round(d/t*100):0;
+    var fill=document.getElementById('exprog-'+i);
+    var lbl=document.getElementById('exprog-lbl-'+i);
+    if(fill) fill.style.width=epct+'%';
+    if(lbl) lbl.textContent=epct+'% answered';
+    var dot=document.getElementById('navdot-'+i);
+    if(dot){
+      if(epct===100){dot.classList.add('done');dot.textContent='✓';}
+      else{dot.classList.remove('done');dot.textContent=i+1;}
+    }
+    var navItem=document.getElementById('nav-'+i);
+    if(navItem) navItem.classList.toggle('done', epct===100);
+  });
+  document.querySelectorAll('textarea').forEach(function(el){
+    if(el.classList.contains('sql-input')){
+      el.classList.toggle('answered', !!QUERY_ANSWERED[el.id]);
+    } else {
+      el.classList.toggle('answered',(el.value||'').trim().length>0);
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════
+// SAVE / LOAD / DOWNLOAD
+// ═══════════════════════════════════════════════
+function gatherAll(){
+  var data={
+    lab:'dbms-subquery-views-lab',
+    meta:{
+      name:document.getElementById('f-name').value,
+      studentId:document.getElementById('f-id').value,
+      classSection:document.getElementById('f-class').value,
+      date:document.getElementById('f-date').value,
+      savedAt:new Date().toISOString()
+    },
+    answers:{}
+  };
+  var fields=getAllFields();
+  Object.keys(fields).forEach(function(id){ data.answers[id]=fields[id].el.value; });
+  return data;
+}
+function saveDraft(){
+  try{
+    localStorage.setItem('dbms_subquery_views_lab_draft', JSON.stringify(gatherAll()));
+    showToast('Draft saved ✓');
+  }catch(e){ showToast('Could not save'); }
+}
+function loadDraft(){
+  try{
+    var raw=localStorage.getItem('dbms_subquery_views_lab_draft');
+    if(!raw) return;
+    var data=JSON.parse(raw);
+    if(data.meta){
+      if(data.meta.name) document.getElementById('f-name').value=data.meta.name;
+      if(data.meta.studentId) document.getElementById('f-id').value=data.meta.studentId;
+      if(data.meta.classSection) document.getElementById('f-class').value=data.meta.classSection;
+      if(data.meta.date) document.getElementById('f-date').value=data.meta.date;
+    }
+    if(data.answers){
+      Object.keys(data.answers).forEach(function(id){
+        var el=document.getElementById(id);
+        if(!el) return;
+        el.value=data.answers[id];
+        autoResize(el);
+      });
+    }
+    updateProgress();
+  }catch(e){}
+}
+function showToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); },2200);
+}
+
+// ═══════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', function(){
+  renderDataset();
+  renderExercises();
+  showExercise(0);
+  loadDraft();
+  updateProgress();
+  initEngine();
+});
+document.addEventListener('keydown', function(e){
+  if((e.ctrlKey||e.metaKey) && e.key==='s'){ e.preventDefault(); saveDraft(); }
+});
+
+window.runQuery = runQuery;
+window.resetEngine = resetEngine;
+window.showExercise = showExercise;
+window.finishLab = finishLab;
+window.autoResize = autoResize;
+window.updateProgress = updateProgress;
+window.saveDraft = saveDraft;
+window.blockCopy = blockCopy;
+window.blockPaste = blockPaste;
+</script>
+</body>
+</html>
