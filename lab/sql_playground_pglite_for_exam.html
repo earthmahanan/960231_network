@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>QueryBench // PostgreSQL Playground (PGlite)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+:root{
+  --bg:#0d1117;
+  --panel:#12181f;
+  --panel2:#161d26;
+  --line:#22303c;
+  --text:#d7e2ea;
+  --dim:#7b8fa1;
+  --accent:#8ecae6;
+  --accent2:#f0b429;
+  --danger:#ff6b6b;
+  --ok:#6fe07b;
+  --mono: 'JetBrains Mono','Fira Code',ui-monospace,Consolas,monospace;
+  --sans: 'Inter',ui-sans-serif,system-ui,sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(142,202,230,0.07), transparent 40%),
+    radial-gradient(circle at 85% 100%, rgba(240,180,41,0.05), transparent 45%),
+    var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  min-height:100vh;
+}
+::selection{background:rgba(142,202,230,.3);}
+
+/* ===== HEADER ===== */
+header{
+  padding:22px 28px 18px;
+  border-bottom:1px solid var(--line);
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  flex-wrap:wrap;
+}
+.brand{display:flex; align-items:center; gap:12px;}
+.brand-mark{
+  width:38px;height:38px;border-radius:9px;
+  background:linear-gradient(135deg,var(--accent),#336791);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-weight:700;color:#031521;font-size:16px;
+  box-shadow:0 0 0 1px rgba(142,202,230,.4), 0 8px 20px -6px rgba(142,202,230,.5);
+}
+.brand h1{font-size:17px;margin:0;letter-spacing:.2px;font-weight:700;}
+.brand p{margin:1px 0 0;font-size:12px;color:var(--dim);font-family:var(--mono);}
+.hdr-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.btn{
+  border:1px solid var(--line); background:var(--panel2); color:var(--text);
+  padding:9px 14px; border-radius:8px; font-size:13px; cursor:pointer;
+  font-family:var(--sans); font-weight:600; display:inline-flex; align-items:center; gap:7px;
+  transition:.15s border-color, .15s transform, .15s background;
+}
+.btn:hover{border-color:var(--accent); transform:translateY(-1px);}
+.btn:active{transform:translateY(0);}
+.btn.primary{background:var(--accent); color:#031521; border-color:var(--accent);}
+.btn.primary:hover{background:#a9dcf1;}
+.btn.ghost{background:transparent;}
+input[type=file]{display:none;}
+
+/* ===== LAYOUT ===== */
+.wrap{display:grid; grid-template-columns:250px 1fr; min-height:calc(100vh - 82px);}
+@media (max-width:860px){.wrap{grid-template-columns:1fr;}}
+
+.sidebar{
+  border-right:1px solid var(--line);
+  padding:18px 14px;
+  background:linear-gradient(180deg, rgba(255,255,255,.012), transparent 200px);
+  overflow-y:auto;
+}
+.sidebar h2{
+  font-size:11px; text-transform:uppercase; letter-spacing:1.4px; color:var(--dim);
+  margin:4px 0 12px; font-family:var(--mono); font-weight:600;
+}
+.dbname{
+  font-family:var(--mono); font-size:12.5px; color:var(--accent2); margin-bottom:14px;
+  padding:8px 10px; background:var(--panel2); border-radius:7px; border:1px dashed var(--line);
+  word-break:break-all;
+}
+.tbl-item{
+  margin-bottom:8px; border:1px solid var(--line); border-radius:8px; overflow:hidden;
+  background:var(--panel);
+}
+.tbl-head{
+  padding:9px 11px; cursor:pointer; display:flex; align-items:center; justify-content:space-between;
+  font-family:var(--mono); font-size:12.5px; font-weight:600; color:var(--text);
+  user-select:none;
+}
+.tbl-head:hover{background:var(--panel2);}
+.tbl-head .count{font-size:10px; color:var(--dim); font-weight:400;}
+.tbl-cols{display:none; padding:0 11px 10px; border-top:1px solid var(--line);}
+.tbl-cols.open{display:block;}
+.col-row{
+  font-family:var(--mono); font-size:11.5px; color:var(--dim); padding:4px 0;
+  display:flex; justify-content:space-between; gap:6px;
+}
+.col-row b{color:var(--text); font-weight:500;}
+.col-row .pk{color:var(--accent2);}
+.empty-hint{font-size:12.5px; color:var(--dim); line-height:1.6; padding:6px 2px;}
+
+.main{display:flex; flex-direction:column; min-width:0;}
+.editor-bar{
+  padding:14px 20px 0; display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+}
+.tag{
+  font-family:var(--mono); font-size:11px; padding:4px 9px; border-radius:20px;
+  border:1px solid var(--line); color:var(--dim); cursor:pointer; background:var(--panel);
+}
+.tag:hover{border-color:var(--accent); color:var(--accent);}
+
+.editor-wrap{margin:12px 20px 0; position:relative;}
+textarea#sql{
+  width:100%; min-height:150px; resize:vertical;
+  background:var(--panel); border:1px solid var(--line); border-radius:10px;
+  color:var(--text); font-family:var(--mono); font-size:14px; line-height:1.6;
+  padding:16px 18px; outline:none;
+}
+textarea#sql:focus{border-color:var(--accent); box-shadow:0 0 0 3px rgba(142,202,230,.08);}
+.run-row{
+  display:flex; justify-content:space-between; align-items:center; margin-top:10px; gap:10px; flex-wrap:wrap;
+}
+.run-hint{font-size:11.5px; color:var(--dim); font-family:var(--mono);}
+.run-hint kbd{
+  background:var(--panel2); border:1px solid var(--line); border-radius:4px; padding:1px 6px; font-family:var(--mono);
+}
+
+.results{margin:18px 20px 28px; flex:1;}
+.status-bar{
+  display:flex; align-items:center; gap:10px; margin-bottom:10px; font-family:var(--mono); font-size:12.5px;
+}
+.status-dot{width:8px;height:8px;border-radius:50%; background:var(--dim);}
+.status-dot.ok{background:var(--ok); box-shadow:0 0 8px var(--ok);}
+.status-dot.err{background:var(--danger); box-shadow:0 0 8px var(--danger);}
+.status-dot.busy{background:var(--accent2); box-shadow:0 0 8px var(--accent2);}
+.status-text{color:var(--dim);}
+.status-text.ok{color:var(--ok);}
+.status-text.err{color:var(--danger);}
+
+.result-block{margin-bottom:22px;}
+.result-label{font-family:var(--mono); font-size:11px; color:var(--dim); margin-bottom:6px;}
+.table-scroll{
+  overflow:auto; border:1px solid var(--line); border-radius:10px; max-height:420px;
+  background:var(--panel);
+}
+table.result-table{border-collapse:collapse; width:100%; font-size:13px; font-family:var(--mono);}
+table.result-table thead th{
+  position:sticky; top:0; background:var(--panel2); color:var(--accent);
+  text-align:left; padding:9px 14px; border-bottom:1px solid var(--line); white-space:nowrap;
+}
+table.result-table tbody td{
+  padding:8px 14px; border-bottom:1px solid rgba(255,255,255,.04); color:var(--text); white-space:nowrap;
+}
+table.result-table tbody tr:hover{background:rgba(142,202,230,.05);}
+table.result-table tbody td.null{color:var(--dim); font-style:italic;}
+
+.err-box{
+  border:1px solid rgba(255,107,107,.4); background:rgba(255,107,107,.06); border-radius:10px;
+  padding:14px 16px; font-family:var(--mono); font-size:13px; color:#ffb3b3; white-space:pre-wrap;
+}
+.placeholder{
+  text-align:center; padding:60px 20px; color:var(--dim); font-size:13.5px; line-height:1.8;
+}
+.placeholder .big{font-size:34px; margin-bottom:10px;}
+
+footer{
+  text-align:center; padding:16px; font-size:11px; color:var(--dim); font-family:var(--mono);
+  border-top:1px solid var(--line);
+}
+.spin{
+  width:14px;height:14px;border:2px solid var(--line); border-top-color:var(--accent);
+  border-radius:50%; animation:spin .7s linear infinite; display:inline-block;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.note{
+  font-size:11.5px; color:var(--dim); line-height:1.6; margin-top:10px; padding:10px 12px;
+  border:1px dashed var(--line); border-radius:8px; background:var(--panel2);
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">Pg</div>
+    <div>
+      <h1>QueryBench</h1>
+      <p>Write SQL and see results instantly &mdash; real PostgreSQL running in your browser (PGlite)</p>
+    </div>
+  </div>
+  <div class="hdr-actions">
+    <button class="btn ghost" id="loadSampleBtn">🔄 Reset Sample Database</button>
+    <label class="btn" for="fileInput">📂 Import Database
+      <input type="file" id="fileInput" accept=".gz,.tar,.tgz">
+    </label>
+    <label class="btn" for="sqlFileInput">📜 Import .sql script
+      <input type="file" id="sqlFileInput" accept=".sql,.txt">
+    </label>
+    <button class="btn" id="exportBtn">💾 Export Database</button>
+    <button class="btn primary" id="runBtn">▶ Run (Ctrl+Enter)</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <aside class="sidebar">
+    <h2>Schema Explorer</h2>
+    <div class="dbname" id="dbNameLabel">Preparing Postgres engine…</div>
+    <div id="tableList"><div class="empty-hint">Loading sample e-commerce database…</div></div>
+  </aside>
+
+  <main class="main">
+    <div class="editor-bar">
+      <span class="tag" data-q="SELECT * FROM products;">SELECT * FROM products;</span>
+      <span class="tag" data-q="SELECT p.name, r.rating, r.comment FROM products p JOIN reviews r ON p.product_id=r.product_id;">JOIN example</span>
+      <span class="tag" data-q="SELECT category_id, COUNT(*) AS total FROM products GROUP BY category_id ORDER BY total DESC;">GROUP BY example</span>
+      <span class="tag" data-q="SELECT current_database(), version();">Postgres version()</span>
+    </div>
+
+    <div class="editor-wrap">
+      <textarea id="sql" spellcheck="false" placeholder="-- Write your SQL here, e.g.
+SELECT * FROM products;">SELECT * FROM products;</textarea>
+    </div>
+
+    <div class="run-row" style="padding:0 20px;">
+      <span class="run-hint">Press <kbd>Ctrl</kbd>+<kbd>Enter</kbd> to run</span>
+      <span class="run-hint" id="dialectHint">Engine: PGlite (real PostgreSQL, compiled to WASM)</span>
+    </div>
+
+    <div class="results">
+      <div class="status-bar" id="statusBar" style="display:none;">
+        <div class="status-dot" id="statusDot"></div>
+        <span class="status-text" id="statusText"></span>
+      </div>
+      <div id="output">
+        <div class="placeholder">
+          <div class="big">🐘</div>
+          Type a SQL statement and click Run<br>Results will appear here as a table
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<footer>QueryBench · Client-side PostgreSQL playground powered by PGlite · All data stays in your browser, nothing is sent to a server</footer>
+
+<script type="module">
+import { PGlite } from "https://cdn.jsdelivr.net/npm/@electric-sql/pglite@0.2.17/dist/index.js";
+
+let db = null;
+let currentDbName = "in-memory (no data loaded yet)";
+
+const $ = (id) => document.getElementById(id);
+const output = $('output');
+const statusBar = $('statusBar');
+const statusDot = $('statusDot');
+const statusText = $('statusText');
+const tableList = $('tableList');
+const dbNameLabel = $('dbNameLabel');
+
+function setStatus(kind, msg){
+  statusBar.style.display = 'flex';
+  statusDot.className = 'status-dot ' + kind;
+  statusText.className = 'status-text ' + kind;
+  statusText.textContent = msg;
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function initDb(){
+  setStatus('busy', 'Preparing Postgres engine (WASM)…');
+  db = new PGlite();
+  await db.waitReady;
+  dbNameLabel.textContent = currentDbName;
+  await loadSampleDb();
+}
+
+function renderTable(columns, rows){
+  const wrap = document.createElement('div');
+  wrap.className = 'table-scroll';
+  const table = document.createElement('table');
+  table.className = 'result-table';
+
+  const thead = document.createElement('thead');
+  const trh = document.createElement('tr');
+  columns.forEach(c => {
+    const th = document.createElement('th');
+    th.textContent = c;
+    trh.appendChild(th);
+  });
+  thead.appendChild(trh);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  rows.forEach(row => {
+    const tr = document.createElement('tr');
+    columns.forEach(col => {
+      const td = document.createElement('td');
+      const val = row[col];
+      if(val === null || val === undefined){
+        td.textContent = 'NULL';
+        td.className = 'null';
+      } else if (typeof val === 'object'){
+        td.textContent = JSON.stringify(val);
+      } else {
+        td.textContent = val;
+      }
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+  return wrap;
+}
+
+async function runQuery(){
+  if(!db){
+    setStatus('err', 'No database loaded — click "Load Sample Database" or import one first');
+    return;
+  }
+  const sql = $('sql').value.trim();
+  if(!sql){ return; }
+
+  output.innerHTML = '';
+  setStatus('busy', 'Running query…');
+  const t0 = performance.now();
+  try {
+    const results = await db.exec(sql);
+    const dt = (performance.now() - t0).toFixed(1);
+
+    let totalRows = 0;
+    let anyRows = false;
+    results.forEach((res, i) => {
+      const rows = res.rows || [];
+      if(rows.length > 0){
+        anyRows = true;
+        totalRows += rows.length;
+        const columns = res.fields ? res.fields.map(f => f.name) : Object.keys(rows[0]);
+        const block = document.createElement('div');
+        block.className = 'result-block';
+        if(results.length > 1){
+          const label = document.createElement('div');
+          label.className = 'result-label';
+          label.textContent = `Statement ${i + 1} · ${rows.length} rows`;
+          block.appendChild(label);
+        }
+        block.appendChild(renderTable(columns, rows));
+        output.appendChild(block);
+      }
+    });
+
+    if(!anyRows){
+      output.innerHTML = `<div class="placeholder"><div class="big">✅</div>Statement ran successfully but returned no rows to display</div>`;
+    }
+
+    setStatus('ok', `Success · ${totalRows} rows · ${dt} ms`);
+    refreshSchema();
+  } catch(e){
+    const errBox = document.createElement('div');
+    errBox.className = 'err-box';
+    errBox.textContent = '❌ ' + e.message;
+    output.appendChild(errBox);
+    setStatus('err', 'Error running SQL');
+  }
+}
+
+async function refreshSchema(){
+  if(!db){ return; }
+  try {
+    const tablesRes = await db.query(`
+      SELECT table_name FROM information_schema.tables
+      WHERE table_schema = 'public' ORDER BY table_name;
+    `);
+    tableList.innerHTML = '';
+    if(tablesRes.rows.length === 0){
+      tableList.innerHTML = `<div class="empty-hint">No tables in this database yet</div>`;
+      return;
+    }
+
+    for(const row of tablesRes.rows){
+      const tname = row.table_name;
+      let countLabel = '';
+      try {
+        const c = await db.query(`SELECT COUNT(*)::int AS n FROM "${tname}";`);
+        countLabel = c.rows[0].n + ' rows';
+      } catch(e){ countLabel = ''; }
+
+      const item = document.createElement('div');
+      item.className = 'tbl-item';
+
+      const head = document.createElement('div');
+      head.className = 'tbl-head';
+      head.innerHTML = `<span>📋 ${escapeHtml(tname)}</span><span class="count">${countLabel}</span>`;
+
+      const colsDiv = document.createElement('div');
+      colsDiv.className = 'tbl-cols';
+
+      try {
+        const info = await db.query(`
+          SELECT c.column_name, c.data_type,
+                 EXISTS (
+                   SELECT 1 FROM information_schema.table_constraints tc
+                   JOIN information_schema.key_column_usage kcu
+                     ON tc.constraint_name = kcu.constraint_name
+                   WHERE tc.constraint_type = 'PRIMARY KEY'
+                     AND tc.table_name = c.table_name
+                     AND kcu.column_name = c.column_name
+                 ) AS is_pk
+          FROM information_schema.columns c
+          WHERE c.table_name = $1
+          ORDER BY c.ordinal_position;
+        `, [tname]);
+        info.rows.forEach(col => {
+          const r = document.createElement('div');
+          r.className = 'col-row';
+          const isPk = col.is_pk ? ' <span class="pk">PK</span>' : '';
+          r.innerHTML = `<b>${escapeHtml(col.column_name)}</b><span>${escapeHtml(col.data_type)}${isPk}</span>`;
+          colsDiv.appendChild(r);
+        });
+      } catch(e){}
+
+      head.addEventListener('click', () => colsDiv.classList.toggle('open'));
+
+      item.appendChild(head);
+      item.appendChild(colsDiv);
+      tableList.appendChild(item);
+    }
+  } catch(e){
+    tableList.innerHTML = `<div class="empty-hint">Failed to read schema: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+async function loadSampleDb(){
+  setStatus('busy', 'Creating sample database…');
+  const seed = `
+  DROP TABLE IF EXISTS order_items;
+  DROP TABLE IF EXISTS orders;
+  DROP TABLE IF EXISTS carts;
+  DROP TABLE IF EXISTS reviews;
+  DROP TABLE IF EXISTS products;
+  DROP TABLE IF EXISTS categories;
+  DROP TABLE IF EXISTS users;
+
+  CREATE TABLE categories (
+    category_id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL
+  );
+
+  CREATE TABLE products (
+    product_id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    price NUMERIC(10,2) NOT NULL,
+    category_id INTEGER REFERENCES categories(category_id),
+    stock INTEGER NOT NULL DEFAULT 0
+  );
+
+  CREATE TABLE users (
+    user_id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL
+  );
+
+  CREATE TABLE reviews (
+    review_id SERIAL PRIMARY KEY,
+    product_id INTEGER REFERENCES products(product_id),
+    user_id INTEGER REFERENCES users(user_id),
+    rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    comment TEXT
+  );
+
+  CREATE TABLE carts (
+    cart_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(user_id),
+    product_id INTEGER REFERENCES products(product_id),
+    quantity INTEGER NOT NULL DEFAULT 1
+  );
+
+  CREATE TABLE orders (
+    order_id INTEGER PRIMARY KEY,
+    user_id INTEGER REFERENCES users(user_id),
+    status TEXT NOT NULL,
+    created_at DATE NOT NULL
+  );
+
+  CREATE TABLE order_items (
+    order_item_id SERIAL PRIMARY KEY,
+    order_id INTEGER REFERENCES orders(order_id),
+    product_id INTEGER REFERENCES products(product_id),
+    quantity INTEGER NOT NULL,
+    unit_price NUMERIC(10,2) NOT NULL
+  );
+
+  INSERT INTO categories (category_id, name) VALUES
+    (1,'Electronics'),
+    (2,'Apparel'),
+    (3,'Home & Garden');
+
+  INSERT INTO products (product_id, name, price, category_id, stock) VALUES
+    (1,'ProBook X15',1299.00,1,15),
+    (2,'Aura Audio ANC',349.00,1,40),
+    (3,'Mechanical Board V2',189.00,1,60),
+    (4,'DevPhone Pro',899.00,1,25),
+    (5,'DevWatch Active',249.00,1,30),
+    (6,'Qi Fast Charger',49.00,1,100),
+    (7,'Cotton Hoodie',45.00,2,80),
+    (8,'Garden Trowel Set',19.00,3,50);
+
+  INSERT INTO users (user_id, name, email) VALUES
+    (1,'Alice Wong','alice@mail.com'),
+    (2,'Ben Carter','ben@mail.com'),
+    (3,'Chalisa P.','chalisa@mail.com'),
+    (4,'Danai S.','danai@mail.com');
+
+  INSERT INTO reviews (review_id, product_id, user_id, rating, comment) VALUES
+    (1,1,1,5,'Great laptop!'),
+    (2,1,2,4,'Good but pricey'),
+    (3,2,1,5,'Amazing sound'),
+    (4,2,3,5,'Best headphones ever'),
+    (5,2,4,4,'Solid ANC'),
+    (6,3,2,4,'Clicky and nice'),
+    (7,3,3,5,'Love it'),
+    (8,4,1,5,'Fast phone'),
+    (9,4,2,5,'Camera is great'),
+    (10,4,3,4,'Battery could be better'),
+    (11,5,4,4,'Good watch'),
+    (12,6,1,5,'Charges fast'),
+    (13,6,2,4,'Works fine');
+
+  INSERT INTO carts (cart_id, user_id, product_id, quantity) VALUES
+    (1,1,6,2),
+    (2,1,3,1);
+
+  INSERT INTO orders (order_id, user_id, status, created_at) VALUES
+    (1038,1,'Shipped','2023-10-15'),
+    (1041,1,'Processing','2023-10-21'),
+    (1042,1,'Shipped','2023-10-24');
+
+  INSERT INTO order_items (order_item_id, order_id, product_id, quantity, unit_price) VALUES
+    (104,1038,4,1,899.00),
+    (105,1038,6,3,49.00),
+    (106,1038,3,1,194.50),
+    (103,1041,5,1,129.99),
+    (101,1042,1,1,456.00),
+    (102,1042,2,1,189.00);
+
+  SELECT setval('categories_category_id_seq', (SELECT MAX(category_id) FROM categories));
+  SELECT setval('products_product_id_seq', (SELECT MAX(product_id) FROM products));
+  SELECT setval('users_user_id_seq', (SELECT MAX(user_id) FROM users));
+  SELECT setval('reviews_review_id_seq', (SELECT MAX(review_id) FROM reviews));
+  SELECT setval('carts_cart_id_seq', (SELECT MAX(cart_id) FROM carts));
+  SELECT setval('order_items_order_item_id_seq', (SELECT MAX(order_item_id) FROM order_items));
+  `;
+  await db.exec(seed);
+  currentDbName = 'sample (e-commerce: categories / products / users / reviews / carts / orders / order_items)';
+  dbNameLabel.textContent = currentDbName;
+  await refreshSchema();
+  $('sql').value = 'SELECT * FROM products;';
+  output.innerHTML = `<div class="placeholder"><div class="big">🎉</div>Sample e-commerce database loaded! Try clicking Run</div>`;
+  setStatus('ok', 'Sample database loaded successfully');
+}
+
+async function importDbFile(file){
+  setStatus('busy', `Importing "${file.name}"…`);
+  try {
+    db = await PGlite.create({ loadDataDir: file });
+    await db.waitReady;
+    currentDbName = file.name;
+    dbNameLabel.textContent = currentDbName;
+    await refreshSchema();
+    output.innerHTML = `<div class="placeholder"><div class="big">📂</div>Imported "${escapeHtml(file.name)}" successfully! Try running SELECT * FROM table_name;</div>`;
+    setStatus('ok', `Imported "${file.name}" successfully`);
+  } catch(e){
+    setStatus('err', 'Import failed: ' + e.message + ' (the file must be a PGlite dump previously exported from this tool)');
+  }
+}
+
+function sanitizeSqlScript(rawText){
+  const removed = [];
+  let text = rawText;
+
+  // psql meta-commands like \c dbname, \d, \l ... (not valid SQL, PGlite has no multi-db switching)
+  text = text.replace(/^[ \t]*\\[a-zA-Z].*$/gm, (m) => { removed.push(m.trim()); return ''; });
+
+  // CREATE DATABASE ...; / DROP DATABASE ...;  (PGlite is a single database instance already)
+  text = text.replace(/^[ \t]*(DROP|CREATE)\s+DATABASE\b[^;]*;/gim, (m) => { removed.push(m.trim()); return ''; });
+
+  return { sql: text, removed };
+}
+
+async function importSqlScript(file){
+  if(!db){
+    setStatus('err', 'No database loaded — click "Load Sample Database" first, or wait for the engine to be ready');
+    return;
+  }
+  setStatus('busy', `Running file "${file.name}"…`);
+  output.innerHTML = '';
+  const t0 = performance.now();
+  try {
+    const rawText = await file.text();
+    const { sql: text, removed } = sanitizeSqlScript(rawText);
+
+    if(removed.length > 0){
+      const note = document.createElement('div');
+      note.className = 'note';
+      note.innerHTML = `⚠️ Removed ${removed.length} statement(s) not supported by PGlite (single-database Postgres) before running:<br>` +
+        removed.map(r => `&middot; <code>${escapeHtml(r.length > 90 ? r.slice(0,90)+'…' : r)}</code>`).join('<br>');
+      output.appendChild(note);
+    }
+
+    const results = await db.exec(text);
+    const dt = (performance.now() - t0).toFixed(1);
+
+    let totalRows = 0;
+    let anyRows = false;
+    results.forEach((res, i) => {
+      const rows = res.rows || [];
+      if(rows.length > 0){
+        anyRows = true;
+        totalRows += rows.length;
+        const columns = res.fields ? res.fields.map(f => f.name) : Object.keys(rows[0]);
+        const block = document.createElement('div');
+        block.className = 'result-block';
+        const label = document.createElement('div');
+        label.className = 'result-label';
+        label.textContent = `Statement ${i + 1} · ${rows.length} rows`;
+        block.appendChild(label);
+        block.appendChild(renderTable(columns, rows));
+        output.appendChild(block);
+      }
+    });
+
+    if(!anyRows){
+      const doneMsg = document.createElement('div');
+      doneMsg.className = 'placeholder';
+      doneMsg.innerHTML = `<div class="big">📜</div>File "${escapeHtml(file.name)}" ran successfully (${results.length} statement(s)) — schema/data updated`;
+      output.appendChild(doneMsg);
+    }
+
+    currentDbName = `imported script: ${file.name}`;
+    dbNameLabel.textContent = currentDbName;
+    setStatus('ok', `File "${file.name}" ran successfully · ${results.length} statement(s) · ${totalRows} rows returned · ${dt} ms`);
+    refreshSchema();
+  } catch(e){
+    const errBox = document.createElement('div');
+    errBox.className = 'err-box';
+    errBox.textContent = '❌ ' + e.message;
+    output.appendChild(errBox);
+    setStatus('err', `Failed to run file "${file.name}"`);
+  }
+}
+
+async function exportDb(){
+  if(!db){ setStatus('err', 'No database to export'); return; }
+  setStatus('busy', 'Preparing export file…');
+  try {
+    const blob = await db.dumpDataDir('gzip');
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'querybench-export.tar.gz';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    setStatus('ok', 'Export successful — keep the .tar.gz file to import it back later');
+  } catch(e){
+    setStatus('err', 'Export failed: ' + e.message);
+  }
+}
+
+// Events
+$('runBtn').addEventListener('click', runQuery);
+$('loadSampleBtn').addEventListener('click', async () => {
+  $('loadSampleBtn').innerHTML = '<span class="spin"></span> Loading...';
+  await loadSampleDb();
+  $('loadSampleBtn').innerHTML = '🔄 Reset Sample Database';
+});
+$('fileInput').addEventListener('change', (e) => {
+  const f = e.target.files[0];
+  if(f) importDbFile(f);
+  e.target.value = '';
+});
+$('sqlFileInput').addEventListener('change', (e) => {
+  const f = e.target.files[0];
+  if(f) importSqlScript(f);
+  e.target.value = '';
+});
+$('exportBtn').addEventListener('click', exportDb);
+
+document.querySelectorAll('.tag').forEach(tag => {
+  tag.addEventListener('click', () => {
+    $('sql').value = tag.dataset.q;
+    $('sql').focus();
+  });
+});
+
+$('sql').addEventListener('keydown', (e) => {
+  if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){
+    e.preventDefault();
+    runQuery();
+  }
+});
+
+initDb();
+</script>
+</body>
+</html>
