@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>สุ่มกลุ่ม Hackathon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#F4F7F5; --surface:#FFFFFF; --ink:#13241A; --muted:#55665C; --line:#DCE4DE;
+  --dark:#0A1C12; --green:#06C755; --green-tx:#067A36; --soft:#E7F6EC; --warn:#B4501A; --warn-bg:#FDF0E7;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Chakra Petch',Tahoma,sans-serif;font-size:16px;line-height:1.5}
+header{background:var(--dark);color:#F2F7F3;padding:28px 16px}
+.wrap{max-width:1240px;margin:0 auto;padding:0 16px}
+header .wrap{padding:0}
+header p.eyebrow{margin:0;color:var(--green);font-weight:600;letter-spacing:3px;font-size:14px}
+header h1{margin:4px 0 6px;font-size:34px;line-height:1.15}
+header p.sub{margin:0;color:#BFD3C6}
+main{padding:24px 0 64px}
+h2{font-size:22px;margin:0 0 4px}
+.hint{color:var(--muted);margin:0 0 16px;font-size:15px}
+section{margin-bottom:32px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}
+.companies{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.co{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.co .head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.co .name{font-weight:700;font-size:17px}
+.co .count{font-size:14px;font-weight:600;padding:2px 10px;border-radius:999px;background:var(--soft);color:var(--green-tx);white-space:nowrap}
+.co .count.bad{background:var(--warn-bg);color:var(--warn)}
+.co textarea{width:100%;min-height:96px;resize:vertical;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit;font-size:15px;color:var(--ink);background:#FBFCFB}
+.co textarea:focus,.cfg textarea:focus{outline:2px solid var(--green);outline-offset:1px}
+.co .where{font-size:13px;color:var(--muted)}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+button{font:inherit;font-weight:600;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:10px 18px;min-height:44px;cursor:pointer}
+button:hover{border-color:var(--ink)}
+button.primary{background:var(--green);border-color:var(--green);color:var(--dark);font-size:18px;padding:12px 28px}
+button.primary:hover{background:#05B34C}
+button:disabled{opacity:.45;cursor:not-allowed}
+.status{font-weight:600}
+.status.ok{color:var(--green-tx)} .status.bad{color:var(--warn)}
+details.cfg{margin-top:4px}
+details.cfg summary{cursor:pointer;font-weight:600;color:var(--green-tx);min-height:44px;display:flex;align-items:center}
+.cfg textarea{width:100%;min-height:260px;border:1px solid var(--line);border-radius:8px;padding:10px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px}
+.cfg .err{color:var(--warn);font-weight:600;margin:6px 0 0}
+.groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.g{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.g .gh{background:var(--dark);color:#F2F7F3;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+.g .gh .num{font-size:22px;font-weight:700}
+.g .gh .num span{color:var(--green)}
+.g .gh .size{font-size:14px;color:#BFD3C6}
+.g .mix{padding:8px 16px 0;font-size:13px;color:var(--muted)}
+.g ul{list-style:none;margin:0;padding:8px 16px 14px}
+.g li{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)}
+.g li:last-child{border-bottom:none}
+.g li .who{font-weight:600}
+.g li .tag{font-size:13px;color:var(--green-tx);background:var(--soft);border-radius:999px;padding:1px 10px;white-space:nowrap;align-self:center}
+.g li.pending .who{color:#9AA8A0}
+.g li.flash .who{color:var(--green-tx)}
+.g{transition:transform .35s ease, box-shadow .35s ease, border-color .35s ease}
+.g.spot{transform:scale(1.035);border-color:var(--green);box-shadow:0 0 0 3px var(--green),0 16px 48px rgba(6,199,85,.35);z-index:2;position:relative}
+.g.done{border-color:var(--green)}
+.g .gh .ok{display:none;color:var(--green);font-weight:700}
+.g.done .gh .ok{display:inline}
+.g.done .gh .size{display:none}
+.g li{border-radius:8px;padding-left:6px;padding-right:6px;margin:0 -6px}
+.g li.spin .who,.g li.decel .who{color:#8FA197;display:inline-block;animation:jit .09s linear infinite}
+.g li.decel .who{color:var(--green-tx);animation-duration:.18s}
+@keyframes jit{0%{transform:translateY(-3px);opacity:.55}50%{transform:translateY(3px);opacity:1}100%{transform:translateY(-3px);opacity:.55}}
+.g li.lock{animation:pop .55s ease-out}
+.g li.lock .who{color:var(--ink)}
+@keyframes pop{0%{transform:scale(1);background:transparent}25%{transform:scale(1.1);background:#BDF2D2}100%{transform:scale(1);background:transparent}}
+#result-sec[hidden]{display:none}
+#cd{position:fixed;inset:0;background:rgba(10,28,18,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:60;color:#F2F7F3}
+#cd[hidden]{display:none}
+#cd .t{margin:0 0 8px;font-size:28px;letter-spacing:4px;color:#BFD3C6}
+#cd .n{font-size:min(38vw,300px);line-height:1;font-weight:700;color:var(--green);animation:cdpop .8s ease-out both}
+@keyframes cdpop{0%{transform:scale(2.6);opacity:0}35%{transform:scale(1);opacity:1}80%{transform:scale(.95);opacity:1}100%{transform:scale(.85);opacity:0}}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:70}
+#toast{position:fixed;left:50%;top:24px;transform:translateX(-50%);background:var(--dark);color:#F2F7F3;padding:16px 28px;border-radius:14px;font-size:22px;font-weight:700;z-index:71;box-shadow:0 12px 40px rgba(0,0,0,.3);animation:toast 3.2s ease forwards}
+#toast span{color:var(--green)}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,-20px)}10%,85%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-10px)}}
+#skip[hidden],#soundWrap[hidden]{display:none}
+.sound{display:flex;align-items:center;gap:6px;min-height:44px;font-weight:600;cursor:pointer}
+.sound input{width:20px;height:20px;accent-color:var(--green)}
+.empty{color:var(--muted);text-align:center;padding:40px 16px;border:2px dashed var(--line);border-radius:14px}
+.tablebox{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+table.plan{width:100%;border-collapse:collapse;font-size:17px}
+table.plan th,table.plan td{padding:10px 16px;text-align:left;border-bottom:1px solid var(--line)}
+table.plan thead th{background:var(--dark);color:#F2F7F3;font-weight:600}
+table.plan tbody tr:nth-child(even){background:var(--bg)}
+table.plan .c{text-align:center;width:90px}
+table.plan td.gn{font-weight:700;color:var(--green-tx)}
+table.plan tfoot th,table.plan tfoot td{font-weight:700;border-bottom:none;background:var(--soft)}
+table.plan tfoot th{text-align:right}
+.chip{display:inline-block;margin:2px 6px 2px 0;padding:2px 10px;border-radius:999px;background:var(--soft);color:var(--green-tx);font-size:15px;font-weight:600}
+details.settings{margin-top:40px;border-top:1px solid var(--line);padding-top:16px}
+details.settings>summary{cursor:pointer;font-weight:600;font-size:18px;min-height:44px;display:flex;align-items:center}
+details.settings section{margin:16px 0 24px}
+body.present #plan{display:none}
+body.present header,body.present #setup{display:none}
+body.present .groups{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+body.present .g li{font-size:20px}
+body.present main{padding-top:16px}
+@media print{header,#setup,.bar{display:none}.g{break-inside:avoid}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <p class="eyebrow">DII · DESIGN PITCHING &amp; HACKATHON 2026</p>
+    <h1>สุ่มคนเข้ากลุ่ม</h1>
+    <p class="sub">39 คน · 10 กลุ่ม · สุ่มตามจำนวนที่นั่งของแต่ละบริษัท</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="plan">
+    <h2>รายละเอียดการแบ่งกลุ่ม</h2>
+    <p class="hint">แต่ละกลุ่มรับคนจากบริษัทตามจำนวนในตาราง ระบบจะสุ่มว่าใครจากบริษัทนั้นได้ไปกลุ่มไหน</p>
+    <div class="tablebox"><table class="plan">
+      <thead><tr><th scope="col" class="c">กลุ่ม</th><th scope="col">สมาชิก</th><th scope="col" class="c">จำนวน</th></tr></thead>
+      <tbody id="planBody"></tbody>
+      <tfoot><tr><th scope="row" colspan="2">รวม</th><td class="c" id="planTotal"></td></tr></tfoot>
+    </table></div>
+  </section>
+
+  <section>
+    <div class="bar" style="margin-bottom:16px">
+      <button type="button" class="primary" id="go">สุ่มกลุ่ม</button>
+      <button type="button" id="skip" hidden>ข้ามแอนิเมชัน</button>
+      <button type="button" id="present">โหมดนำเสนอ</button>
+      <button type="button" id="copy" disabled>คัดลอกผล</button>
+      <button type="button" id="csv" disabled>ดาวน์โหลด CSV</button>
+      <label class="sound" id="soundWrap"><input type="checkbox" id="sound" checked> เสียง</label>
+      <span class="status" id="status" role="status"></span>
+    </div>
+  </section>
+
+  <section id="result-sec" hidden>
+    <h2>ผลการสุ่ม</h2>
+    <div id="result" class="groups" aria-live="polite"></div>
+  </section>
+
+  <details id="setup" class="settings">
+    <summary>ตั้งค่า: แก้ไขรายชื่อ / โครงสร้างกลุ่ม</summary>
+    <section>
+      <h2>รายชื่อตามบริษัท</h2>
+      <p class="hint">พิมพ์หรือวางชื่อ 1 คนต่อบรรทัด จำนวนคนต้องเท่ากับจำนวนที่นั่งของบริษัทนั้น ระบบจำรายชื่อไว้ในเบราว์เซอร์นี้</p>
+      <div class="companies" id="companies"></div>
+    </section>
+
+    <section>
+      <h2>โครงสร้างกลุ่ม</h2>
+      <p class="hint">ตั้งค่าตามตารางแล้ว แก้ได้ถ้ามีการเปลี่ยนแปลง</p>
+      <div class="panel">
+        <details class="cfg">
+          <summary>แก้ไขโครงสร้างกลุ่ม (1 บรรทัดต่อกลุ่ม เช่น <code>&nbsp;Megmeet 3 + Turnpro 1</code>)</summary>
+          <textarea id="cfg" spellcheck="false" aria-label="โครงสร้างกลุ่ม"></textarea>
+          <p class="err" id="cfgErr" hidden></p>
+          <div class="bar" style="margin-top:10px">
+            <button type="button" id="applyCfg">ใช้โครงสร้างนี้</button>
+            <button type="button" id="resetCfg">คืนค่าตามตารางเดิม</button>
+          </div>
+        </details>
+      </div>
+    </section>
+    <div class="bar"><button type="button" id="demo">คืนรายชื่อเดิม</button></div>
+  </details>
+</main>
+
+<div id="cd" hidden aria-hidden="true"><p class="t">เตรียมสุ่ม</p><div class="n" id="cdn">3</div></div>
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<script>
+const DEFAULT_CFG = [
+  "Megmeet 3 + Turnpro 1",
+  "Megmeet 3 + Turnpro 1",
+  "Zygen 4",
+  "Mercil 3 + Turnpro 1",
+  "Komatsu 3 + Turnpro 1",
+  "CLBS 2 + Turnpro 2",
+  "PCC 2 + WS 1 + Turnpro 1",
+  "Arete Platform 1 + MovePlus 1 + Turnpro 2",
+  "hylife 1 + CWN 1 + Turnpro 2",
+  "NDF 1 + Turnpro 2"
+].join("\n");
+
+const DEFAULT_NAMES = {"Mercil": "สกาย\nกันต์\nต้น", "Turnpro": "โบนัส\nเฟรม\nบอม\nนิก\nเจฟ\nปังปอนด์\nนัท\nดิว\nฟลุ๊ค\nพี\nไอคิว\nเซฟ\nยูริ", "hylife": "โปเต้", "CLBS": "วินเซิฟ\nไบโอ", "Zygen": "เติ้ล\nมินตรา\nพอ\nโฟว์วิล", "PCC": "ออม\nแบงค์", "Megmeet": "ไตตั้น\nโอเว่น\nกิต\nคิว\nม่อน\nปังปอนด์", "Komatsu": "อาร์ม\nSea\nพลุ", "MovePlus": "โฟล์ค", "WS": "อั๋น", "CWN": "นนท์", "NDF": "บิว", "Arete Platform": "ฟ้า"};
+
+const store = {
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+};
+
+let groups = [];        // [{parts:[{co,n}]}]
+let names = {};         // co -> textarea text
+let result = null;      // [[{name,co}]]
+let busy = false;
+
+const $ = (id) => document.getElementById(id);
+
+function parseCfg(text){
+  const out = [];
+  const lines = text.split("\n").map(s => s.trim()).filter(Boolean);
+  for (let i = 0; i < lines.length; i++){
+    const parts = [];
+    for (const raw of lines[i].split("+")){
+      const m = raw.trim().match(/^(.*\S)\s+(\d+)$/);
+      if (!m) throw new Error("บรรทัด " + (i+1) + ": อ่าน \"" + raw.trim() + "\" ไม่ได้ ต้องเป็น ชื่อบริษัท ตามด้วยจำนวน");
+      parts.push({ co: m[1], n: parseInt(m[2], 10) });
+    }
+    out.push({ parts });
+  }
+  if (!out.length) throw new Error("ยังไม่มีกลุ่ม");
+  return out;
+}
+
+function quotas(){
+  const q = {}; const where = {};
+  groups.forEach((g, gi) => g.parts.forEach(p => {
+    q[p.co] = (q[p.co] || 0) + p.n;
+    (where[p.co] = where[p.co] || []).push("กลุ่ม " + (gi+1) + " (" + p.n + ")");
+  }));
+  return { q, where };
+}
+
+function listOf(co){ return (names[co] || "").split("\n").map(s => s.trim()).filter(Boolean); }
+
+function esc(s){ return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+function renderPlan(){
+  let total = 0;
+  $("planBody").innerHTML = groups.map((g, gi) => {
+    const n = g.parts.reduce((a, p) => a + p.n, 0); total += n;
+    return '<tr><td class="c gn">' + (gi+1) + '</td><td>' + g.parts.map(p => '<span class="chip">' + esc(p.co) + ' ' + p.n + '</span>').join(" ") + '</td><td class="c">' + n + '</td></tr>';
+  }).join("");
+  $("planTotal").textContent = total + " คน";
+}
+
+function renderCompanies(){
+  renderPlan();
+  const { q, where } = quotas();
+  const box = $("companies");
+  box.innerHTML = "";
+  Object.keys(q).forEach(co => {
+    const id = "co-" + co.replace(/\W+/g, "_");
+    const card = document.createElement("div");
+    card.className = "co";
+    card.innerHTML =
+      '<div class="head"><label class="name" for="' + id + '">' + esc(co) + '</label><span class="count" id="' + id + '-c"></span></div>' +
+      '<textarea id="' + id + '" placeholder="ชื่อ 1 คนต่อบรรทัด"></textarea>' +
+      '<div class="where">' + esc(where[co].join(" · ")) + '</div>';
+    box.appendChild(card);
+    const ta = card.querySelector("textarea");
+    ta.value = names[co] || "";
+    ta.addEventListener("input", () => { names[co] = ta.value; store.set("grp2-names", JSON.stringify(names)); updateCounts(); });
+  });
+  updateCounts();
+}
+
+function updateCounts(){
+  const { q } = quotas();
+  let ok = true, total = 0, need = 0;
+  Object.keys(q).forEach(co => {
+    const have = listOf(co).length;
+    total += have; need += q[co];
+    const el = document.getElementById("co-" + co.replace(/\W+/g, "_") + "-c");
+    if (el){ el.textContent = have + " / " + q[co] + " คน"; el.classList.toggle("bad", have !== q[co]); }
+    if (have !== q[co]) ok = false;
+  });
+  const st = $("status");
+  st.textContent = ok ? "พร้อมสุ่ม: ครบ " + need + " คน, " + groups.length + " กลุ่ม" : "ใส่ชื่อแล้ว " + total + " / " + need + " คน (ตัวเลขสีส้ม = จำนวนยังไม่ตรง)";
+  st.className = "status " + (ok ? "ok" : "bad");
+  $("go").disabled = !ok || busy;
+  return ok;
+}
+
+function rand(n){ const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % n; }
+function shuffle(arr){ const a = arr.slice(); for (let i = a.length - 1; i > 0; i--){ const j = rand(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+function draw(){
+  const pools = {};
+  const { q } = quotas();
+  Object.keys(q).forEach(co => pools[co] = shuffle(listOf(co)));
+  return groups.map(g => {
+    const members = [];
+    g.parts.forEach(p => { for (let k = 0; k < p.n; k++) members.push({ name: pools[p.co].pop(), co: p.co }); });
+    return members;
+  });
+}
+
+const ALL_NAMES = () => Object.keys(quotas().q).flatMap(listOf);
+let skip = false;
+
+function renderSlots(res){
+  const box = $("result");
+  box.innerHTML = "";
+  res.forEach((members, gi) => {
+    const g = document.createElement("article");
+    g.className = "g"; g.id = "g" + gi;
+    const mix = groups[gi].parts.map(p => p.co + " " + p.n).join(" + ");
+    const lis = members.map((m, mi) =>
+      '<li class="spin" data-g="' + gi + '" data-m="' + mi + '"><span class="who">…</span><span class="tag">' + esc(m.co) + '</span></li>').join("");
+    g.innerHTML = '<div class="gh"><div class="num">กลุ่ม <span>' + (gi+1) + '</span></div><div class="size">' + members.length + ' คน</div><div class="ok">✓ ครบ</div></div><div class="mix">' + esc(mix) + '</div><ul>' + lis + '</ul>';
+    box.appendChild(g);
+  });
+}
+
+// ---------- sound ----------
+let ac = null;
+function tone(freq, dur, type, vol, when){
+  if (!$("sound").checked) return;
+  try {
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    const t = ac.currentTime + (when || 0);
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = type || "sine"; o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(vol || 0.08, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(ac.destination); o.start(t); o.stop(t + dur + 0.02);
+  } catch(e){}
+}
+const sfx = {
+  tick: () => tone(1400, 0.03, "square", 0.025),
+  lock: () => { tone(880, 0.12, "triangle", 0.12); tone(1320, 0.18, "triangle", 0.1, 0.07); },
+  beep: (hi) => tone(hi ? 1046 : 523, hi ? 0.5 : 0.18, "square", 0.07),
+  group: () => [784, 988, 1175].forEach((f, i) => tone(f, 0.16, "triangle", 0.09, i * 0.08)),
+  fanfare: () => [523, 659, 784, 1046, 784, 1046].forEach((f, i) => tone(f, i === 5 ? 0.7 : 0.18, "triangle", 0.11, i * 0.13))
+};
+
+// ---------- confetti ----------
+function confetti(){
+  const c = $("confetti"), ctx = c.getContext("2d");
+  c.width = innerWidth; c.height = innerHeight;
+  const cols = ["#06C755", "#B8F36B", "#F2F7F3", "#3DDCC4", "#FFD34D"];
+  const ps = Array.from({ length: 220 }, () => ({
+    x: innerWidth / 2 + (Math.random() - .5) * 200, y: innerHeight * .35,
+    vx: (Math.random() - .5) * 18, vy: -Math.random() * 16 - 4,
+    s: 6 + Math.random() * 8, r: Math.random() * 6, vr: (Math.random() - .5) * .3, c: cols[rand(cols.length)]
+  }));
+  let f = 0;
+  (function frame(){
+    ctx.clearRect(0, 0, c.width, c.height);
+    ps.forEach(p => { p.vy += .45; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-p.s/2, -p.s/4, p.s, p.s/2); ctx.restore(); });
+    if (++f < 200) requestAnimationFrame(frame); else ctx.clearRect(0, 0, c.width, c.height);
+  })();
+}
+function toast(html){
+  const old = $("toast"); if (old) old.remove();
+  const t = document.createElement("div"); t.id = "toast"; t.innerHTML = html;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 3300);
+}
+
+const sleep = (ms) => new Promise(r => setTimeout(r, skip ? 0 : ms));
+
+async function countdown(){
+  const cd = $("cd"), n = $("cdn");
+  cd.hidden = false;
+  for (const v of ["3", "2", "1", "สุ่ม!"]){
+    if (skip) break;
+    n.textContent = v; n.style.animation = "none"; void n.offsetWidth; n.style.animation = "";
+    n.style.fontSize = v.length > 1 ? "min(20vw,180px)" : "";
+    sfx.beep(v.length > 1);
+    await sleep(800);
+  }
+  cd.hidden = true;
+}
+
+async function revealSlot(li, finalName, slow){
+  const who = li.querySelector(".who");
+  const pool = ALL_NAMES();
+  li.classList.remove("spin"); li.classList.add("decel");
+  let d = slow ? 60 : 40;
+  const steps = slow ? 12 : 5, k = slow ? 1.2 : 1.3;
+  for (let i = 0; i < steps && !skip; i++){
+    who.textContent = pool[rand(pool.length)]; sfx.tick();
+    await sleep(d); d *= k;
+  }
+  who.textContent = finalName;
+  li.classList.remove("decel"); li.classList.add("lock");
+  if (!skip) sfx.lock();
+}
+
+async function go(){
+  if (busy || !updateCounts()) return;
+  busy = true; skip = false;
+  ["go","copy","csv","demo"].forEach(id => $(id).disabled = true);
+  $("skip").hidden = false;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) skip = true;
+  try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); ac.resume(); } catch(e){}
+
+  result = draw();
+  await countdown();
+
+  $("result-sec").hidden = false;
+  renderSlots(result);
+  const pool = ALL_NAMES();
+  const spinner = setInterval(() => {
+    document.querySelectorAll("li.spin .who").forEach(w => w.textContent = pool[rand(pool.length)]);
+  }, 70);
+  $("result-sec").scrollIntoView({ behavior: skip ? "auto" : "smooth", block: "start" });
+  await sleep(1200);
+
+  for (let gi = 0; gi < result.length; gi++){
+    const card = $("g" + gi);
+    const last = gi === result.length - 1;
+    card.classList.add("spot");
+    if (!skip) card.scrollIntoView({ behavior: "smooth", block: "center" });
+    await sleep(last ? 900 : 450);
+    for (let mi = 0; mi < result[gi].length; mi++){
+      const li = card.querySelector('li[data-m="' + mi + '"]');
+      await revealSlot(li, result[gi][mi].name, last);
+      await sleep(last ? 500 : 120);
+    }
+    card.classList.remove("spot"); card.classList.add("done");
+    if (!skip) sfx.group();
+    await sleep(last ? 300 : 380);
+  }
+  clearInterval(spinner);
+  document.querySelectorAll("li.spin, li.decel").forEach(li => li.classList.remove("spin", "decel"));
+
+  $("skip").hidden = true;
+  $("result-sec").scrollIntoView({ behavior: "smooth", block: "start" });
+  sfx.fanfare(); confetti();
+  toast('สุ่มครบ <span>' + result.length + '</span> กลุ่มแล้ว!');
+  busy = false;
+  ["copy","csv","demo"].forEach(id => $(id).disabled = false);
+  updateCounts();
+  $("go").textContent = "สุ่มใหม่";
+}
+
+function asText(){
+  return result.map((m, gi) => "กลุ่ม " + (gi+1) + "\n" + m.map(x => "- " + x.name + " (" + x.co + ")").join("\n")).join("\n\n");
+}
+function asCSV(){
+  const q = (s) => '"' + String(s).replace(/"/g, '""') + '"';
+  const rows = [["กลุ่ม","ชื่อ","บริษัท"]];
+  result.forEach((m, gi) => m.forEach(x => rows.push([gi+1, x.name, x.co])));
+  return "﻿" + rows.map(r => r.map(q).join(",")).join("\n");
+}
+
+$("go").addEventListener("click", go);
+$("skip").addEventListener("click", () => { skip = true; });
+$("copy").addEventListener("click", async () => {
+  try { await navigator.clipboard.writeText(asText()); $("copy").textContent = "คัดลอกแล้ว"; }
+  catch(e){ $("copy").textContent = "คัดลอกไม่ได้"; }
+  setTimeout(() => $("copy").textContent = "คัดลอกผล", 1500);
+});
+$("csv").addEventListener("click", () => {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([asCSV()], { type: "text/csv;charset=utf-8" }));
+  a.download = "hackathon-groups.csv"; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+$("present").addEventListener("click", () => {
+  const on = document.body.classList.toggle("present");
+  $("present").textContent = on ? "ออกจากโหมดนำเสนอ" : "โหมดนำเสนอ";
+});
+$("demo").addEventListener("click", () => {
+  names = Object.assign({}, DEFAULT_NAMES);
+  store.set("grp2-names", JSON.stringify(names));
+  renderCompanies();
+});
+$("applyCfg").addEventListener("click", () => {
+  try {
+    groups = parseCfg($("cfg").value);
+    $("cfgErr").hidden = true;
+    store.set("grp2-cfg", $("cfg").value);
+    result = null; $("result").innerHTML = ""; $("result-sec").hidden = true; $("go").textContent = "สุ่มกลุ่ม";
+    ["copy","csv"].forEach(id => $(id).disabled = true);
+    renderCompanies();
+  } catch(e){ $("cfgErr").textContent = e.message; $("cfgErr").hidden = false; }
+});
+$("resetCfg").addEventListener("click", () => { $("cfg").value = DEFAULT_CFG; $("applyCfg").click(); });
+
+// init
+(function init(){
+  const savedCfg = store.get("grp2-cfg");
+  $("cfg").value = savedCfg || DEFAULT_CFG;
+  try { groups = parseCfg($("cfg").value); } catch(e){ $("cfg").value = DEFAULT_CFG; groups = parseCfg(DEFAULT_CFG); }
+  try { names = JSON.parse(store.get("grp2-names") || "null") || Object.assign({}, DEFAULT_NAMES); } catch(e){ names = {}; }
+  renderCompanies();
+})();
+</script>
+</body>
+</html>
