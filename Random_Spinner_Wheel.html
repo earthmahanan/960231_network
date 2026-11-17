@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Random Spinner Wheel</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#04170e; --neon:#3df27a; --neon2:#7dff9e; --orange:#ff9a1f; --white:#ffffff;
+          --glass:rgba(10,45,28,.55); --line:rgba(61,242,122,.45); }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:'Poppins',system-ui,sans-serif; color:var(--white); min-height:100vh;
+         display:flex; align-items:center; justify-content:center; padding:20px; overflow-x:hidden;
+         background:
+           radial-gradient(ellipse 60% 50% at 80% 30%, rgba(61,242,122,.28), transparent 70%),
+           radial-gradient(ellipse 50% 40% at 10% 90%, rgba(255,154,31,.18), transparent 70%),
+           radial-gradient(ellipse 70% 60% at 20% 10%, rgba(30,160,110,.25), transparent 70%),
+           linear-gradient(160deg,#062a18 0%,#04170e 55%,#020c07 100%); }
+  /* faint grid like the poster's digital mesh */
+  body::before { content:''; position:fixed; inset:0; pointer-events:none; opacity:.18;
+         background-image:linear-gradient(rgba(61,242,122,.35) 1px,transparent 1px),linear-gradient(90deg,rgba(61,242,122,.35) 1px,transparent 1px);
+         background-size:44px 44px; mask-image:linear-gradient(to top,#000 0%,transparent 60%); }
+  .app { display:flex; align-items:center; justify-content:center; width:100%; max-width:1200px;
+         flex-wrap:nowrap; gap:24px; position:relative; }
+  .wheel-wrap { position:relative; order:2; flex:0 1 460px; min-width:0; aspect-ratio:1; }
+  canvas { width:100%; height:100%; display:block; border-radius:50%;
+           box-shadow:0 0 0 6px rgba(61,242,122,.25), 0 0 40px rgba(61,242,122,.55), 0 0 90px rgba(61,242,122,.25); }
+  .pointer { position:absolute; top:-10px; left:50%; transform:translateX(-50%); width:0; height:0; z-index:2;
+             border-left:20px solid transparent; border-right:20px solid transparent; border-top:40px solid var(--orange);
+             filter:drop-shadow(0 0 8px rgba(255,154,31,.9)); }
+  .hub { position:absolute; inset:0; margin:auto; width:22%; height:22%; border-radius:50%; cursor:pointer;
+         border:3px solid var(--neon); background:#062a18; color:var(--neon);
+         font:400 clamp(13px,2.4vw,22px) 'Archivo Black',sans-serif; letter-spacing:.04em;
+         box-shadow:0 0 18px rgba(61,242,122,.8), inset 0 0 14px rgba(61,242,122,.4); transition:transform .15s; }
+  .hub:hover:not(:disabled) { transform:scale(1.07); }
+  .hub:disabled { opacity:.8; cursor:default; }
+  .panel { width:240px; flex:none; padding:18px; border-radius:20px; background:var(--glass);
+           border:2px solid var(--line); backdrop-filter:blur(8px);
+           box-shadow:0 0 22px rgba(61,242,122,.25), inset 0 0 20px rgba(61,242,122,.08); }
+  .panel.entries { order:1; } .panel.winners { order:3; }
+  h1 { margin:0 0 4px; font:400 26px/1.05 'Archivo Black',sans-serif; text-transform:uppercase; letter-spacing:.01em; }
+  h1 .hl { color:var(--neon); text-shadow:0 0 12px rgba(61,242,122,.6); }
+  .tag { display:inline-block; background:var(--neon); color:#062a18; font:800 11px 'Poppins',sans-serif;
+         letter-spacing:.12em; padding:3px 12px; border-radius:999px; margin-bottom:8px; }
+  p.sub { margin:4px 0 12px; font-size:13px; font-weight:600; color:rgba(255,255,255,.75); }
+  textarea { width:100%; height:200px; border:2px solid var(--line); border-radius:12px; padding:10px;
+             background:rgba(2,12,7,.6); color:#fff; font:600 15px 'Poppins',sans-serif; resize:vertical; }
+  textarea:focus { outline:none; border-color:var(--neon); box-shadow:0 0 12px rgba(61,242,122,.5); }
+  .row { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
+  .btn { flex:1; border:2px solid var(--line); border-radius:10px; padding:9px 6px; cursor:pointer;
+         background:rgba(61,242,122,.1); color:#fff; font:700 13px 'Poppins',sans-serif; transition:.15s; }
+  .btn:hover { background:rgba(61,242,122,.25); border-color:var(--neon); }
+  .btn.primary { background:var(--neon); color:#062a18; border-color:var(--neon); box-shadow:0 0 16px rgba(61,242,122,.6); }
+  .btn.primary:hover { background:var(--neon2); }
+  .count { display:inline-block; background:var(--orange); color:#1a0c00; border-radius:999px;
+           font:800 15px 'Poppins',sans-serif; padding:1px 10px; vertical-align:middle; box-shadow:0 0 10px rgba(255,154,31,.7); }
+  #winList { margin:0; padding:0; list-style:none; counter-reset:w; max-height:260px; overflow:auto; }
+  #winList li { counter-increment:w; display:flex; align-items:center; gap:10px; padding:8px 10px; margin-bottom:6px;
+                background:rgba(61,242,122,.1); border:1px solid rgba(61,242,122,.25); border-radius:10px;
+                font:600 15px 'Poppins',sans-serif; animation:slide .4s ease; }
+  #winList li::before { content:counter(w); background:var(--neon); color:#062a18; border-radius:50%; width:24px; height:24px;
+                        flex:none; display:flex; align-items:center; justify-content:center; font:800 12px 'Poppins',sans-serif; }
+  #winList li.latest { border-color:var(--orange); background:rgba(255,154,31,.15); box-shadow:0 0 12px rgba(255,154,31,.35); }
+  #winList li.latest::before { background:var(--orange); }
+  #winList:empty::after { content:'No one picked yet'; display:block; opacity:.55; font-size:14px; padding:8px 0; }
+  .overlay { position:fixed; inset:0; background:rgba(2,12,7,.75); display:none; align-items:center; justify-content:center; z-index:10; }
+  .overlay.show { display:flex; cursor:pointer; }
+  .result { background:linear-gradient(160deg,#0a3a22,#04170e); border:3px solid var(--neon); border-radius:24px;
+            padding:30px 44px; text-align:center; max-width:90vw; animation:pop .35s cubic-bezier(.2,1.6,.4,1);
+            box-shadow:0 0 40px rgba(61,242,122,.6); }
+  .result small { font:800 13px 'Poppins',sans-serif; letter-spacing:.14em; background:var(--neon); color:#062a18;
+                  padding:4px 14px; border-radius:999px; }
+  .result h2 { font:800 clamp(36px,8vw,64px)/1.1 'Poppins',sans-serif; margin:4px 0 10px; color:var(--neon);
+               text-shadow:0 0 18px rgba(61,242,122,.7); word-break:break-word; }
+  .result .swoosh { width:70%; height:6px; margin:0 auto 6px; background:var(--orange); border-radius:6px;
+                     box-shadow:0 0 10px rgba(255,154,31,.8); }
+  .result .btn { flex:none; padding:12px 30px; font-size:15px; }
+  @keyframes pop { from { transform:scale(.6); opacity:0 } to { transform:scale(1); opacity:1 } }
+  @keyframes slide { from { transform:translateX(20px); opacity:0 } to { transform:none; opacity:1 } }
+  @media (max-width:760px) {
+    .app { flex-wrap:wrap; }
+    .wheel-wrap { flex-basis:100%; max-width:88vw; }
+    .panel { width:min(320px,88vw); }
+  }
+  /* ---- White background theme ---- */
+  body { color:#062a18; background:
+           radial-gradient(ellipse 55% 45% at 85% 25%, rgba(61,242,122,.14), transparent 70%),
+           radial-gradient(ellipse 45% 40% at 8% 92%, rgba(255,154,31,.10), transparent 70%),
+           #ffffff; }
+  body::before { opacity:.10; }
+  .panel { background:#ffffff; border-color:rgba(24,184,90,.45); backdrop-filter:none;
+           box-shadow:0 10px 30px rgba(6,42,24,.10), 0 0 0 4px rgba(61,242,122,.08); }
+  h1 { color:#062a18; }
+  h1 .hl { color:#14b257; text-shadow:none; }
+  .tag { background:#062a18; color:#3df27a; }
+  p.sub { color:rgba(6,42,24,.65); }
+  textarea { background:#f3fdf6; color:#062a18; border-color:rgba(24,184,90,.35); }
+  .btn { background:#eefbf2; color:#062a18; border-color:rgba(24,184,90,.35); }
+  .btn:hover { background:#d9f7e3; border-color:#14b257; }
+  #winList li { background:#f3fdf6; border-color:rgba(24,184,90,.25); color:#062a18; }
+  #winList li::before { background:#062a18; color:#3df27a; }
+  #winList li.latest { background:#fff3e3; border-color:#ff9a1f; box-shadow:0 0 0 3px rgba(255,154,31,.15); }
+  #winList li.latest::before { background:#ff9a1f; color:#1a0c00; }
+  canvas { box-shadow:0 0 0 6px rgba(61,242,122,.25), 0 14px 40px rgba(6,42,24,.25), 0 0 50px rgba(61,242,122,.35); }
+  .overlay { background:rgba(6,42,24,.55); }
+  .toggle { display:flex; align-items:center; gap:10px; margin-top:14px; cursor:pointer; user-select:none;
+            font:700 13px 'Poppins',sans-serif; color:#062a18; }
+  .toggle input { position:absolute; opacity:0; pointer-events:none; }
+  .toggle .track { flex:none; width:42px; height:24px; border-radius:999px; background:#d5e6db; position:relative; transition:.2s; }
+  .toggle .knob { position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff;
+                  box-shadow:0 1px 4px rgba(0,0,0,.25); transition:.2s; }
+  .toggle input:checked + .track { background:#14b257; box-shadow:0 0 10px rgba(61,242,122,.5); }
+  .toggle input:checked + .track .knob { left:21px; }
+  .toggle input:focus-visible + .track { outline:2px solid #ff9a1f; outline-offset:2px; }
+  textarea[hidden] { display:none; }
+  .names { display:flex; flex-direction:column; gap:6px; height:200px; overflow:auto; padding:2px; }
+  .names button { display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; text-align:left;
+                  padding:8px 10px; border-radius:10px; border:1px solid rgba(24,184,90,.3); background:#f3fdf6;
+                  color:#062a18; font:600 15px 'Poppins',sans-serif; cursor:pointer; transition:.15s; }
+  .names button span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .names button::after { content:'Pick'; flex:none; font:800 11px 'Poppins',sans-serif; letter-spacing:.06em; text-transform:uppercase;
+                         padding:3px 9px; border-radius:999px; background:#062a18; color:#3df27a; opacity:0; transition:.15s; }
+  .names button:hover, .names button:focus-visible { border-color:#14b257; background:#e3f9ea; outline:none; }
+  .names button:hover::after, .names button:focus-visible::after { opacity:1; }
+  .names button:disabled { cursor:default; opacity:.6; }
+  .names[hidden] { display:none; }
+  .names .empty { opacity:.55; font-size:14px; padding:8px 2px; }
+  .row .btn { flex:1 1 40%; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="wheel-wrap">
+    <div class="pointer"></div>
+    <canvas id="wheel" width="920" height="920"></canvas>
+    <button class="hub" id="spinBtn">SPIN</button>
+  </div>
+  <div class="panel entries">
+    <span class="tag">DII HACKATHON</span>
+    <h1>Random <span class="hl">Spinner</span></h1>
+    <p class="sub" id="entriesSub">Click a name to pick it, or spin the wheel.</p>
+    <div class="names" id="nameList"></div>
+    <textarea id="entries" hidden>Alice
+Bob
+Charlie
+Diana
+Ethan
+Fiona
+George
+Hannah</textarea>
+    <div class="row">
+      <button class="btn" id="editBtn">Edit list</button>
+      <button class="btn" id="shuffleBtn">Shuffle</button>
+      <button class="btn" id="numbersBtn">1–10</button>
+      <button class="btn" id="yesnoBtn">Yes / No</button>
+    </div>
+    <label class="toggle">
+      <input type="checkbox" id="removeChk" checked>
+      <span class="track"><span class="knob"></span></span>
+      <span>Remove winner from wheel</span>
+    </label>
+  </div>
+  <div class="panel winners">
+    <h1>Picked <span id="count" class="count">0</span></h1>
+    <p class="sub" id="pickedSub">Each winner moves here and leaves the wheel.</p>
+    <ol id="winList"></ol>
+    <div class="row">
+      <button class="btn" id="resetBtn">Put all back</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="result">
+        <h2 id="winner"></h2>
+    <div class="swoosh"></div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('wheel'), ctx = canvas.getContext('2d');
+const ta = document.getElementById('entries');
+const spinBtn = document.getElementById('spinBtn');
+const colors = ['#3df27a','#0b3d24','#ff9a1f','#14593a','#b6ff5c','#0e2a1c','#1fd1a0','#123f2b'];
+const textOn = c => ['#3df27a','#ff9a1f','#b6ff5c','#1fd1a0'].includes(c) ? '#062a18' : '#ffffff';
+let angle = 0, spinning = false, history = [];
+let audioCtx = null;
+
+function items() { return ta.value.split('\n').map(s => s.trim()).filter(Boolean); }
+
+function draw() {
+  const list = items(), n = Math.max(list.length, 1), W = canvas.width, r = W/2;
+  ctx.clearRect(0,0,W,W);
+  ctx.save(); ctx.translate(r,r); ctx.rotate(angle);
+  const slice = 2*Math.PI/n;
+  for (let i=0;i<n;i++) {
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r-6,i*slice,(i+1)*slice); ctx.closePath();
+    let c = colors[i % colors.length];
+    if (n % colors.length === 1 && i === n-1) c = colors[2];
+    ctx.fillStyle = list.length ? c : '#0b3d24'; ctx.fill();
+    ctx.strokeStyle = 'rgba(61,242,122,.55)'; ctx.lineWidth = 3; ctx.stroke();
+    if (!list.length) continue;
+    ctx.save(); ctx.rotate(i*slice + slice/2);
+    ctx.textAlign='right'; ctx.textBaseline='middle'; ctx.fillStyle=textOn(c);
+    const fs = Math.max(18, Math.min(46, 360/n + 10));
+    ctx.font = `800 ${fs}px Poppins, sans-serif`;
+    let t = list[i]; const maxW = r*0.62;
+    while (ctx.measureText(t).width > maxW && t.length > 1) t = t.slice(0,-1);
+    if (t !== list[i]) t = t.slice(0,-1) + '…';
+    ctx.shadowColor='rgba(0,0,0,.2)'; ctx.shadowBlur=3;
+    ctx.fillText(t, r-36, 0); ctx.restore();
+  }
+  ctx.restore();
+  ctx.beginPath(); ctx.arc(r,r,r-3,0,2*Math.PI); ctx.lineWidth=8; ctx.strokeStyle='#3df27a'; ctx.stroke();
+}
+
+function tick() {
+  try {
+    if (!audioCtx) return;
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.frequency.value = 900; o.type='triangle';
+    g.gain.setValueAtTime(.08, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime+.05);
+    o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+.05);
+  } catch(e) {}
+}
+
+function spin() {
+  const list = items();
+  if (spinning || !list.length) return;
+  if (list.length === 1) {   // only one left: it wins automatically
+    declareWinner(list[0]); return;
+  }
+  try { audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)(); } catch(e) {}
+  spinning = true; spinBtn.disabled = true; renderNames();
+  const n = list.length, slice = 2*Math.PI/n;
+  const start = angle, total = (6 + Math.random()*4) * 2*Math.PI + Math.random()*2*Math.PI;
+  const dur = 4500 + Math.random()*1500, t0 = performance.now();
+  let lastIdx = -1;
+  const idxAt = a => { const p = ((-Math.PI/2 - a) % (2*Math.PI) + 4*Math.PI) % (2*Math.PI); return Math.floor(p/slice); };
+  function frame(now) {
+    const t = Math.min((now - t0)/dur, 1), e = 1 - Math.pow(1-t, 4);
+    angle = start + total*e; draw();
+    const idx = idxAt(angle); if (idx !== lastIdx) { tick(); lastIdx = idx; }
+    if (t < 1) requestAnimationFrame(frame);
+    else {
+      spinning = false; spinBtn.disabled = false; renderNames();
+      angle = angle % (2*Math.PI);
+      const win = list[idxAt(angle)];
+      declareWinner(win);
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+function renderWinners() {
+  const ol = document.getElementById('winList');
+  ol.innerHTML = '';
+  history.forEach((w, i) => {
+    const li = document.createElement('li'); li.textContent = w.name;
+    if (i === history.length - 1) li.className = 'latest';
+    ol.appendChild(li);
+  });
+  ol.scrollTop = ol.scrollHeight;
+  document.getElementById('count').textContent = history.length;
+  const left = items().length;
+  spinBtn.textContent = left === 0 ? 'DONE' : (left === 1 && removeOn()) ? 'LAST' : 'SPIN';
+  document.getElementById('pickedSub').textContent = removeOn()
+    ? 'Each winner moves here and leaves the wheel.'
+    : 'Winners are listed here and stay on the wheel.';
+}
+
+function declareWinner(name) {
+  const rm = removeOn();
+  history.push({ name, removed:rm });
+  document.getElementById('winner').textContent = name;
+  document.getElementById('overlay').classList.add('show');
+  if (rm) { const l = items(); l.splice(l.indexOf(name),1); ta.value = l.join('\n'); }
+  renderWinners(); renderNames(); draw();
+}
+
+function renderNames() {
+  const box = document.getElementById('nameList');
+  box.innerHTML = '';
+  const list = items();
+  if (!list.length) { box.innerHTML = '<div class="empty">No names left</div>'; return; }
+  list.forEach(name => {
+    const b = document.createElement('button');
+    const sp = document.createElement('span'); sp.textContent = name; b.appendChild(sp);
+    b.title = 'Pick ' + name; b.disabled = spinning;
+    b.onclick = () => { if (!spinning) declareWinner(name); };
+    box.appendChild(b);
+  });
+}
+
+function removeOn() { return document.getElementById('removeChk').checked; }
+
+function closeResult() { document.getElementById('overlay').classList.remove('show'); draw(); }
+
+spinBtn.onclick = spin;
+canvas.onclick = spin;
+document.getElementById('resetBtn').onclick = () => {
+  if (spinning) return;
+  const back = history.filter(h => h.removed).map(h => h.name);
+  ta.value = items().concat(back).join('\n'); history = []; renderWinners(); renderNames(); draw();
+};
+ta.addEventListener('input', () => { renderWinners(); renderNames(); });
+document.getElementById('editBtn').onclick = () => {
+  const editing = ta.hidden;
+  ta.hidden = !editing; document.getElementById('nameList').hidden = editing;
+  document.getElementById('editBtn').textContent = editing ? 'Done' : 'Edit list';
+  document.getElementById('entriesSub').textContent = editing
+    ? 'One entry per line. Press Done when finished.'
+    : 'Click a name to pick it, or spin the wheel.';
+  if (editing) ta.focus(); else renderNames();
+};
+document.getElementById('removeChk').addEventListener('change', renderWinners);
+document.getElementById('overlay').onclick = closeResult;
+ta.oninput = draw;
+document.getElementById('shuffleBtn').onclick = () => {
+  const l = items(); for (let i=l.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [l[i],l[j]]=[l[j],l[i]]; }
+  ta.value = l.join('\n'); draw(); renderNames();
+};
+document.getElementById('numbersBtn').onclick = () => { ta.value = Array.from({length:10},(_,i)=>i+1).join('\n'); draw(); renderNames(); renderWinners(); };
+document.getElementById('yesnoBtn').onclick = () => { ta.value = 'Yes\nNo\nYes\nNo'; draw(); renderNames(); renderWinners(); };
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' && document.activeElement !== ta) { e.preventDefault();
+    if (document.getElementById('overlay').classList.contains('show')) closeResult(); else spin(); }
+  if (e.code === 'Escape') closeResult();
+});
+document.fonts && document.fonts.ready.then(draw);
+draw(); renderNames(); renderWinners();
+</script>
+</body>
+</html>
